@@ -1,0 +1,80 @@
+:root {
+  color-scheme: light;
+  --bg-0: #f4f8ff;
+  --bg-1: #e8f1ff;
+  --surface-1: rgba(255, 255, 255, 0.9);
+  --surface-2: rgba(250, 253, 255, 0.95);
+  --border-subtle: rgba(102, 133, 184, 0.26);
+  --border-strong: rgba(86, 125, 188, 0.45);
+  --text-primary: #16233f;
+  --text-secondary: #415d89;
+  --text-tertiary: #60779f;
+  --accent: #2f6fdd;
+  --accent-strong: #1d57bf;
+  --danger-subtle: #b95d72;
+  --focus-ring: #1f6ff5;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --shadow-sm: 0 6px 16px rgba(31, 68, 126, 0.1);
+  --shadow-md: 0 14px 28px rgba(31, 68, 126, 0.12);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --line: var(--border-subtle);
+  --primary: var(--accent);
+  --primary-strong: var(--accent-strong);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 10% 12%, rgba(131, 177, 255, 0.28), transparent 45%),
+    radial-gradient(circle at 85% 4%, rgba(117, 178, 255, 0.22), transparent 44%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1));
+  color: var(--text);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

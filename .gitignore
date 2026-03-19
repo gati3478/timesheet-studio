@@ -1,10 +1,37 @@
+# Dependencies
 node_modules/
+
+# SvelteKit
 .svelte-kit/
 build/
+
+# Testing
 playwright-report/
 test-results/
 coverage/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+!.env.example
 
 # Runtime outputs
 *.tmp
+
+# Generated timesheet outputs
+example-*.doc
+example-*.docx

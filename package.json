@@ -1,7 +1,21 @@
 {
   "name": "timesheet-generator",
-  "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Georgian-format monthly timesheet generator with interactive calendar and DOCX template filling",
+  "license": "MIT",
+  "author": "Giorgi Petriashvili",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gati3478/timesheet-generator.git"
+  },
+  "keywords": [
+    "timesheet",
+    "sveltekit",
+    "docx",
+    "georgia",
+    "document-generation",
+    "holidays"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite dev",

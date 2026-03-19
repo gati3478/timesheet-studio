@@ -35,7 +35,9 @@
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write .",
     "test": "npm run test:unit",
-    "test:unit": "svelte-kit sync && vitest run --config vitest.config.ts tests/unit tests/integration",
+    "test:unit": "svelte-kit sync && vitest run --config vitest.config.ts",
+    "test:e2e": "playwright test",
+    "test:all": "npm run test:unit && npm run test:e2e",
     "prepare:template": "node scripts/prepare-template.mjs",
     "doctor": "bash scripts/doctor.sh",
     "clean": "rm -rf build .svelte-kit test-results playwright-report coverage"

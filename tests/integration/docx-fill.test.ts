@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { DOMParser } from '@xmldom/xmldom';
-import xpath from 'xpath';
 import { fillTimesheetTemplate } from '../../src/lib/server/docx';
 import type { ComputedTimesheet, DayCode } from '../../src/lib/server/types';
+import {
+  getCell,
+  getCellText,
+  hasBold,
+  getSize,
+  hasShading,
+  isCentered
+} from '../helpers/docx-assertions';
 
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
@@ -57,88 +64,47 @@ async function buildTemplateBuffer(): Promise<Buffer> {
   return zip.generateAsync({ type: 'nodebuffer' });
 }
 
-function getCell(
-  document: Document,
-  tableIndex: number,
-  rowIndex: number,
-  cellIndex: number
-): Element {
-  const tables = xpath.select("//*[local-name()='tbl']", document) as Element[];
-  const rows = xpath.select("./*[local-name()='tr']", tables[tableIndex]) as Element[];
-  const cells = xpath.select("./*[local-name()='tc']", rows[rowIndex]) as Element[];
-  return cells[cellIndex];
-}
-
-function getCellText(cell: Element): string {
-  const textNodes = xpath.select(".//*[local-name()='t']", cell) as Node[];
-  return textNodes.map((node) => node.textContent ?? '').join('');
-}
-
-function hasShading(cell: Element): boolean {
-  const shading = xpath.select("./*[local-name()='tcPr']/*[local-name()='shd']", cell) as Node[];
-  return shading.length > 0;
-}
-
-function hasBold(cell: Element): boolean {
-  const boldNodes = xpath.select(".//*[local-name()='rPr']/*[local-name()='b']", cell) as Node[];
-  return boldNodes.length > 0;
-}
-
-function getSize(cell: Element): string | null {
-  const sizeNode = xpath.select(".//*[local-name()='rPr']/*[local-name()='sz']", cell) as Element[];
-  if (sizeNode.length === 0) {
-    return null;
+function makeComputed(overrides: Partial<ComputedTimesheet> = {}): ComputedTimesheet {
+  const dayCodesByDay = new Map<number, DayCode>();
+  for (let day = 1; day <= 31; day += 1) {
+    dayCodesByDay.set(day, '');
   }
+  dayCodesByDay.set(1, 'X');
+  dayCodesByDay.set(2, '8');
+  dayCodesByDay.set(3, 'შ');
 
-  return sizeNode[0].getAttribute('w:val') ?? sizeNode[0].getAttribute('val');
+  return {
+    dayCodesByDay: overrides.dayCodesByDay ?? dayCodesByDay,
+    firstHalfHours: overrides.firstHalfHours ?? 56,
+    secondHalfHours: overrides.secondHalfHours ?? 88,
+    workedDays: overrides.workedDays ?? 18,
+    totalWorkedHours: overrides.totalWorkedHours ?? 144,
+    paidVacationHours: overrides.paidVacationHours ?? 8,
+    weekdayHolidayCount: overrides.weekdayHolidayCount ?? 3,
+    startDateLabel: overrides.startDateLabel ?? '01.01.2026',
+    endDateLabel: overrides.endDateLabel ?? '31.01.2026',
+    lastWorkdayLabel: overrides.lastWorkdayLabel ?? '30.01'
+  };
 }
 
-function isCentered(cell: Element): boolean {
-  const jcNode = xpath.select(".//*[local-name()='pPr']/*[local-name()='jc']", cell) as Element[];
-  if (jcNode.length === 0) {
-    return false;
-  }
-
-  const value = jcNode[0].getAttribute('w:val') ?? jcNode[0].getAttribute('val');
-  return value === 'center';
+async function fillAndParse(computed: ComputedTimesheet): Promise<Document> {
+  const templateBuffer = await buildTemplateBuffer();
+  const output = await fillTimesheetTemplate({
+    templateBuffer,
+    companyCode: '405627530',
+    employeeName: 'გიორგი პეტრიაშვილი, უფროსი დეველოპერი',
+    employeeId: '01005031116',
+    computed
+  });
+  const zip = await JSZip.loadAsync(output);
+  const xml = await zip.file('word/document.xml')!.async('text');
+  return new DOMParser().parseFromString(xml, 'application/xml');
 }
 
 describe('fillTimesheetTemplate', () => {
   it('writes dates, row values, totals and day-cell shading', async () => {
-    const templateBuffer = await buildTemplateBuffer();
-
-    const dayCodesByDay = new Map<number, DayCode>();
-    for (let day = 1; day <= 31; day += 1) {
-      dayCodesByDay.set(day, '');
-    }
-    dayCodesByDay.set(1, 'X');
-    dayCodesByDay.set(2, '8');
-    dayCodesByDay.set(3, 'შ');
-
-    const computed: ComputedTimesheet = {
-      dayCodesByDay,
-      firstHalfHours: 56,
-      secondHalfHours: 88,
-      workedDays: 18,
-      totalWorkedHours: 144,
-      paidVacationHours: 8,
-      weekdayHolidayCount: 3,
-      startDateLabel: '01.01.2026',
-      endDateLabel: '31.01.2026',
-      lastWorkdayLabel: '30.01'
-    };
-
-    const output = await fillTimesheetTemplate({
-      templateBuffer,
-      companyCode: '405627530',
-      employeeName: 'გიორგი პეტრიაშვილი, უფროსი დეველოპერი',
-      employeeId: '01005031116',
-      computed
-    });
-
-    const zip = await JSZip.loadAsync(output);
-    const xml = await zip.file('word/document.xml')!.async('text');
-    const documentNode = new DOMParser().parseFromString(xml, 'application/xml');
+    const computed = makeComputed();
+    const documentNode = await fillAndParse(computed);
 
     expect(getCellText(getCell(documentNode, 0, 5, 2))).toBe('30.01');
     expect(getCellText(getCell(documentNode, 0, 5, 4))).toBe('01.01.2026');
@@ -179,5 +145,75 @@ describe('fillTimesheetTemplate', () => {
     expect(getCellText(getCell(documentNode, 1, 5, 41))).toBe('144');
     expect(getCellText(getCell(documentNode, 1, 5, 43))).toBe('8');
     expect(getCellText(getCell(documentNode, 1, 5, 46))).toBe('3');
+  });
+
+  it('fills an all-vacation month with zero worked hours', async () => {
+    const dayCodesByDay = new Map<number, DayCode>();
+    for (let day = 1; day <= 31; day += 1) {
+      dayCodesByDay.set(day, '');
+    }
+
+    // Jan 2026: weekdays get შ, weekends get X
+    // Day 1 Thu, 2 Fri, 3 Sat, 4 Sun, 5 Mon...
+    for (let day = 1; day <= 31; day += 1) {
+      const date = new Date(2026, 0, day);
+      const dow = date.getDay();
+      if (dow === 0 || dow === 6) {
+        dayCodesByDay.set(day, 'X');
+      } else {
+        dayCodesByDay.set(day, 'შ');
+      }
+    }
+
+    const computed = makeComputed({
+      dayCodesByDay,
+      firstHalfHours: 0,
+      secondHalfHours: 0,
+      workedDays: 0,
+      totalWorkedHours: 0,
+      paidVacationHours: 176,
+      weekdayHolidayCount: 0
+    });
+
+    const documentNode = await fillAndParse(computed);
+
+    expect(getCellText(getCell(documentNode, 1, 5, 36))).toBe('0');
+    expect(getCellText(getCell(documentNode, 1, 5, 37))).toBe('0');
+    expect(getCellText(getCell(documentNode, 1, 5, 43))).toBe('176');
+
+    // Verify weekday cells have შ code
+    expect(getCellText(getCell(documentNode, 1, 5, 3))).toBe('შ');
+    expect(getCellText(getCell(documentNode, 1, 5, 4))).toBe('შ');
+  });
+
+  it('clears cells for days beyond month length (Feb 28 days)', async () => {
+    const dayCodesByDay = new Map<number, DayCode>();
+    for (let day = 1; day <= 28; day += 1) {
+      dayCodesByDay.set(day, '8');
+    }
+    // Days 29-31 should be empty
+    dayCodesByDay.set(29, '');
+    dayCodesByDay.set(30, '');
+    dayCodesByDay.set(31, '');
+
+    const computed = makeComputed({
+      dayCodesByDay,
+      firstHalfHours: 88,
+      secondHalfHours: 80,
+      workedDays: 21,
+      totalWorkedHours: 168,
+      paidVacationHours: 0,
+      weekdayHolidayCount: 0,
+      startDateLabel: '01.02.2025',
+      endDateLabel: '28.02.2025',
+      lastWorkdayLabel: '28.02'
+    });
+
+    const documentNode = await fillAndParse(computed);
+
+    // Days 29-31 use dayToCellIndex: day + 3 for days 16-31, so indices 32, 33, 34
+    expect(getCellText(getCell(documentNode, 1, 5, 32))).toBe('');
+    expect(getCellText(getCell(documentNode, 1, 5, 33))).toBe('');
+    expect(getCellText(getCell(documentNode, 1, 5, 34))).toBe('');
   });
 });

@@ -404,7 +404,8 @@ async function fetchYellHolidayPage(): Promise<string> {
   const response = await fetch(YELL_HOLIDAY_URL, {
     headers: {
       'User-Agent': 'timesheet-generator/1.0'
-    }
+    },
+    signal: AbortSignal.timeout(10_000)
   });
 
   if (!response.ok) {
@@ -426,7 +427,8 @@ async function fetchNagerHolidays(year: number): Promise<HolidayEntry[]> {
     headers: {
       'User-Agent': 'timesheet-generator/1.0',
       Accept: 'application/json'
-    }
+    },
+    signal: AbortSignal.timeout(10_000)
   });
 
   if (!response.ok) {

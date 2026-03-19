@@ -82,12 +82,12 @@ Accepts a JSON body and returns the filled document as a binary file download.
 }
 ```
 
-**Response:** Binary file with `Content-Disposition: attachment; filename="g.petriashvili-{mon}-{year}-timesheet.{ext}"`.
+**Response:** Binary file with `Content-Disposition: attachment; filename="{name-slug}-{mon}-{year}-timesheet.{ext}"`.
 MIME type is `application/vnd.openxmlformats-officedocument.wordprocessingml.document` for DOCX or `application/msword` for DOC.
 
 ### `POST /api/system/shutdown`
 
-Shuts down the local Node process via `SIGTERM` (for desktop app mode). No authentication — intended only for local/trusted environments.
+Shuts down the local Node process via `SIGTERM` (for desktop app mode). Only available in dev mode (`NODE_ENV=development`); returns 404 in production.
 
 ## Key Concepts
 

@@ -66,7 +66,14 @@ function parsePayload(payload: unknown): TimesheetGenerateRequest {
   };
 }
 
+const MAX_BODY_SIZE = 1024 * 1024; // 1 MB
+
 export const POST: RequestHandler = async ({ request }) => {
+  const contentLength = Number(request.headers.get('content-length') ?? 0);
+  if (contentLength > MAX_BODY_SIZE) {
+    return json({ message: 'Request body too large.' }, { status: 413 });
+  }
+
   try {
     const payload = await request.json();
     const input = parsePayload(payload);
@@ -95,7 +102,12 @@ export const POST: RequestHandler = async ({ request }) => {
       outputBuffer = await convertDocxBufferToDoc(docxBuffer);
     }
 
-    const filename = buildOutputFilename(input.year, input.month, input.outputFormat);
+    const filename = buildOutputFilename(
+      input.employeeName,
+      input.year,
+      input.month,
+      input.outputFormat
+    );
     const mimeType =
       input.outputFormat === 'doc'
         ? 'application/msword'
@@ -118,7 +130,9 @@ export const POST: RequestHandler = async ({ request }) => {
       return json({ message: error.message }, { status: 500 });
     }
 
-    const message = error instanceof Error ? error.message : 'Unexpected generation error.';
-    return json({ message }, { status: 500 });
+    if (error instanceof Error) {
+      console.error('Timesheet generation error:', error);
+    }
+    return json({ message: 'Unexpected generation error.' }, { status: 500 });
   }
 };

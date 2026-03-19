@@ -1,7 +1,12 @@
+import { dev } from '$app/environment';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async () => {
+  if (!dev) {
+    return new Response(null, { status: 404 });
+  }
+
   const pid = process.pid;
 
   setTimeout(() => {

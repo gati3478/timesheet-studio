@@ -6,50 +6,14 @@ import { DOMParser } from '@xmldom/xmldom';
 import xpath from 'xpath';
 import { fillTimesheetTemplate } from '../../src/lib/server/docx';
 import type { ComputedTimesheet, DayCode } from '../../src/lib/server/types';
-
-function getCell(documentNode: Document, table: number, row: number, cell: number): Element {
-  const tables = xpath.select("//*[local-name()='tbl']", documentNode) as Element[];
-  const rows = xpath.select("./*[local-name()='tr']", tables[table]) as Element[];
-  const cells = xpath.select("./*[local-name()='tc']", rows[row]) as Element[];
-  return cells[cell];
-}
-
-function getCellText(documentNode: Document, table: number, row: number, cell: number): string {
-  const textNodes = xpath.select(
-    ".//*[local-name()='t']",
-    getCell(documentNode, table, row, cell)
-  ) as Node[];
-  return textNodes.map((node) => node.textContent ?? '').join('');
-}
-
-function hasShading(cell: Element): boolean {
-  const nodes = xpath.select("./*[local-name()='tcPr']/*[local-name()='shd']", cell) as Element[];
-  return nodes.length > 0;
-}
-
-function hasBold(cell: Element): boolean {
-  const nodes = xpath.select(".//*[local-name()='rPr']/*[local-name()='b']", cell) as Element[];
-  return nodes.length > 0;
-}
-
-function getSize(cell: Element): string | null {
-  const nodes = xpath.select(".//*[local-name()='rPr']/*[local-name()='sz']", cell) as Element[];
-  if (nodes.length === 0) {
-    return null;
-  }
-
-  return nodes[0].getAttribute('w:val') ?? nodes[0].getAttribute('val');
-}
-
-function isCentered(cell: Element): boolean {
-  const nodes = xpath.select(".//*[local-name()='pPr']/*[local-name()='jc']", cell) as Element[];
-  if (nodes.length === 0) {
-    return false;
-  }
-
-  const value = nodes[0].getAttribute('w:val') ?? nodes[0].getAttribute('val');
-  return value === 'center';
-}
+import {
+  getCell,
+  getCellTextAt,
+  hasBold,
+  getSize,
+  hasShading,
+  isCentered
+} from '../helpers/docx-assertions';
 
 describe('fillTimesheetTemplate with real converted template', () => {
   it('writes expected coordinates for employee row and totals', async () => {
@@ -86,18 +50,18 @@ describe('fillTimesheetTemplate with real converted template', () => {
     const xml = await zip.file('word/document.xml')!.async('text');
     const documentNode = new DOMParser().parseFromString(xml, 'application/xml');
 
-    expect(getCellText(documentNode, 0, 5, 2)).toContain('30.01');
-    expect(getCellText(documentNode, 0, 5, 4)).toContain('01.01.2026');
-    expect(getCellText(documentNode, 0, 5, 5)).toContain('31.01.2026');
-    expect(getCellText(documentNode, 0, 3, 1)).toContain('405627530');
+    expect(getCellTextAt(documentNode, 0, 5, 2)).toContain('30.01');
+    expect(getCellTextAt(documentNode, 0, 5, 4)).toContain('01.01.2026');
+    expect(getCellTextAt(documentNode, 0, 5, 5)).toContain('31.01.2026');
+    expect(getCellTextAt(documentNode, 0, 3, 1)).toContain('405627530');
 
-    expect(getCellText(documentNode, 1, 5, 1)).toContain('გიორგი პეტრიაშვილი');
-    expect(getCellText(documentNode, 1, 5, 2)).toContain('01005031116');
+    expect(getCellTextAt(documentNode, 1, 5, 1)).toContain('გიორგი პეტრიაშვილი');
+    expect(getCellTextAt(documentNode, 1, 5, 2)).toContain('01005031116');
 
-    expect(getCellText(documentNode, 1, 5, 3)).toContain('X');
-    expect(getCellText(documentNode, 1, 5, 4)).toContain('X');
-    expect(getCellText(documentNode, 1, 5, 5)).toContain('X');
-    expect(getCellText(documentNode, 1, 5, 6)).toContain('8');
+    expect(getCellTextAt(documentNode, 1, 5, 3)).toContain('X');
+    expect(getCellTextAt(documentNode, 1, 5, 4)).toContain('X');
+    expect(getCellTextAt(documentNode, 1, 5, 5)).toContain('X');
+    expect(getCellTextAt(documentNode, 1, 5, 6)).toContain('8');
     expect(hasBold(getCell(documentNode, 1, 5, 3))).toBe(true);
     expect(getSize(getCell(documentNode, 1, 5, 3))).toBe('18');
     expect(isCentered(getCell(documentNode, 1, 5, 3))).toBe(true);
@@ -106,13 +70,13 @@ describe('fillTimesheetTemplate with real converted template', () => {
     expect(hasShading(getCell(documentNode, 1, 6, 3))).toBe(true);
     expect(hasShading(getCell(documentNode, 1, 6, 6))).toBe(false);
 
-    expect(getCellText(documentNode, 1, 5, 18)).toContain('32');
-    expect(getCellText(documentNode, 1, 5, 35)).toContain('0');
-    expect(getCellText(documentNode, 1, 5, 36)).toContain('4');
-    expect(getCellText(documentNode, 1, 5, 37)).toContain('32');
-    expect(getCellText(documentNode, 1, 5, 41)).toContain('32');
-    expect(getCellText(documentNode, 1, 5, 43)).toContain('0');
-    expect(getCellText(documentNode, 1, 5, 46)).toContain('1');
+    expect(getCellTextAt(documentNode, 1, 5, 18)).toContain('32');
+    expect(getCellTextAt(documentNode, 1, 5, 35)).toContain('0');
+    expect(getCellTextAt(documentNode, 1, 5, 36)).toContain('4');
+    expect(getCellTextAt(documentNode, 1, 5, 37)).toContain('32');
+    expect(getCellTextAt(documentNode, 1, 5, 41)).toContain('32');
+    expect(getCellTextAt(documentNode, 1, 5, 43)).toContain('0');
+    expect(getCellTextAt(documentNode, 1, 5, 46)).toContain('1');
 
     const runs = xpath.select("//*[local-name()='r']", documentNode) as Element[];
     const nonSylfaenRuns = runs.filter((run) => {

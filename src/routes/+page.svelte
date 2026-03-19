@@ -6,11 +6,12 @@
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import VacationCalendar from '$lib/components/VacationCalendar.svelte';
   import SummaryMetrics from '$lib/components/SummaryMetrics.svelte';
+  import { env } from '$env/dynamic/public';
 
   const PROFILE_STORAGE_KEY = 'timesheet.profile.v1';
-  const DEFAULT_COMPANY_CODE = '405627530';
-  const DEFAULT_EMPLOYEE_NAME = 'გიორგი პეტრიაშვილი, უფროსი დეველოპერი';
-  const DEFAULT_EMPLOYEE_ID = '01005031116';
+  const DEFAULT_COMPANY_CODE = env.PUBLIC_DEFAULT_COMPANY_CODE ?? '';
+  const DEFAULT_EMPLOYEE_NAME = env.PUBLIC_DEFAULT_EMPLOYEE_NAME ?? '';
+  const DEFAULT_EMPLOYEE_ID = env.PUBLIC_DEFAULT_EMPLOYEE_ID ?? '';
 
   const now = new Date();
   let selectedYear = now.getFullYear();
@@ -60,21 +61,22 @@
 
   function normalizeCompanyCode(value: string): string {
     const trimmed = value.trim();
-    if (trimmed.length < 6 || trimmed.length > 12 || !isNumeric(trimmed)) {
-      return DEFAULT_COMPANY_CODE;
-    }
+    if (trimmed.length === 0) return '';
+    if (trimmed.length < 6 || trimmed.length > 12 || !isNumeric(trimmed)) return '';
     return trimmed;
   }
 
   function normalizeEmployeeId(value: string): string {
     const trimmed = value.trim();
-    if (!/^\d{11}$/.test(trimmed)) return DEFAULT_EMPLOYEE_ID;
+    if (trimmed.length === 0) return '';
+    if (!/^\d{11}$/.test(trimmed)) return '';
     return trimmed;
   }
 
   function normalizeEmployeeName(value: string): string {
     const trimmed = value.trim();
-    if (!looksLikeName(trimmed)) return DEFAULT_EMPLOYEE_NAME;
+    if (trimmed.length === 0) return '';
+    if (!looksLikeName(trimmed)) return '';
     return trimmed;
   }
 
@@ -194,7 +196,7 @@
 
   function parseFilename(contentDisposition: string | null): string | null {
     if (!contentDisposition) return null;
-    const match = /filename="?([^";]+)"?/.exec(contentDisposition);
+    const match = /filename="?([a-zA-Z0-9\u10D0-\u10FF._-]+)"?/.exec(contentDisposition);
     return match?.[1] ?? null;
   }
 
@@ -226,7 +228,13 @@
       }
 
       const blob = await response.blob();
-      const fallbackFilename = `g.petriashvili-${MONTHS[selectedMonth - 1].short.toLowerCase()}-${selectedYear}-timesheet.${outputFormat}`;
+      const nameSlug =
+        employeeName
+          .toLowerCase()
+          .replace(/[^a-z0-9\u10D0-\u10FF\s-]/g, '')
+          .trim()
+          .replace(/\s+/g, '-') || 'timesheet';
+      const fallbackFilename = `${nameSlug}-${MONTHS[selectedMonth - 1].short.toLowerCase()}-${selectedYear}-timesheet.${outputFormat}`;
       const filename =
         parseFilename(response.headers.get('content-disposition')) ?? fallbackFilename;
       const href = URL.createObjectURL(blob);

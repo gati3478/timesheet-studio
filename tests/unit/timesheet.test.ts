@@ -69,4 +69,150 @@ describe('computeTimesheet', () => {
       expect(validation.details).toHaveLength(2);
     }
   });
+
+  it('throws for year below 2000', () => {
+    expect(() =>
+      computeTimesheet({
+        year: 1999,
+        month: 1,
+        vacationDates: [],
+        holidayDates: new Set()
+      })
+    ).toThrowError(TimesheetValidationError);
+  });
+
+  it('throws for year above 2100', () => {
+    expect(() =>
+      computeTimesheet({
+        year: 2101,
+        month: 1,
+        vacationDates: [],
+        holidayDates: new Set()
+      })
+    ).toThrowError(TimesheetValidationError);
+  });
+
+  it('throws for non-integer year', () => {
+    expect(() =>
+      computeTimesheet({
+        year: 2026.5,
+        month: 1,
+        vacationDates: [],
+        holidayDates: new Set()
+      })
+    ).toThrowError(TimesheetValidationError);
+  });
+
+  it('throws for month below 1', () => {
+    expect(() =>
+      computeTimesheet({
+        year: 2026,
+        month: 0,
+        vacationDates: [],
+        holidayDates: new Set()
+      })
+    ).toThrowError(TimesheetValidationError);
+  });
+
+  it('throws for month above 12', () => {
+    expect(() =>
+      computeTimesheet({
+        year: 2026,
+        month: 13,
+        vacationDates: [],
+        holidayDates: new Set()
+      })
+    ).toThrowError(TimesheetValidationError);
+  });
+
+  it('throws for invalid vacation date format', () => {
+    try {
+      computeTimesheet({
+        year: 2026,
+        month: 3,
+        vacationDates: ['not-a-date'],
+        holidayDates: new Set()
+      });
+      expect.unreachable('should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(TimesheetValidationError);
+      const validation = error as TimesheetValidationError;
+      expect(validation.details).toHaveLength(1);
+      expect(validation.details[0]).toContain('invalid date format');
+    }
+  });
+
+  it('throws for vacation date outside selected month', () => {
+    try {
+      computeTimesheet({
+        year: 2026,
+        month: 1,
+        vacationDates: ['2026-02-15'],
+        holidayDates: new Set()
+      });
+      expect.unreachable('should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(TimesheetValidationError);
+      const validation = error as TimesheetValidationError;
+      expect(validation.details).toHaveLength(1);
+      expect(validation.details[0]).toContain('not in selected month');
+    }
+  });
+
+  it('handles multiple valid vacations correctly', () => {
+    // March 2026: 2nd Mon, 4th Wed, 5th Thu are weekdays; Mar 3 is a holiday
+    const result = computeTimesheet({
+      year: 2026,
+      month: 3,
+      vacationDates: ['2026-03-02', '2026-03-04', '2026-03-05'],
+      holidayDates: new Set(['2026-03-03'])
+    });
+
+    expect(result.paidVacationHours).toBe(24);
+    expect(result.dayCodesByDay.get(2)).toBe('შ');
+    expect(result.dayCodesByDay.get(4)).toBe('შ');
+    expect(result.dayCodesByDay.get(5)).toBe('შ');
+
+    // Worked days should be reduced by 3 vs a no-vacation scenario
+    const baseline = computeTimesheet({
+      year: 2026,
+      month: 3,
+      vacationDates: [],
+      holidayDates: new Set(['2026-03-03'])
+    });
+    expect(result.workedDays).toBe(baseline.workedDays - 3);
+  });
+
+  it('computes December last workday when month ends on Thursday', () => {
+    // Dec 2026: day 31 is Thursday
+    const result = computeTimesheet({
+      year: 2026,
+      month: 12,
+      vacationDates: [],
+      holidayDates: new Set()
+    });
+
+    expect(result.lastWorkdayLabel).toBe('31.12');
+    expect(result.endDateLabel).toBe('31.12.2026');
+  });
+
+  it('assigns no X codes to weekdays when holidayDates is empty', () => {
+    const result = computeTimesheet({
+      year: 2026,
+      month: 3,
+      vacationDates: [],
+      holidayDates: new Set()
+    });
+
+    for (let day = 1; day <= 31; day += 1) {
+      const date = new Date(2026, 2, day);
+      const dow = date.getDay();
+      const code = result.dayCodesByDay.get(day)!;
+      if (dow === 0 || dow === 6) {
+        expect(code).toBe('X');
+      } else {
+        expect(code).toBe('8');
+      }
+    }
+  });
 });

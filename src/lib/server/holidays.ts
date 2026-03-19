@@ -188,7 +188,11 @@ function extractMonthContext(text: string, fallbackYear: number): MonthContext |
   return { month, year: fallbackYear };
 }
 
-function extractDayOnlyDatesFromText(text: string, fallbackYear: number, month: number | null): string[] {
+function extractDayOnlyDatesFromText(
+  text: string,
+  fallbackYear: number,
+  month: number | null
+): string[] {
   if (!month) {
     return [];
   }
@@ -249,7 +253,12 @@ function parseHolidayEntries(html: string, year: number): HolidayEntry[] {
     }
   } else {
     const bodyText = normalizeText($('body').text());
-    lines.push(...bodyText.split(/\s{2,}|\n/g).map(normalizeText).filter(Boolean));
+    lines.push(
+      ...bodyText
+        .split(/\s{2,}|\n/g)
+        .map(normalizeText)
+        .filter(Boolean)
+    );
   }
 
   const merged = new Map<string, HolidayEntry>();
@@ -340,7 +349,9 @@ function parseNagerHolidays(payload: unknown, year: number): HolidayEntry[] {
 
     if (Array.isArray(entry.types) && entry.types.length > 0) {
       const typeSet = new Set(
-        entry.types.filter((item): item is string => typeof item === 'string').map((item) => item.toLowerCase())
+        entry.types
+          .filter((item): item is string => typeof item === 'string')
+          .map((item) => item.toLowerCase())
       );
       if (!typeSet.has('public')) {
         continue;

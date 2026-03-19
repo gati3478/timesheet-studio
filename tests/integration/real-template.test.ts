@@ -15,7 +15,10 @@ function getCell(documentNode: Document, table: number, row: number, cell: numbe
 }
 
 function getCellText(documentNode: Document, table: number, row: number, cell: number): string {
-  const textNodes = xpath.select(".//*[local-name()='t']", getCell(documentNode, table, row, cell)) as Node[];
+  const textNodes = xpath.select(
+    ".//*[local-name()='t']",
+    getCell(documentNode, table, row, cell)
+  ) as Node[];
   return textNodes.map((node) => node.textContent ?? '').join('');
 }
 
@@ -113,7 +116,10 @@ describe('fillTimesheetTemplate with real converted template', () => {
 
     const runs = xpath.select("//*[local-name()='r']", documentNode) as Element[];
     const nonSylfaenRuns = runs.filter((run) => {
-      const rFonts = xpath.select("./*[local-name()='rPr']/*[local-name()='rFonts']", run) as Element[];
+      const rFonts = xpath.select(
+        "./*[local-name()='rPr']/*[local-name()='rFonts']",
+        run
+      ) as Element[];
       if (rFonts.length === 0) {
         return true;
       }

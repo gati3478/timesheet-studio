@@ -105,7 +105,7 @@ export const POST: RequestHandler = async ({ request }) => {
       status: 200,
       headers: {
         'Content-Type': mimeType,
-        'Content-Disposition': `attachment; filename=\"${filename}\"`,
+        'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-store'
       }
     });

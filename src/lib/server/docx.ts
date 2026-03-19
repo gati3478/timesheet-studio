@@ -241,7 +241,10 @@ function ensureStylesDefaultFont(stylesDocument: Document): void {
     return;
   }
 
-  let docDefaults = xpath.select("/*[local-name()='styles']/*[local-name()='docDefaults']", stylesDocument) as Element[];
+  const docDefaults = xpath.select(
+    "/*[local-name()='styles']/*[local-name()='docDefaults']",
+    stylesDocument
+  ) as Element[];
   let docDefaultsNode = docDefaults[0];
   if (!docDefaultsNode) {
     docDefaultsNode = createWElement(stylesDocument, 'docDefaults');

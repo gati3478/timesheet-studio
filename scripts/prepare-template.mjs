@@ -39,7 +39,10 @@ async function main() {
     console.log(`Prepared template: ${outputDocx}`);
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'Unknown error';
-    throw new Error(`Template conversion failed. Ensure LibreOffice (soffice) is installed. ${detail}`);
+    throw new Error(
+      `Template conversion failed. Ensure LibreOffice (soffice) is installed. ${detail}`,
+      { cause: error }
+    );
   } finally {
     await rm(workDir, { recursive: true, force: true });
   }

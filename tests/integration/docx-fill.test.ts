@@ -12,7 +12,10 @@ function makeCell(text = '', shaded = false): string {
   return `<w:tc><w:tcPr>${shading}</w:tcPr><w:p><w:r><w:t>${text}</w:t></w:r></w:p></w:tc>`;
 }
 
-function makeRow(cellCount: number, values: Record<number, { text?: string; shaded?: boolean }> = {}): string {
+function makeRow(
+  cellCount: number,
+  values: Record<number, { text?: string; shaded?: boolean }> = {}
+): string {
   const cells: string[] = [];
   for (let index = 0; index < cellCount; index += 1) {
     const value = values[index];
@@ -22,7 +25,9 @@ function makeRow(cellCount: number, values: Record<number, { text?: string; shad
 }
 
 async function buildTemplateBuffer(): Promise<Buffer> {
-  const table0Rows = Array.from({ length: 6 }, (_, row) => makeRow(6, row === 5 ? { 2: { text: 'old' }, 4: { text: 'old' }, 5: { text: 'old' } } : {})).join('');
+  const table0Rows = Array.from({ length: 6 }, (_, row) =>
+    makeRow(6, row === 5 ? { 2: { text: 'old' }, 4: { text: 'old' }, 5: { text: 'old' } } : {})
+  ).join('');
 
   const table1Rows = Array.from({ length: 8 }, (_, row) => {
     if (row !== 5) {
@@ -52,7 +57,12 @@ async function buildTemplateBuffer(): Promise<Buffer> {
   return zip.generateAsync({ type: 'nodebuffer' });
 }
 
-function getCell(document: Document, tableIndex: number, rowIndex: number, cellIndex: number): Element {
+function getCell(
+  document: Document,
+  tableIndex: number,
+  rowIndex: number,
+  cellIndex: number
+): Element {
   const tables = xpath.select("//*[local-name()='tbl']", document) as Element[];
   const rows = xpath.select("./*[local-name()='tr']", tables[tableIndex]) as Element[];
   const cells = xpath.select("./*[local-name()='tc']", rows[rowIndex]) as Element[];
@@ -134,7 +144,9 @@ describe('fillTimesheetTemplate', () => {
     expect(getCellText(getCell(documentNode, 0, 5, 4))).toBe('01.01.2026');
     expect(getCellText(getCell(documentNode, 0, 5, 5))).toBe('31.01.2026');
 
-    expect(getCellText(getCell(documentNode, 1, 5, 1))).toBe('გიორგი პეტრიაშვილი, უფროსი დეველოპერი');
+    expect(getCellText(getCell(documentNode, 1, 5, 1))).toBe(
+      'გიორგი პეტრიაშვილი, უფროსი დეველოპერი'
+    );
     expect(getCellText(getCell(documentNode, 1, 5, 2))).toBe('01005031116');
 
     expect(getCellText(getCell(documentNode, 1, 5, 3))).toBe('X');

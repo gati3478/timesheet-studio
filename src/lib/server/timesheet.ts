@@ -104,24 +104,37 @@ export function computeTimesheet(input: TimesheetComputationInput): ComputedTime
     dayCodesByDay.set(day, '8');
   }
 
-  const firstHalfHours = Array.from({ length: Math.min(15, monthDays) }, (_, idx) => idx + 1)
-    .filter((day) => dayCodesByDay.get(day) === '8').length * 8;
+  const firstHalfHours =
+    Array.from({ length: Math.min(15, monthDays) }, (_, idx) => idx + 1).filter(
+      (day) => dayCodesByDay.get(day) === '8'
+    ).length * 8;
 
-  const secondHalfHours = Array.from({ length: Math.max(0, monthDays - 15) }, (_, idx) => idx + 16)
-    .filter((day) => dayCodesByDay.get(day) === '8').length * 8;
+  const secondHalfHours =
+    Array.from({ length: Math.max(0, monthDays - 15) }, (_, idx) => idx + 16).filter(
+      (day) => dayCodesByDay.get(day) === '8'
+    ).length * 8;
 
-  const workedDays = Array.from({ length: monthDays }, (_, idx) => idx + 1)
-    .filter((day) => dayCodesByDay.get(day) === '8').length;
+  const workedDays = Array.from({ length: monthDays }, (_, idx) => idx + 1).filter(
+    (day) => dayCodesByDay.get(day) === '8'
+  ).length;
 
-  const paidVacationHours = Array.from({ length: monthDays }, (_, idx) => idx + 1)
-    .filter((day) => dayCodesByDay.get(day) === 'შ').length * 8;
+  const paidVacationHours =
+    Array.from({ length: monthDays }, (_, idx) => idx + 1).filter(
+      (day) => dayCodesByDay.get(day) === 'შ'
+    ).length * 8;
 
-  const weekdayHolidayCount = eachDayOfInterval({ start: startOfMonth(monthStart), end: monthEnd })
-    .filter((date) => holidayDates.has(toDateKey(date)) && isWeekday(date)).length;
+  const weekdayHolidayCount = eachDayOfInterval({
+    start: startOfMonth(monthStart),
+    end: monthEnd
+  }).filter((date) => holidayDates.has(toDateKey(date)) && isWeekday(date)).length;
 
   let lastWorkday = monthEnd;
   while (!isWeekday(lastWorkday)) {
-    lastWorkday = new Date(lastWorkday.getFullYear(), lastWorkday.getMonth(), getDate(lastWorkday) - 1);
+    lastWorkday = new Date(
+      lastWorkday.getFullYear(),
+      lastWorkday.getMonth(),
+      getDate(lastWorkday) - 1
+    );
   }
 
   return {

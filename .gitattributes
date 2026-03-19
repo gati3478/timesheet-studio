@@ -1,0 +1,12 @@
+# Normalize line endings
+* text=auto eol=lf
+
+# Binary files
+*.doc  binary
+*.docx binary
+*.png  binary
+*.jpg  binary
+*.ico  binary
+
+# Linguist overrides
+package-lock.json linguist-generated

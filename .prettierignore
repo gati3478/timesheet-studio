@@ -1,0 +1,10 @@
+package-lock.json
+node_modules/
+build/
+.svelte-kit/
+static/
+coverage/
+test-results/
+playwright-report/
+*.doc
+*.docx

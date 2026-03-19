@@ -1,8 +1,17 @@
 # Timesheet Studio
 
+[![CI](https://github.com/gati3478/timesheet-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/gati3478/timesheet-generator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-2-ff3e00.svg)](https://kit.svelte.dev/)
+
 A SvelteKit web application that automates generating Georgian-format monthly timesheets. It computes worked days, vacation days, and public holidays, fills an official DOCX template via XML manipulation, and returns the completed document — ready for submission.
 
 Built for organizations operating under Georgian labor regulations that require standardized monthly timesheet forms.
+
+<!-- TODO: Add screenshot
+![Timesheet Studio](docs/screenshot.png)
+-->
 
 ## Features
 
@@ -21,39 +30,131 @@ Built for organizations operating under Georgian labor regulations that require 
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v18+
-- [LibreOffice](https://www.libreoffice.org/) (only required for `.doc` output format)
+- [Node.js](https://nodejs.org/) v18+ (v22 recommended, pinned in `.nvmrc`)
+- [LibreOffice](https://www.libreoffice.org/) (required for template preparation and `.doc` export)
 
-### Installation
+### One-Command Launch
 
 ```bash
 git clone https://github.com/gati3478/timesheet-generator.git
 cd timesheet-generator
+npm start
+```
+
+`npm start` handles everything automatically:
+
+1. Installs dependencies (if `node_modules/` missing)
+2. Prepares the DOCX template from `.doc` source (if not already built)
+3. Checks port availability
+4. Starts the dev server
+5. Opens your browser to [http://localhost:5173](http://localhost:5173)
+
+Override host/port with environment variables:
+
+```bash
+HOST=0.0.0.0 PORT=3000 npm start
+```
+
+### Manual Setup
+
+If you prefer step-by-step control:
+
+```bash
+# 1. Install dependencies
 npm install
-```
 
-### Prepare the Template
-
-Converts the source `.doc` template into the `.docx` format used at runtime. Requires LibreOffice.
-
-```bash
+# 2. Convert the source .doc template to .docx (requires LibreOffice)
 npm run prepare:template
-```
 
-### Run
-
-```bash
+# 3. Start the dev server
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+### Environment Check
 
-#### Alternative: Shell Launcher
-
-A standalone launcher that installs dependencies, prepares the template, starts the server, and opens the browser automatically:
+Verify your environment is ready:
 
 ```bash
-./run-timesheet-app.sh
+npm run doctor
+```
+
+```
+  Timesheet Studio — Environment Check
+  ─────────────────────────────────────
+
+  ✓ Node.js 22.14.0
+  ✓ npm 10.9.2
+  ✓ Dependencies installed
+  ✓ DOCX template ready
+  ✓ Source template (.doc) present
+  ✓ LibreOffice available (DOC export + template prep supported)
+  ✓ Port 5173 available
+
+  ─────────────────────────────────────
+  Results: 7 passed, 0 warnings, 0 failed
+```
+
+## Development
+
+### All Commands
+
+| Command                    | Description                                          |
+| -------------------------- | ---------------------------------------------------- |
+| `npm start`                | Full launcher: install, prepare, start, open browser |
+| `npm run dev`              | Start Vite dev server on port 5173                   |
+| `npm run build`            | Production build                                     |
+| `npm run preview`          | Preview production build                             |
+| `npm run check`            | Type-check with svelte-check                         |
+| `npm run lint`             | Run Prettier + ESLint                                |
+| `npm run format`           | Auto-format all files with Prettier                  |
+| `npm test`                 | Run all tests (alias for `test:unit`)                |
+| `npm run test:unit`        | Run Vitest unit & integration tests                  |
+| `npm run prepare:template` | Convert `.doc` → `.docx` template                    |
+| `npm run doctor`           | Environment health check                             |
+| `npm run clean`            | Remove build artifacts                               |
+
+### Code Quality
+
+The project uses [Prettier](https://prettier.io/) for formatting and [ESLint](https://eslint.org/) for linting with TypeScript and Svelte support.
+
+```bash
+# Check formatting and lint rules
+npm run lint
+
+# Auto-format everything
+npm run format
+```
+
+CI runs lint, type checking, and tests on every push and pull request.
+
+## Deployment
+
+### Production Build
+
+```bash
+npm run build
+```
+
+The build output goes to `build/`. SvelteKit uses [`adapter-auto`](https://kit.svelte.dev/docs/adapter-auto) which auto-detects deployment platforms.
+
+### Supported Platforms
+
+| Platform       | Adapter                         | Notes                              |
+| -------------- | ------------------------------- | ---------------------------------- |
+| **Node.js**    | `adapter-auto` / `adapter-node` | Self-hosted, run `node build`      |
+| **Vercel**     | `adapter-auto` (auto-detected)  | Zero-config deployment             |
+| **Netlify**    | `adapter-auto` (auto-detected)  | Zero-config deployment             |
+| **Cloudflare** | `adapter-cloudflare`            | Swap adapter in `svelte.config.js` |
+
+> **Note:** The `.doc` export format requires LibreOffice on the server. DOCX export works everywhere.
+
+### Preview Locally
+
+Test the production build before deploying:
+
+```bash
+npm run build
+npm run preview
 ```
 
 ## How It Works
@@ -103,11 +204,23 @@ A standalone launcher that installs dependencies, prepares the template, starts 
 | `X`       | Holiday or weekend                         | 0h    | Gray shading   |
 | _(empty)_ | Day beyond month end (e.g., day 30 in Feb) | —     | —              |
 
+### Template Filling Pipeline
+
+The DOCX template is a ZIP archive containing XML documents. The filling process:
+
+1. **Extract** — JSZip unpacks the `.docx` file
+2. **Parse** — `@xmldom/xmldom` parses `word/document.xml` into a DOM tree
+3. **Locate** — XPath queries find specific table cells by position
+4. **Fill** — Cell text content is set to day codes, dates, names, and totals
+5. **Style** — Sylfaen font applied for Georgian text; gray shading for locked cells
+6. **Repack** — Modified XML is serialized back and the ZIP is rebuilt
+7. **Convert** — (Optional) LibreOffice CLI converts `.docx` → `.doc` for legacy format
+
 ## API Reference
 
 ### `GET /api/holidays?year={yyyy}`
 
-Returns Georgian public holidays for a given year. Results are cached for 6 hours.
+Returns Georgian public holidays for a given year. Results are cached for 6 hours. Fetches from [date.nager.at](https://date.nager.at) (primary) with [yell.ge](https://www.yell.ge) as fallback.
 
 **Response:**
 
@@ -152,7 +265,7 @@ Generates a filled timesheet document from the template.
 
 ### `POST /api/system/shutdown`
 
-Gracefully shuts down the local server (for desktop app mode). No authentication — intended only for local/trusted environments.
+Gracefully shuts down the local server via `SIGTERM` (for desktop/launcher mode). No authentication — intended only for local/trusted environments.
 
 ## Project Structure
 
@@ -178,7 +291,9 @@ src/
     └── template.ts                       # Template buffer loader
 
 scripts/
-└── prepare-template.mjs                  # .doc → .docx template conversion
+├── start.mjs                            # Unified launcher (npm start)
+├── prepare-template.mjs                 # .doc → .docx template conversion
+└── doctor.sh                            # Environment health check
 
 static/
 └── templates/
@@ -201,21 +316,12 @@ tests/
 | Framework           | [SvelteKit 2](https://kit.svelte.dev/) + [Svelte 5](https://svelte.dev/)                                                                |
 | Language            | [TypeScript](https://www.typescriptlang.org/)                                                                                           |
 | Build               | [Vite 6](https://vitejs.dev/)                                                                                                           |
+| Linting             | [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/)                                                                        |
 | Document Processing | [JSZip](https://stuk.github.io/jszip/) · [@xmldom/xmldom](https://github.com/xmldom/xmldom) · [xpath](https://github.com/goto100/xpath) |
 | Date Handling       | [date-fns](https://date-fns.org/)                                                                                                       |
 | HTML Parsing        | [Cheerio](https://cheerio.js.org/) (holiday fallback source)                                                                            |
 | Testing             | [Vitest](https://vitest.dev/) (unit/integration) · [Playwright](https://playwright.dev/) (e2e)                                          |
-
-## Development
-
-```bash
-npm run dev              # Start dev server (port 5173)
-npm run build            # Production build
-npm run preview          # Preview production build
-npm run check            # Type-check with svelte-check
-npm run test:unit        # Run unit & integration tests
-npm run prepare:template # Convert .doc → .docx template
-```
+| CI                  | [GitHub Actions](https://github.com/features/actions)                                                                                   |
 
 ## License
 

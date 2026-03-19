@@ -62,9 +62,7 @@
     isVacation: boolean;
   };
 
-  type CalendarCell =
-    | { kind: 'empty'; key: string }
-    | { kind: 'day'; key: string; item: DayItem };
+  type CalendarCell = { kind: 'empty'; key: string } | { kind: 'day'; key: string; item: DayItem };
 
   function pad2(value: number): string {
     return String(value).padStart(2, '0');
@@ -200,7 +198,9 @@
         throw new Error(data.message ?? 'Failed to load holidays.');
       }
 
-      holidayDates = new Set<string>((data.entries ?? []).map((entry: { date: string }) => entry.date));
+      holidayDates = new Set<string>(
+        (data.entries ?? []).map((entry: { date: string }) => entry.date)
+      );
       loadedHolidayYear = year;
     } catch (error) {
       holidayError = error instanceof Error ? error.message : 'Unexpected holiday loading error.';
@@ -230,7 +230,7 @@
       return null;
     }
 
-    const match = /filename=\"?([^\";]+)\"?/.exec(contentDisposition);
+    const match = /filename="?([^";]+)"?/.exec(contentDisposition);
     return match?.[1] ?? null;
   }
 
@@ -265,7 +265,8 @@
 
       const blob = await response.blob();
       const fallbackFilename = `g.petriashvili-${MONTHS[selectedMonth - 1].short.toLowerCase()}-${selectedYear}-timesheet.${outputFormat}`;
-      const filename = parseFilename(response.headers.get('content-disposition')) ?? fallbackFilename;
+      const filename =
+        parseFilename(response.headers.get('content-disposition')) ?? fallbackFilename;
       const href = URL.createObjectURL(blob);
 
       const anchor = document.createElement('a');
@@ -543,7 +544,9 @@
     <div>
       <p class="eyebrow">Twino</p>
       <h1>Timesheet Studio</h1>
-      <p class="subtitle">Precisely fill your monthly form with holiday-aware accounting and instant export.</p>
+      <p class="subtitle">
+        Precisely fill your monthly form with holiday-aware accounting and instant export.
+      </p>
     </div>
     <div class="hero-pill">{monthLabel}</div>
   </section>
@@ -557,19 +560,27 @@
 
       <div class="period-shell">
         <div class="period-header">
-          <button type="button" class="nav" on:click={() => shiftMonth(-1)} aria-label="Previous month">←</button>
+          <button
+            type="button"
+            class="nav"
+            on:click={() => shiftMonth(-1)}
+            aria-label="Previous month">←</button
+          >
           <div class="period-label">{monthLabel}</div>
-          <button type="button" class="nav" on:click={() => shiftMonth(1)} aria-label="Next month">→</button>
+          <button type="button" class="nav" on:click={() => shiftMonth(1)} aria-label="Next month"
+            >→</button
+          >
         </div>
 
         <div class="year-stepper">
-          <button type="button" on:click={() => changeYear(-1)} aria-label="Decrease year">−</button>
+          <button type="button" on:click={() => changeYear(-1)} aria-label="Decrease year">−</button
+          >
           <div>{selectedYear}</div>
           <button type="button" on:click={() => changeYear(1)} aria-label="Increase year">+</button>
         </div>
 
         <div class="month-grid">
-          {#each MONTHS as month}
+          {#each MONTHS as month (month.value)}
             <button
               type="button"
               class:active={month.value === selectedMonth}
@@ -601,17 +612,32 @@
       <div class="input-grid" class:editing={isEditingProfile}>
         <label>
           <span>Company Code</span>
-          <input type="text" bind:value={draftCompanyCode} placeholder="405627530" disabled={!isEditingProfile} />
+          <input
+            type="text"
+            bind:value={draftCompanyCode}
+            placeholder="405627530"
+            disabled={!isEditingProfile}
+          />
         </label>
 
         <label>
           <span>Employee Name</span>
-          <input type="text" bind:value={draftEmployeeName} placeholder="Employee full name" disabled={!isEditingProfile} />
+          <input
+            type="text"
+            bind:value={draftEmployeeName}
+            placeholder="Employee full name"
+            disabled={!isEditingProfile}
+          />
         </label>
 
         <label>
           <span>Employee ID</span>
-          <input type="text" bind:value={draftEmployeeId} placeholder="Personal ID" disabled={!isEditingProfile} />
+          <input
+            type="text"
+            bind:value={draftEmployeeId}
+            placeholder="Personal ID"
+            disabled={!isEditingProfile}
+          />
         </label>
 
         <label>
@@ -639,7 +665,7 @@
           <p class="status status-error">{generationError}</p>
           {#if generationDetails.length > 0}
             <ul class="status-list">
-              {#each generationDetails as detail}
+              {#each generationDetails as detail, i (i)}
                 <li>{detail}</li>
               {/each}
             </ul>
@@ -695,7 +721,7 @@
       </div>
 
       <div class="weekday-row">
-        {#each WEEKDAYS as day}
+        {#each WEEKDAYS as day (day)}
           <div>{day}</div>
         {/each}
       </div>
@@ -710,7 +736,7 @@
             <button
               type="button"
               class="day-cell"
-              class:blocked={blocked}
+              class:blocked
               class:selected={item.isVacation}
               class:holidayCell={item.isHoliday}
               class:weekendCell={item.isWeekend && !item.isHoliday}
@@ -743,7 +769,6 @@
           {/if}
         {/each}
       </div>
-
     </article>
   </section>
 
@@ -896,7 +921,9 @@
     background: var(--surface-2);
     color: var(--accent-strong);
     font-weight: 700;
-    transition: background-color 140ms ease, border-color 140ms ease;
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease;
   }
 
   .nav:hover {
@@ -934,7 +961,9 @@
     color: var(--accent-strong);
     font-size: 1.1rem;
     line-height: 1;
-    transition: background-color 140ms ease, border-color 140ms ease;
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease;
   }
 
   .year-stepper button:hover {
@@ -958,7 +987,10 @@
     color: var(--text-secondary);
     font-size: 0.79rem;
     font-weight: 600;
-    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease,
+      color 140ms ease;
   }
 
   .month-grid button:hover {
@@ -1006,7 +1038,9 @@
     padding: 0.44rem 0.86rem;
     font-size: 0.79rem;
     font-weight: 650;
-    transition: background-color 120ms ease, border-color 120ms ease;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease;
   }
 
   .ghost:hover {
@@ -1051,7 +1085,9 @@
     background: var(--surface-2);
     color: var(--text-primary);
     padding: 0.6rem 0.76rem;
-    transition: border-color 120ms ease, background-color 120ms ease;
+    transition:
+      border-color 120ms ease,
+      background-color 120ms ease;
   }
 
   input:disabled {
@@ -1101,7 +1137,10 @@
     color: var(--text-secondary);
     padding: 0.45rem 0.8rem;
     font-weight: 560;
-    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
   }
 
   .utility-button:hover:not(:disabled) {
@@ -1237,7 +1276,10 @@
     gap: 0.18rem;
     position: relative;
     cursor: pointer;
-    transition: transform 120ms ease, box-shadow 160ms ease, border-color 120ms ease;
+    transition:
+      transform 120ms ease,
+      box-shadow 160ms ease,
+      border-color 120ms ease;
   }
 
   .day-cell:not(.blocked):hover {

@@ -16,25 +16,43 @@
     "document-generation",
     "holidays"
   ],
+  "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
+    "start": "node scripts/start.mjs",
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "test": "svelte-kit sync && vitest run --config vitest.config.ts",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write .",
+    "test": "npm run test:unit",
     "test:unit": "svelte-kit sync && vitest run --config vitest.config.ts tests/unit tests/integration",
-    "prepare:template": "node scripts/prepare-template.mjs"
+    "prepare:template": "node scripts/prepare-template.mjs",
+    "doctor": "bash scripts/doctor.sh",
+    "clean": "rm -rf build .svelte-kit test-results playwright-report coverage"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.53.0",
     "@sveltejs/adapter-auto": "^6.0.0",
     "@sveltejs/kit": "^2.53.3",
     "@types/node": "^20.11.30",
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.15.2",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-svelte": "^3.5.1",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tslib": "^2.6.2",
     "typescript": "^5.4.2",
+    "typescript-eslint": "^8.57.1",
     "vite": "^6.0.0",
     "vitest": "^2.0.0"
   },

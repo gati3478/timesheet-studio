@@ -331,6 +331,17 @@ tests/
 | Testing             | [Vitest](https://vitest.dev/) (unit/integration) · [Playwright](https://playwright.dev/) (e2e)                                          |
 | CI                  | [GitHub Actions](https://github.com/features/actions)                                                                                   |
 
+## Pre-Release Checklist
+
+> **For maintainers:** Complete these steps before or shortly after making the repository public.
+
+- [ ] **Add screenshot** — Capture the app UI, save as `docs/screenshot.png`, uncomment the image tag near the top of this README
+- [ ] **Create v1.0.0 tag** — `git tag v1.0.0 && git push origin v1.0.0`
+- [ ] **Create GitHub Release** — Use the v1.0.0 tag with brief release notes
+- [ ] **Set repository description** — "Georgian-format monthly timesheet generator with interactive calendar and DOCX template filling"
+- [ ] **Set repository topics** — `timesheet`, `sveltekit`, `svelte`, `docx`, `georgia`, `document-generation`, `typescript`
+- [ ] **Review repository settings** — Ensure Issues are enabled; optionally enable Discussions and configure branch protection for `main`
+
 ## License
 
 [MIT](LICENSE)

@@ -4,9 +4,13 @@
   "description": "Georgian-format monthly timesheet generator with interactive calendar and DOCX template filling",
   "license": "MIT",
   "author": "Giorgi Petriashvili",
+  "homepage": "https://github.com/gati3478/timesheet-generator#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/gati3478/timesheet-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gati3478/timesheet-generator/issues"
   },
   "keywords": [
     "timesheet",

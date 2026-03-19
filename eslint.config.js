@@ -27,7 +27,8 @@ export default [
       }
     },
     rules: {
-      // Using Svelte 4 reactivity ($:) — SvelteSet migration tracked separately
+      // Component uses legacy $: reactivity (Svelte 4 syntax, supported in Svelte 5)
+      // TODO: Migrate to Svelte 5 runes ($state, $derived) and remove this override
       'svelte/prefer-svelte-reactivity': 'off'
     }
   },

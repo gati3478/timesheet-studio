@@ -139,12 +139,12 @@ The build output goes to `build/`. SvelteKit uses [`adapter-auto`](https://kit.s
 
 ### Supported Platforms
 
-| Platform       | Adapter                         | Notes                              |
-| -------------- | ------------------------------- | ---------------------------------- |
-| **Node.js**    | `adapter-auto` / `adapter-node` | Self-hosted, run `node build`      |
-| **Vercel**     | `adapter-auto` (auto-detected)  | Zero-config deployment             |
-| **Netlify**    | `adapter-auto` (auto-detected)  | Zero-config deployment             |
-| **Cloudflare** | `adapter-cloudflare`            | Swap adapter in `svelte.config.js` |
+| Platform       | Adapter                        | Notes                              |
+| -------------- | ------------------------------ | ---------------------------------- |
+| **Node.js**    | `adapter-auto` (auto-detected) | Self-hosted, run `node build`      |
+| **Vercel**     | `adapter-auto` (auto-detected) | Zero-config deployment             |
+| **Netlify**    | `adapter-auto` (auto-detected) | Zero-config deployment             |
+| **Cloudflare** | `adapter-cloudflare`           | Swap adapter in `svelte.config.js` |
 
 > **Note:** The `.doc` export format requires LibreOffice on the server. DOCX export works everywhere.
 
@@ -275,20 +275,28 @@ src/
 ├── app.css                               # Global styles & design tokens
 ├── app.d.ts                              # Ambient TypeScript declarations
 ├── routes/
-│   ├── +page.svelte                      # Main UI (calendar, controls, profile)
+│   ├── +page.svelte                      # Page orchestration & state management
 │   ├── +layout.svelte                    # Root layout
 │   └── api/
 │       ├── holidays/+server.ts           # Holiday fetching endpoint
 │       ├── timesheet/generate/+server.ts # Document generation endpoint
 │       └── system/shutdown/+server.ts    # Local server shutdown
-└── lib/server/
-    ├── types.ts                          # Shared TypeScript types
-    ├── timesheet.ts                      # Day-code computation logic
-    ├── docx.ts                           # DOCX XML template filling
-    ├── doc-conversion.ts                 # DOCX → DOC via LibreOffice
-    ├── holidays.ts                       # Holiday fetching & caching
-    ├── filename.ts                       # Output filename generation
-    └── template.ts                       # Template buffer loader
+└── lib/
+    ├── constants.ts                      # Shared constants (months, weekdays)
+    ├── calendar-types.ts                 # DayItem & CalendarCell types
+    ├── components/
+    │   ├── MonthPicker.svelte            # Year/month navigation controls
+    │   ├── ProfileEditor.svelte          # Employee profile form
+    │   ├── VacationCalendar.svelte       # Interactive vacation day picker
+    │   └── SummaryMetrics.svelte         # Worked/vacation/holiday counters
+    └── server/
+        ├── types.ts                      # Server-side TypeScript types
+        ├── timesheet.ts                  # Day-code computation logic
+        ├── docx.ts                       # DOCX XML template filling
+        ├── doc-conversion.ts             # DOCX → DOC via LibreOffice
+        ├── holidays.ts                   # Holiday fetching & caching
+        ├── filename.ts                   # Output filename generation
+        └── template.ts                   # Template buffer loader
 
 scripts/
 ├── start.mjs                            # Unified launcher (npm start)

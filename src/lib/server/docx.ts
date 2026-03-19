@@ -33,6 +33,14 @@ const EMPLOYEE_ROW_INDEX = 5;
 const FIRST_DAY_INDEX = 1;
 const LAST_DAY_INDEX = 31;
 
+const FIRST_HALF_HOURS_CELL = 18;
+const SECOND_HALF_HOURS_CELL = 35;
+const WORKED_DAYS_CELL = 36;
+const TOTAL_WORKED_HOURS_CELL = 37;
+const TOTAL_HOURS_DUPLICATE_CELL = 41;
+const PAID_VACATION_HOURS_CELL = 43;
+const WEEKDAY_HOLIDAY_COUNT_CELL = 46;
+
 function w(name: string): string {
   return `w:${name}`;
 }
@@ -106,7 +114,7 @@ function getOrCreateText(run: Element): Element {
 }
 
 function removeChildByLocalName(parent: Element, localName: string): void {
-  const children = [...Array.from(parent.childNodes)] as Node[];
+  const children = Array.from(parent.childNodes);
   for (const child of children) {
     if (child.nodeType === child.ELEMENT_NODE && (child as Element).localName === localName) {
       parent.removeChild(child);
@@ -335,29 +343,6 @@ function clearCellText(tc: Element): void {
   }
 }
 
-function setCellText(tc: Element, value: string): void {
-  const textNodes = xpath.select(".//*[local-name()='t']", tc) as Element[];
-  if (textNodes.length > 0) {
-    textNodes[0].textContent = value;
-    for (let index = 1; index < textNodes.length; index += 1) {
-      textNodes[index].textContent = '';
-    }
-    return;
-  }
-
-  const paragraph = getOrCreateParagraph(tc);
-  const run = getOrCreateRun(paragraph);
-  const text = getOrCreateText(run);
-
-  if (value.startsWith(' ') || value.endsWith(' ')) {
-    text.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
-  } else {
-    text.removeAttribute('xml:space');
-  }
-
-  text.textContent = value;
-}
-
 function setDayCellShading(tc: Element, enabled: boolean): void {
   const tcPr = getOrCreateTcPr(tc);
   const existingShading = findChildByLocalName(tcPr, 'shd');
@@ -434,15 +419,17 @@ export async function fillTimesheetTemplate(input: FillTemplateInput): Promise<B
 
   const documentNode = new DOMParser().parseFromString(documentXml, 'application/xml');
 
-  setCellText(getTableCell(documentNode, LEFT_DATE_CELL), input.computed.lastWorkdayLabel);
-  setCellText(getTableCell(documentNode, START_DATE_CELL), input.computed.startDateLabel);
-  setCellText(getTableCell(documentNode, END_DATE_CELL), input.computed.endDateLabel);
-  setCellText(getTableCell(documentNode, COMPANY_CODE_CELL), input.companyCode);
+  setStyledCellText(getTableCell(documentNode, LEFT_DATE_CELL), input.computed.lastWorkdayLabel, {
+    bold: true
+  });
+  setStyledCellText(getTableCell(documentNode, START_DATE_CELL), input.computed.startDateLabel);
+  setStyledCellText(getTableCell(documentNode, END_DATE_CELL), input.computed.endDateLabel);
+  setStyledCellText(getTableCell(documentNode, COMPANY_CODE_CELL), input.companyCode);
 
   const rowCells = getEmployeeRowCells(documentNode);
 
-  setCellText(rowCells[1], input.employeeName);
-  setCellText(rowCells[2], input.employeeId);
+  setStyledCellText(rowCells[1], input.employeeName);
+  setStyledCellText(rowCells[2], input.employeeId);
 
   for (let day = 1; day <= 15; day += 1) {
     const rowCell = rowCells[2 + day];
@@ -456,34 +443,19 @@ export async function fillTimesheetTemplate(input: FillTemplateInput): Promise<B
     setDayCellValue(rowCell, code);
   }
 
-  setStyledCellText(rowCells[18], String(input.computed.firstHalfHours), {
-    centered: true,
-    sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS
-  });
-  setStyledCellText(rowCells[35], String(input.computed.secondHalfHours), {
-    centered: true,
-    sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS
-  });
-  setStyledCellText(rowCells[36], String(input.computed.workedDays), {
-    centered: true,
-    sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS
-  });
-  setStyledCellText(rowCells[37], String(input.computed.totalWorkedHours), {
-    centered: true,
-    sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS
-  });
-  setStyledCellText(rowCells[41], String(input.computed.totalWorkedHours), {
-    centered: true,
-    sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS
-  });
-  setStyledCellText(rowCells[43], String(input.computed.paidVacationHours), {
-    centered: true,
-    sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS
-  });
-  setStyledCellText(rowCells[46], String(input.computed.weekdayHolidayCount), {
-    centered: true,
-    sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS
-  });
+  const totalsStyle = { centered: true, sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS } as const;
+  const totalsCells: [number, number][] = [
+    [FIRST_HALF_HOURS_CELL, input.computed.firstHalfHours],
+    [SECOND_HALF_HOURS_CELL, input.computed.secondHalfHours],
+    [WORKED_DAYS_CELL, input.computed.workedDays],
+    [TOTAL_WORKED_HOURS_CELL, input.computed.totalWorkedHours],
+    [TOTAL_HOURS_DUPLICATE_CELL, input.computed.totalWorkedHours],
+    [PAID_VACATION_HOURS_CELL, input.computed.paidVacationHours],
+    [WEEKDAY_HOLIDAY_COUNT_CELL, input.computed.weekdayHolidayCount]
+  ];
+  for (const [idx, value] of totalsCells) {
+    setStyledCellText(rowCells[idx], String(value), totalsStyle);
+  }
   applyDayColumnShading(documentNode, input.computed.dayCodesByDay as Map<number, string>);
   enforceSylfaenOnAllRuns(documentNode);
 

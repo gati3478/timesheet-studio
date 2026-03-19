@@ -386,10 +386,6 @@
     return cells;
   }
 
-  function isWorkedDay(item: DayItem): boolean {
-    return !item.isWeekend && !item.isHoliday && !item.isVacation;
-  }
-
   // ── Lifecycle ────────────────────────────────────────────
 
   onMount(() => {
@@ -450,14 +446,36 @@
   $: dayItems = buildDayItems(selectedYear, selectedMonth, holidayDates, vacationDates);
   $: calendarCells = buildCalendarCells(selectedYear, selectedMonth, dayItems);
 
-  $: workedDayCount = dayItems.filter((item) => isWorkedDay(item)).length;
-  $: vacationDayCount = dayItems.filter((item) => item.isVacation).length;
-  $: blockedDayCount = dayItems.filter((item) => item.isWeekend || item.isHoliday).length;
-  $: weekdayHolidayCount = dayItems.filter((item) => item.isHoliday && !item.isWeekend).length;
-  $: firstHalfHours = dayItems.filter((item) => item.day <= 15 && isWorkedDay(item)).length * 8;
-  $: secondHalfHours = dayItems.filter((item) => item.day >= 16 && isWorkedDay(item)).length * 8;
-  $: totalHours = firstHalfHours + secondHalfHours;
-  $: vacationHours = vacationDayCount * 8;
+  $: summary = (() => {
+    let worked = 0,
+      vacation = 0,
+      blocked = 0,
+      weekdayHoliday = 0,
+      h1 = 0,
+      h2 = 0;
+    for (const item of dayItems) {
+      if (item.isWeekend || item.isHoliday) {
+        blocked++;
+        if (item.isHoliday && !item.isWeekend) weekdayHoliday++;
+      } else if (item.isVacation) {
+        vacation++;
+      } else {
+        worked++;
+        if (item.day <= 15) h1 += 8;
+        else h2 += 8;
+      }
+    }
+    return {
+      workedDayCount: worked,
+      vacationDayCount: vacation,
+      blockedDayCount: blocked,
+      weekdayHolidayCount: weekdayHoliday,
+      firstHalfHours: h1,
+      secondHalfHours: h2,
+      totalHours: h1 + h2,
+      vacationHours: vacation * 8
+    };
+  })();
 </script>
 
 <svelte:head>
@@ -562,14 +580,14 @@
   </section>
 
   <SummaryMetrics
-    {workedDayCount}
-    {vacationDayCount}
-    {weekdayHolidayCount}
-    {blockedDayCount}
-    {totalHours}
-    {vacationHours}
-    {firstHalfHours}
-    {secondHalfHours}
+    workedDayCount={summary.workedDayCount}
+    vacationDayCount={summary.vacationDayCount}
+    weekdayHolidayCount={summary.weekdayHolidayCount}
+    blockedDayCount={summary.blockedDayCount}
+    totalHours={summary.totalHours}
+    vacationHours={summary.vacationHours}
+    firstHalfHours={summary.firstHalfHours}
+    secondHalfHours={summary.secondHalfHours}
   />
 </main>
 

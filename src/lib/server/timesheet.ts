@@ -1,13 +1,4 @@
-import {
-  eachDayOfInterval,
-  endOfMonth,
-  format,
-  getDate,
-  getDaysInMonth,
-  getISODay,
-  parseISO,
-  startOfMonth
-} from 'date-fns';
+import { endOfMonth, format, getDate, getDaysInMonth, getISODay, parseISO } from 'date-fns';
 import type { ComputedTimesheet, DayCode, TimesheetComputationInput } from './types';
 
 export class TimesheetValidationError extends Error {
@@ -104,29 +95,29 @@ export function computeTimesheet(input: TimesheetComputationInput): ComputedTime
     dayCodesByDay.set(day, '8');
   }
 
-  const firstHalfHours =
-    Array.from({ length: Math.min(15, monthDays) }, (_, idx) => idx + 1).filter(
-      (day) => dayCodesByDay.get(day) === '8'
-    ).length * 8;
+  let firstHalfHours = 0;
+  let secondHalfHours = 0;
+  let workedDays = 0;
+  let paidVacationHours = 0;
+  let weekdayHolidayCount = 0;
 
-  const secondHalfHours =
-    Array.from({ length: Math.max(0, monthDays - 15) }, (_, idx) => idx + 16).filter(
-      (day) => dayCodesByDay.get(day) === '8'
-    ).length * 8;
+  for (let day = 1; day <= monthDays; day++) {
+    const code = dayCodesByDay.get(day);
+    if (code === '8') {
+      workedDays++;
+      if (day <= 15) firstHalfHours += 8;
+      else secondHalfHours += 8;
+    } else if (code === 'შ') {
+      paidVacationHours += 8;
+    }
 
-  const workedDays = Array.from({ length: monthDays }, (_, idx) => idx + 1).filter(
-    (day) => dayCodesByDay.get(day) === '8'
-  ).length;
-
-  const paidVacationHours =
-    Array.from({ length: monthDays }, (_, idx) => idx + 1).filter(
-      (day) => dayCodesByDay.get(day) === 'შ'
-    ).length * 8;
-
-  const weekdayHolidayCount = eachDayOfInterval({
-    start: startOfMonth(monthStart),
-    end: monthEnd
-  }).filter((date) => holidayDates.has(toDateKey(date)) && isWeekday(date)).length;
+    if (code === 'X') {
+      const current = new Date(year, month - 1, day);
+      if (isWeekday(current) && holidayDates.has(toDateKey(current))) {
+        weekdayHolidayCount++;
+      }
+    }
+  }
 
   let lastWorkday = monthEnd;
   while (!isWeekday(lastWorkday)) {

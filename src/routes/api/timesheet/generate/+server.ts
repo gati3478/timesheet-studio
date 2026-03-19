@@ -55,9 +55,20 @@ function parsePayload(payload: unknown): TimesheetGenerateRequest {
     throw new TimesheetValidationError('Employee id is required.', []);
   }
 
+  const year = Number(body.year);
+  const month = Number(body.month);
+
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+    throw new TimesheetValidationError('Year must be an integer between 2000 and 2100.', []);
+  }
+
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    throw new TimesheetValidationError('Month must be an integer between 1 and 12.', []);
+  }
+
   return {
-    year: Number(body.year),
-    month: Number(body.month),
+    year,
+    month,
     companyCode,
     employeeName,
     employeeId,

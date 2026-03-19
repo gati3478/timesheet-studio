@@ -6,6 +6,7 @@
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import VacationCalendar from '$lib/components/VacationCalendar.svelte';
   import SummaryMetrics from '$lib/components/SummaryMetrics.svelte';
+  import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
 
   const PROFILE_STORAGE_KEY = 'timesheet.profile.v1';
@@ -441,7 +442,7 @@
   }
 
   $: monthLabel = `${MONTHS[selectedMonth - 1].label} ${selectedYear}`;
-  $: if (selectedYear) void loadHolidays(selectedYear);
+  $: if (browser && selectedYear) void loadHolidays(selectedYear);
 
   $: dayItems = buildDayItems(selectedYear, selectedMonth, holidayDates, vacationDates);
   $: calendarCells = buildCalendarCells(selectedYear, selectedMonth, dayItems);

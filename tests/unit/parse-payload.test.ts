@@ -177,4 +177,50 @@ describe('parsePayload', () => {
     expect(parsePayload({ ...VALID_PAYLOAD, month: 1 }).month).toBe(1);
     expect(parsePayload({ ...VALID_PAYLOAD, month: 12 }).month).toBe(12);
   });
+
+  it('rejects employeeName exceeding 500 characters', () => {
+    const payload = { ...VALID_PAYLOAD, employeeName: 'ა'.repeat(501) };
+    expect(() => parsePayload(payload)).toThrow('Employee name cannot exceed 500 characters.');
+  });
+
+  it('accepts employeeName at exactly 500 characters', () => {
+    const payload = { ...VALID_PAYLOAD, employeeName: 'ა'.repeat(500) };
+    const result = parsePayload(payload);
+    expect(result.employeeName.length).toBe(500);
+  });
+
+  it('rejects companyCode exceeding 20 characters', () => {
+    const payload = { ...VALID_PAYLOAD, companyCode: '1'.repeat(21) };
+    expect(() => parsePayload(payload)).toThrow('Company code cannot exceed 20 characters.');
+  });
+
+  it('accepts companyCode at exactly 20 characters', () => {
+    const payload = { ...VALID_PAYLOAD, companyCode: '1'.repeat(20) };
+    const result = parsePayload(payload);
+    expect(result.companyCode.length).toBe(20);
+  });
+
+  it('rejects employeeId exceeding 20 characters', () => {
+    const payload = { ...VALID_PAYLOAD, employeeId: '0'.repeat(21) };
+    expect(() => parsePayload(payload)).toThrow('Employee id cannot exceed 20 characters.');
+  });
+
+  it('accepts employeeId at exactly 20 characters', () => {
+    const payload = { ...VALID_PAYLOAD, employeeId: '0'.repeat(20) };
+    const result = parsePayload(payload);
+    expect(result.employeeId.length).toBe(20);
+  });
+
+  it('rejects vacationDates array exceeding 31 entries', () => {
+    const dates = Array.from({ length: 32 }, (_, i) => `2026-03-${String(i + 1).padStart(2, '0')}`);
+    const payload = { ...VALID_PAYLOAD, vacationDates: dates };
+    expect(() => parsePayload(payload)).toThrow('Vacation dates cannot exceed 31 entries.');
+  });
+
+  it('accepts vacationDates array at exactly 31 entries', () => {
+    const dates = Array.from({ length: 31 }, (_, i) => `2026-03-${String(i + 1).padStart(2, '0')}`);
+    const payload = { ...VALID_PAYLOAD, vacationDates: dates };
+    const result = parsePayload(payload);
+    expect(result.vacationDates).toHaveLength(31);
+  });
 });

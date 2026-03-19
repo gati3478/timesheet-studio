@@ -277,6 +277,7 @@ src/
 ├── app.html                              # SvelteKit HTML entry point
 ├── app.css                               # Global styles & design tokens
 ├── app.d.ts                              # Ambient TypeScript declarations
+├── hooks.server.ts                       # Security headers hook
 ├── routes/
 │   ├── +page.svelte                      # Page orchestration & state management
 │   ├── +layout.svelte                    # Root layout
@@ -294,6 +295,7 @@ src/
     │   └── SummaryMetrics.svelte         # Worked/vacation/holiday counters
     └── server/
         ├── types.ts                      # Server-side TypeScript types
+        ├── parse-payload.ts              # Request validation & length limits
         ├── timesheet.ts                  # Day-code computation logic
         ├── docx.ts                       # DOCX XML template filling
         ├── doc-conversion.ts             # DOCX → DOC via LibreOffice
@@ -311,13 +313,28 @@ static/
     └── timesheet_template.docx           # Compiled DOCX template
 
 tests/
+├── helpers/
+│   ├── docx-assertions.ts               # DOCX content assertion utilities
+│   └── fixtures.ts                       # Shared test fixtures
 ├── unit/
 │   ├── timesheet.test.ts                 # Day code computation tests
 │   ├── holidays.test.ts                  # Holiday parsing tests
-│   └── filename.test.ts                  # Filename generation tests
-└── integration/
-    ├── docx-fill.test.ts                 # Template filling tests
-    └── real-template.test.ts             # Full template scenarios
+│   ├── filename.test.ts                  # Filename generation tests
+│   ├── parse-payload.test.ts             # Input validation tests
+│   ├── doc-conversion.test.ts            # DOC conversion tests
+│   ├── template.test.ts                  # Template loader tests
+│   ├── hooks.test.ts                     # Security headers tests
+│   ├── server-endpoint.test.ts           # Endpoint handler tests
+│   └── shutdown.test.ts                  # Shutdown endpoint tests
+├── integration/
+│   ├── docx-fill.test.ts                 # Template filling tests
+│   └── real-template.test.ts             # Full template scenarios
+└── e2e/
+    ├── app.spec.ts                       # App UI smoke tests
+    ├── calendar.spec.ts                  # Calendar interaction tests
+    ├── api.spec.ts                       # API endpoint tests
+    ├── api-validation.spec.ts            # API validation tests
+    └── security.spec.ts                  # Security header tests
 ```
 
 ## Tech Stack
@@ -338,6 +355,8 @@ tests/
 
 > **For maintainers:** Complete these steps before or shortly after making the repository public.
 
+- [x] **Remove `"private": true`** from `package.json` — allows the repo to be recognized as a shareable project
+- [x] **Update project structure** in README — reflects all source files, test suites, and helpers
 - [ ] **Add screenshot** — Capture the app UI, save as `docs/screenshot.png`, uncomment the image tag near the top of this README
 - [ ] **Create v1.0.0 tag** — `git tag v1.0.0 && git push origin v1.0.0`
 - [ ] **Create GitHub Release** — Use the v1.0.0 tag with brief release notes

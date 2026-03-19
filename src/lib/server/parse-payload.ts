@@ -1,6 +1,11 @@
 import { TimesheetValidationError } from './timesheet';
 import type { TimesheetGenerateRequest } from './types';
 
+const MAX_EMPLOYEE_NAME_LENGTH = 500;
+const MAX_COMPANY_CODE_LENGTH = 20;
+const MAX_EMPLOYEE_ID_LENGTH = 20;
+const MAX_VACATION_DATES = 31;
+
 export function isValidOutputFormat(value: unknown): value is 'docx' | 'doc' {
   return value === 'docx' || value === 'doc';
 }
@@ -28,6 +33,13 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
     throw new TimesheetValidationError('Vacation dates must be an array.', []);
   }
 
+  if (body.vacationDates.length > MAX_VACATION_DATES) {
+    throw new TimesheetValidationError(
+      `Vacation dates cannot exceed ${MAX_VACATION_DATES} entries.`,
+      []
+    );
+  }
+
   if (!isValidOutputFormat(body.outputFormat)) {
     throw new TimesheetValidationError('Output format must be either docx or doc.', []);
   }
@@ -44,8 +56,29 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
     throw new TimesheetValidationError('Employee name is required.', []);
   }
 
+  if (employeeName.length > MAX_EMPLOYEE_NAME_LENGTH) {
+    throw new TimesheetValidationError(
+      `Employee name cannot exceed ${MAX_EMPLOYEE_NAME_LENGTH} characters.`,
+      []
+    );
+  }
+
+  if (companyCode.length > MAX_COMPANY_CODE_LENGTH) {
+    throw new TimesheetValidationError(
+      `Company code cannot exceed ${MAX_COMPANY_CODE_LENGTH} characters.`,
+      []
+    );
+  }
+
   if (employeeId.length === 0) {
     throw new TimesheetValidationError('Employee id is required.', []);
+  }
+
+  if (employeeId.length > MAX_EMPLOYEE_ID_LENGTH) {
+    throw new TimesheetValidationError(
+      `Employee id cannot exceed ${MAX_EMPLOYEE_ID_LENGTH} characters.`,
+      []
+    );
   }
 
   const year = Number(body.year);

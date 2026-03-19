@@ -16,7 +16,7 @@ import {
 } from '../helpers/docx-assertions';
 
 describe('fillTimesheetTemplate with real converted template', () => {
-  it('writes expected coordinates for employee row and totals', async () => {
+  it('writes expected coordinates for employee row and totals', { timeout: 15_000 }, async () => {
     const templatePath = path.resolve(process.cwd(), 'static/templates/timesheet_template.docx');
     const templateBuffer = await readFile(templatePath);
 

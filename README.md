@@ -109,6 +109,9 @@ npm run doctor
 | `npm run format`           | Auto-format all files with Prettier                  |
 | `npm test`                 | Run all tests (alias for `test:unit`)                |
 | `npm run test:unit`        | Run Vitest unit & integration tests                  |
+| `npm run test:coverage`    | Run unit tests with coverage report                  |
+| `npm run test:e2e`         | Run Playwright end-to-end tests                      |
+| `npm run test:all`         | Run unit + e2e tests sequentially                    |
 | `npm run prepare:template` | Convert `.doc` → `.docx` template                    |
 | `npm run doctor`           | Environment health check                             |
 | `npm run clean`            | Remove build artifacts                               |

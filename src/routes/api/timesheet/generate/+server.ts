@@ -55,11 +55,16 @@ export const POST: RequestHandler = async ({ request }) => {
         ? 'application/msword'
         : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
+    const isAscii = /^[\x20-\x7E]*$/.test(filename);
+    const contentDisposition = isAscii
+      ? `attachment; filename="${filename}"`
+      : `attachment; filename="timesheet.${input.outputFormat}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
+
     return new Response(new Uint8Array(outputBuffer), {
       status: 200,
       headers: {
         'Content-Type': mimeType,
-        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Disposition': contentDisposition,
         'Cache-Control': 'no-store'
       }
     });

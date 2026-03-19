@@ -23,6 +23,7 @@ describe('Security headers hook', () => {
     });
     const csp = result.headers.get('Content-Security-Policy')!;
 
+    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
     expect(csp).toContain("style-src 'self' 'unsafe-inline'");
     expect(csp).toContain("img-src 'self' data:");
     expect(csp).toContain("font-src 'self'");

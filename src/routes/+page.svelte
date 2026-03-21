@@ -30,6 +30,7 @@
   let profileMessage = '';
 
   let outputFormat: 'docx' | 'doc' = 'docx';
+  let docExportAvailable = false;
 
   let holidayDates = new Set<string>();
   let holidayError = '';
@@ -400,33 +401,47 @@
 
   // ── Lifecycle ────────────────────────────────────────────
 
-  onMount(() => {
+  onMount(async () => {
     const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
-    if (!saved) return;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as Partial<{
+          companyCode: string;
+          employeeName: string;
+          employeeId: string;
+        }>;
+
+        const fixed = repairProfileSnapshot({
+          companyCode: typeof parsed.companyCode === 'string' ? parsed.companyCode : '',
+          employeeName: typeof parsed.employeeName === 'string' ? parsed.employeeName : '',
+          employeeId: typeof parsed.employeeId === 'string' ? parsed.employeeId : ''
+        });
+
+        companyCode = fixed.companyCode;
+        employeeName = fixed.employeeName;
+        employeeId = fixed.employeeId;
+        draftCompanyCode = companyCode;
+        draftEmployeeName = employeeName;
+        draftEmployeeId = employeeId;
+
+        persistProfile();
+      } catch {
+        localStorage.removeItem(PROFILE_STORAGE_KEY);
+      }
+    }
 
     try {
-      const parsed = JSON.parse(saved) as Partial<{
-        companyCode: string;
-        employeeName: string;
-        employeeId: string;
-      }>;
-
-      const fixed = repairProfileSnapshot({
-        companyCode: typeof parsed.companyCode === 'string' ? parsed.companyCode : '',
-        employeeName: typeof parsed.employeeName === 'string' ? parsed.employeeName : '',
-        employeeId: typeof parsed.employeeId === 'string' ? parsed.employeeId : ''
-      });
-
-      companyCode = fixed.companyCode;
-      employeeName = fixed.employeeName;
-      employeeId = fixed.employeeId;
-      draftCompanyCode = companyCode;
-      draftEmployeeName = employeeName;
-      draftEmployeeId = employeeId;
-
-      persistProfile();
+      const response = await fetch('/api/capabilities');
+      if (response.ok) {
+        const data = await response.json();
+        docExportAvailable = data.docExportAvailable === true;
+      }
     } catch {
-      localStorage.removeItem(PROFILE_STORAGE_KEY);
+      docExportAvailable = false;
+    }
+
+    if (!docExportAvailable && outputFormat === 'doc') {
+      outputFormat = 'docx';
     }
   });
 
@@ -522,6 +537,7 @@
         bind:draftEmployeeName
         bind:draftEmployeeId
         bind:outputFormat
+        {docExportAvailable}
         isEditing={isEditingProfile}
         error={profileError}
         message={profileMessage}

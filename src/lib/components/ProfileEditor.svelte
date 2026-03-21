@@ -7,6 +7,8 @@
   export let error: string;
   export let message: string;
 
+  export let docExportAvailable: boolean;
+
   export let onEdit: () => void;
   export let onSave: () => void;
   export let onCancel: () => void;
@@ -63,7 +65,9 @@
     <span>Output Format</span>
     <select bind:value={outputFormat}>
       <option value="docx">DOCX</option>
-      <option value="doc">DOC</option>
+      {#if docExportAvailable}
+        <option value="doc">DOC</option>
+      {/if}
     </select>
   </label>
 </div>

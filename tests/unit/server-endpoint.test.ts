@@ -46,6 +46,10 @@ vi.mock('$lib/server/template', () => ({
   loadTemplateBuffer: vi.fn().mockResolvedValue(Buffer.from('fake-template'))
 }));
 
+vi.mock('$lib/server/capabilities', () => ({
+  isDocExportAvailable: vi.fn().mockResolvedValue(true)
+}));
+
 vi.mock('$lib/server/parse-payload', async () => {
   const actual = await vi.importActual<typeof import('../../src/lib/server/parse-payload')>(
     '../../src/lib/server/parse-payload'
@@ -154,6 +158,32 @@ describe('POST /api/timesheet/generate', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('application/msword');
     expect(convertDocxBufferToDoc).toHaveBeenCalledOnce();
+  });
+
+  it('returns 400 when DOC requested but LibreOffice unavailable', async () => {
+    const { isDocExportAvailable } = await import('$lib/server/capabilities');
+    vi.mocked(isDocExportAvailable).mockResolvedValueOnce(false);
+
+    const request = new Request('http://localhost/api/timesheet/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        year: 2026,
+        month: 3,
+        companyCode: '405627530',
+        employeeName: 'Test User',
+        employeeId: '01005031116',
+        vacationDates: [],
+        outputFormat: 'doc'
+      })
+    });
+
+    const response = await POST({ request });
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toContain('DOC export is not available');
+    expect(data.details).toBeDefined();
+    expect(data.details.length).toBeGreaterThan(0);
   });
 
   it('Content-Disposition uses RFC 5987 for non-ASCII filenames', async () => {

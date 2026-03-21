@@ -1,13 +1,18 @@
+import { dev } from '$app/environment';
 import { access, readFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
 import path from 'node:path';
 
-export const DOCX_TEMPLATE_PATH = path.resolve(
-  process.cwd(),
-  'static',
-  'templates',
-  'timesheet_template.docx'
-);
+const TEMPLATE_FILENAME = 'timesheet_template.docx';
+
+function resolveTemplatePath(): string {
+  if (dev) {
+    return path.resolve('static', 'templates', TEMPLATE_FILENAME);
+  }
+  return path.resolve('build', 'client', 'templates', TEMPLATE_FILENAME);
+}
+
+export const DOCX_TEMPLATE_PATH = resolveTemplatePath();
 
 export async function assertTemplateExists(): Promise<void> {
   try {

@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import iconv from 'iconv-lite';
 import { format } from 'date-fns';
 import type { HolidayEntry } from './types';
+import staticHolidays from './georgian-holidays.json';
 
 const YELL_HOLIDAY_URL = 'https://www.yell.ge/info/holiday.php?ht=1';
 const NAGER_HOLIDAY_URL = 'https://date.nager.at/api/v3/PublicHolidays';
@@ -439,6 +440,19 @@ async function fetchNagerHolidays(year: number): Promise<HolidayEntry[]> {
   return parseNagerHolidays(payload, year);
 }
 
+function getStaticHolidaysForYear(year: number): HolidayEntry[] {
+  const entries: HolidayEntry[] = [];
+
+  for (const entry of staticHolidays) {
+    const date = toIsoDate(year, entry.month, entry.day);
+    if (date) {
+      entries.push({ date, title: entry.title, isStateOnly: false });
+    }
+  }
+
+  return entries.sort((a, b) => a.date.localeCompare(b.date));
+}
+
 async function fetchMergedHolidays(year: number): Promise<HolidayEntry[]> {
   let nagerEntries: HolidayEntry[] = [];
   let yellEntries: HolidayEntry[] = [];
@@ -463,10 +477,14 @@ async function fetchMergedHolidays(year: number): Promise<HolidayEntry[]> {
   }
 
   if (nagerError && yellError) {
-    throw new Error(`${nagerError.message} ${yellError.message}`.trim());
+    console.warn(
+      `Both holiday providers failed; using static fallback. Nager: ${nagerError.message} Yell: ${yellError.message}`
+    );
+    return getStaticHolidaysForYear(year);
   }
 
-  throw new Error('Holiday providers returned no entries for the selected year.');
+  console.warn('Holiday providers returned no entries; using static fallback.');
+  return getStaticHolidaysForYear(year);
 }
 
 function getCachedEntries(year: number): HolidayEntry[] | null {

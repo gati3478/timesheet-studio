@@ -7,6 +7,7 @@ import { buildOutputFilename } from '$lib/server/filename';
 import { convertDocxBufferToDoc, DocConversionError } from '$lib/server/doc-conversion';
 import { loadTemplateBuffer } from '$lib/server/template';
 import { parsePayload } from '$lib/server/parse-payload';
+import { isDocExportAvailable } from '$lib/server/capabilities';
 
 const MAX_BODY_SIZE = 1024 * 1024; // 1 MB
 
@@ -19,6 +20,19 @@ export const POST: RequestHandler = async ({ request }) => {
   try {
     const payload = await request.json();
     const input = parsePayload(payload);
+
+    if (input.outputFormat === 'doc') {
+      const docAvailable = await isDocExportAvailable();
+      if (!docAvailable) {
+        return json(
+          {
+            message: 'DOC export is not available. LibreOffice is not installed on this server.',
+            details: ['Install LibreOffice (soffice) to enable DOC export, or use DOCX format.']
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     const holidays = await getHolidaysForYear(input.year, { includeStateOnly: false });
     const holidayDates = new Set(holidays.map((holiday) => holiday.date));

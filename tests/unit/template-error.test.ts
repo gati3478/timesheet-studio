@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 
+vi.mock('$app/environment', () => ({
+  dev: true
+}));
+
 const mockAccess = vi.hoisted(() => vi.fn());
 
 vi.mock('node:fs/promises', () => ({

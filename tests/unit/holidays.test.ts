@@ -150,7 +150,7 @@ describe('getHolidaysForYear', () => {
     );
   });
 
-  it('throws when both providers fail', async () => {
+  it('falls back to static holidays when both providers fail', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
@@ -162,12 +162,16 @@ describe('getHolidaysForYear', () => {
       })
     );
 
-    await expect(getHolidaysForYear(2026)).rejects.toThrowError(
-      /date\.nager\.at.*yell\.ge|yell\.ge.*date\.nager\.at/
-    );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const entries = await getHolidaysForYear(2026);
+    expect(entries.length).toBe(13);
+    expect(entries[0].date).toBe('2026-01-01');
+    expect(entries[entries.length - 1].date).toBe('2026-11-23');
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('static fallback'));
+    warnSpy.mockRestore();
   });
 
-  it('throws when both providers return empty results', async () => {
+  it('falls back to static holidays when both providers return empty results', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
@@ -185,7 +189,12 @@ describe('getHolidaysForYear', () => {
       })
     );
 
-    await expect(getHolidaysForYear(2026)).rejects.toThrowError(/no entries/i);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const entries = await getHolidaysForYear(2026);
+    expect(entries.length).toBe(13);
+    expect(entries.every((e) => e.date.startsWith('2026-'))).toBe(true);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('static fallback'));
+    warnSpy.mockRestore();
   });
 
   it('caches results and only fetches once for the same year', async () => {

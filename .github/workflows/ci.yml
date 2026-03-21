@@ -77,3 +77,17 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
+      - name: Smoke test production build
+        run: |
+          PORT=3000 HOST=0.0.0.0 ORIGIN=http://localhost:3000 node build &
+          SERVER_PID=$!
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000 > /dev/null 2>&1; then
+              echo "Server is up"
+              break
+            fi
+            sleep 1
+          done
+          curl -sf -o /dev/null -w "%{http_code}" http://localhost:3000 | grep -q 200
+          curl -sf -o /dev/null -w "%{http_code}" "http://localhost:3000/api/holidays?year=2026" | grep -q 200
+          kill $SERVER_PID

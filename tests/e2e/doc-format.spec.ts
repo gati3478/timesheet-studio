@@ -11,6 +11,10 @@ try {
 
 const describeOrSkip = hasLibreOffice ? test.describe : test.describe.skip;
 
+// LibreOffice uses a single-user profile lock — only run in one browser project
+// to avoid concurrent soffice invocations causing lock contention failures.
+test.skip(({ browserName }) => browserName !== 'chromium', 'DOC tests run in Chromium only');
+
 const docPayload = {
   year: 2026,
   month: 3,

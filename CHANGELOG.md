@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TEMPLATE_DIR` env var support in `template.ts` for sidecar resource path resolution
 - `npm run tauri:build` — single command to build the desktop app
 - `npm run tauri:dev` — Tauri development mode with hot-reload
+- Cross-browser e2e testing — Firefox and WebKit alongside Chromium
+- Accessibility testing via `@axe-core/playwright` — WCAG 2.1 AA checks, form labels, heading hierarchy, color contrast
+- `npm audit` security audit job in CI pipeline
+- CI job dependency graph — e2e and build gate on lint, type-check, and unit tests passing
+- Unit tests for `TEMPLATE_DIR` env var, holiday partial-failure fallback, and `TimesheetValidationError` details propagation
 
 ## [1.0.0] - 2026-03-19
 

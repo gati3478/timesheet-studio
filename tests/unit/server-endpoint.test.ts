@@ -240,6 +240,39 @@ describe('POST /api/timesheet/generate', () => {
     expect(cd).not.toContain('filename*=');
   });
 
+  it('returns 400 with details array when TimesheetValidationError is thrown by computeTimesheet', async () => {
+    const { computeTimesheet, TimesheetValidationError } = await import('$lib/server/timesheet');
+    vi.mocked(computeTimesheet).mockImplementationOnce(() => {
+      throw new TimesheetValidationError('Vacation date validation failed.', [
+        'Vacation date 2026-03-07 falls on a weekend.',
+        'Vacation date 2026-03-08 falls on a holiday.'
+      ]);
+    });
+
+    const request = new Request('http://localhost/api/timesheet/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        year: 2026,
+        month: 3,
+        companyCode: '405627530',
+        employeeName: 'Test User',
+        employeeId: '01005031116',
+        vacationDates: ['2026-03-07', '2026-03-08'],
+        outputFormat: 'docx'
+      })
+    });
+
+    const response = await POST({ request });
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toBe('Vacation date validation failed.');
+    expect(data.details).toEqual([
+      'Vacation date 2026-03-07 falls on a weekend.',
+      'Vacation date 2026-03-08 falls on a holiday.'
+    ]);
+  });
+
   it('returns 500 when DocConversionError is thrown', async () => {
     const { convertDocxBufferToDoc } = await import('$lib/server/doc-conversion');
     const { DocConversionError } = await import('$lib/server/doc-conversion');

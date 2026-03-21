@@ -433,16 +433,43 @@ tests/
 
 ## Pre-Release Checklist
 
-> **For maintainers:** Complete these steps before or shortly after making the repository public.
+> **For maintainers:** Complete these steps before or shortly after making the repository public. Items marked with `(manual)` require GitHub UI or CLI actions that cannot be automated in code.
 
-- [x] **Remove `"private": true`** from `package.json` — allows the repo to be recognized as a shareable project
-- [x] **Update project structure** in README — reflects all source files, test suites, and helpers
-- [ ] **Add screenshot** — Capture the app UI, save as `docs/screenshot.png`, uncomment the image tag near the top of this README
-- [ ] **Create v1.0.0 tag** — `git tag v1.0.0 && git push origin v1.0.0`
-- [ ] **Create GitHub Release** — Use the v1.0.0 tag with brief release notes
-- [ ] **Set repository description** — "Georgian-format monthly timesheet generator with interactive calendar and DOCX template filling"
-- [ ] **Set repository topics** — `timesheet`, `sveltekit`, `svelte`, `tauri`, `docx`, `georgia`, `document-generation`, `typescript`, `desktop-app`
-- [ ] **Review repository settings** — Ensure Issues are enabled; optionally enable Discussions and configure branch protection for `main`
+### Done
+
+- [x] Remove `"private": true` from `package.json`
+- [x] Update project structure in README
+- [x] CI pipeline: lint, type-check, security audit, unit tests, e2e (cross-browser), build + smoke test
+- [x] Accessibility testing via axe-core
+- [x] Issue templates, PR template, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
+- [x] Dependabot for npm and GitHub Actions
+
+### Before going public (manual)
+
+- [ ] **Add screenshot** — capture the app UI, save as `docs/screenshot.png`, then uncomment the image tag near line 15 of this README
+- [ ] **Set repository description** `(manual)` — go to repo Settings → General, or run:
+  ```bash
+  gh repo edit --description "Georgian-format monthly timesheet generator with interactive calendar and DOCX template filling"
+  ```
+- [ ] **Set repository topics** `(manual)` — go to repo main page → gear icon near About, or run:
+  ```bash
+  gh repo edit --add-topic timesheet,sveltekit,svelte,tauri,docx,georgia,document-generation,typescript,desktop-app
+  ```
+
+### After going public (manual)
+
+- [ ] **Create v1.0.0 tag and GitHub Release** `(manual)`:
+  ```bash
+  git tag v1.0.0
+  git push origin v1.0.0
+  gh release create v1.0.0 --title "v1.0.0" --notes "Initial public release. See [CHANGELOG.md](CHANGELOG.md) for details."
+  ```
+- [ ] **Enable private vulnerability reporting** `(manual)` — go to repo Settings → Code security → Private vulnerability reporting → Enable
+- [ ] **Configure branch protection for `main`** `(manual)` — go to repo Settings → Branches → Add rule for `main`:
+  - Require status checks to pass (select: `Lint`, `Type Check`, `Unit Tests`, `E2E Tests`, `Build`)
+  - Require branches to be up to date before merging
+  - Optionally require PR reviews before merging
+- [ ] **Enable Discussions** `(manual, optional)` — go to repo Settings → General → Features → check Discussions
 
 ## License
 

@@ -33,10 +33,10 @@ npm run tauri:build      # Full production desktop app build
 
 ## Testing
 
-- **Unit/integration**: Vitest. Coverage scope: `src/lib/server/**/*.ts` + `src/hooks.server.ts` (excludes `types.ts`). Thresholds: 80% lines/functions/statements, 70% branches.
-- **E2E**: Playwright, Chromium only. Config auto-starts dev server on port 5173.
+- **Unit/integration**: Vitest. Coverage scope: `src/lib/server/**/*.ts` + `src/hooks.server.ts` (excludes `types.ts`). Thresholds: 90% lines/statements, 100% functions, 85% branches.
+- **E2E**: Playwright, Chromium + Firefox + WebKit. Config auto-starts dev server on port 5173. Includes accessibility checks via `@axe-core/playwright`.
 - **Test helpers**: Use `makeComputedTimesheet()` and `makeTimesheetInput()` from `tests/helpers/fixtures.ts` for test data. Use `tests/helpers/docx-assertions.ts` for DOCX content assertions. Always prefer these over inline fixtures.
-- **CI**: Lint, type-check, unit tests (with coverage), e2e tests, build + smoke test all run on push/PR to main.
+- **CI**: Lint, type-check, and unit tests (with coverage) run in parallel; e2e tests and build gate on those passing. A security audit (`npm audit`) runs independently in parallel. All run on push/PR to main.
 
 ## Domain
 

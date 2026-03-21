@@ -50,6 +50,7 @@
     "tauri:build": "npm run build && npm run bundle:sidecar && tauri build"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.53.0",
     "@sveltejs/adapter-node": "^5.2.0",

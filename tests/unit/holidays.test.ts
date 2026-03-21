@@ -171,6 +171,31 @@ describe('getHolidaysForYear', () => {
     warnSpy.mockRestore();
   });
 
+  it('falls back to static holidays when one provider fails and the other returns empty', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          throw new Error('Network timeout');
+        }
+        return new Response('<html><body><table></table></body></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+      })
+    );
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const entries = await getHolidaysForYear(2026);
+    expect(entries.length).toBe(13);
+    expect(entries.every((e) => e.date.startsWith('2026-'))).toBe(true);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Holiday providers returned no entries')
+    );
+    warnSpy.mockRestore();
+  });
+
   it('falls back to static holidays when both providers return empty results', async () => {
     vi.stubGlobal(
       'fetch',

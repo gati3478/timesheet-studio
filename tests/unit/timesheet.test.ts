@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeTimesheet, TimesheetValidationError } from '../../src/lib/server/timesheet';
+import { makeTimesheetInput } from '../helpers/fixtures';
 
 describe('computeTimesheet', () => {
   it('computes january 2026 totals and labels', () => {
@@ -214,5 +215,69 @@ describe('computeTimesheet', () => {
         expect(code).toBe('8');
       }
     }
+  });
+
+  it('duplicate vacation dates in array are deduplicated', () => {
+    const result = computeTimesheet(
+      makeTimesheetInput({
+        vacationDates: ['2026-03-02', '2026-03-02']
+      })
+    );
+
+    expect(result.paidVacationHours).toBe(8);
+    expect(result.dayCodesByDay.get(2)).toBe('შ');
+  });
+
+  it('all weekdays are holidays → zero worked days and hours', () => {
+    // March 2026 weekdays: 2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27,30,31
+    const allWeekdayHolidays = new Set(
+      [2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 30, 31].map(
+        (d) => `2026-03-${String(d).padStart(2, '0')}`
+      )
+    );
+
+    const result = computeTimesheet(
+      makeTimesheetInput({
+        holidayDates: allWeekdayHolidays
+      })
+    );
+
+    expect(result.workedDays).toBe(0);
+    expect(result.totalWorkedHours).toBe(0);
+    expect(result.weekdayHolidayCount).toBe(22);
+
+    for (let day = 1; day <= 31; day++) {
+      expect(result.dayCodesByDay.get(day)).toBe('X');
+    }
+  });
+
+  it('vacation on a holiday date throws with details', () => {
+    try {
+      computeTimesheet(
+        makeTimesheetInput({
+          holidayDates: new Set(['2026-03-03']),
+          vacationDates: ['2026-03-03']
+        })
+      );
+      expect.unreachable('should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(TimesheetValidationError);
+      const validation = error as TimesheetValidationError;
+      expect(validation.details).toHaveLength(1);
+      expect(validation.details[0]).toContain('vacation cannot be on weekend/holiday');
+    }
+  });
+
+  it('February 2026 lastWorkdayLabel is 27.02 when month ends on Saturday', () => {
+    // Feb 2026: 28th is Saturday, so last weekday is Friday the 27th
+    const result = computeTimesheet(
+      makeTimesheetInput({
+        month: 2,
+        vacationDates: [],
+        holidayDates: new Set()
+      })
+    );
+
+    expect(result.lastWorkdayLabel).toBe('27.02');
   });
 });

@@ -33,4 +33,62 @@ describe('buildOutputFilename', () => {
       'Month must be from 1 to 12.'
     );
   });
+
+  it('falls back to "timesheet" slug for whitespace-only name', () => {
+    expect(buildOutputFilename('   ', 2026, 4, 'docx')).toBe('timesheet-apr-2026-timesheet.docx');
+  });
+
+  it('keeps numeric characters in slug', () => {
+    expect(buildOutputFilename('12345', 2026, 5, 'docx')).toBe('12345-may-2026-timesheet.docx');
+  });
+
+  it('falls back to "timesheet" slug when only special characters remain', () => {
+    expect(buildOutputFilename('!!!@@@', 2026, 5, 'docx')).toBe(
+      'timesheet-may-2026-timesheet.docx'
+    );
+  });
+
+  it('collapses multiple consecutive spaces into a single hyphen', () => {
+    expect(buildOutputFilename('John   Doe', 2026, 7, 'docx')).toBe(
+      'john-doe-jul-2026-timesheet.docx'
+    );
+  });
+
+  it('preserves mixed Georgian and ASCII characters', () => {
+    expect(buildOutputFilename('გიორგი Dev', 2026, 9, 'docx')).toBe(
+      'გიორგი-dev-sep-2026-timesheet.docx'
+    );
+  });
+
+  it('produces correct month abbreviation for all 12 months', () => {
+    const expected = [
+      'jan',
+      'feb',
+      'mar',
+      'apr',
+      'may',
+      'jun',
+      'jul',
+      'aug',
+      'sep',
+      'oct',
+      'nov',
+      'dec'
+    ];
+    for (let month = 1; month <= 12; month += 1) {
+      const filename = buildOutputFilename('x', 2026, month, 'docx');
+      expect(filename).toBe(`x-${expected[month - 1]}-2026-timesheet.docx`);
+    }
+  });
+
+  it('uses doc extension for all slug variants', () => {
+    expect(buildOutputFilename('', 2026, 1, 'doc')).toBe('timesheet-jan-2026-timesheet.doc');
+    expect(buildOutputFilename('გიორგი', 2026, 6, 'doc')).toBe('გიორგი-jun-2026-timesheet.doc');
+  });
+
+  it('preserves very long names without truncation', () => {
+    const longName = 'a'.repeat(300);
+    const filename = buildOutputFilename(longName, 2026, 2, 'docx');
+    expect(filename).toBe(`${'a'.repeat(300)}-feb-2026-timesheet.docx`);
+  });
 });

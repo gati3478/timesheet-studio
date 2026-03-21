@@ -267,4 +267,378 @@ describe('getHolidaysForYear', () => {
     // nager says isStateOnly=false, yell says true → merged result should be false (AND logic)
     expect(jan1!.isStateOnly).toBe(false);
   });
+
+  it('cache TTL expiry triggers re-fetch', async () => {
+    vi.useFakeTimers();
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('date.nager.at')) {
+        return new Response(
+          JSON.stringify([
+            {
+              date: '2026-01-01',
+              localName: 'ახალი წელი',
+              name: "New Year's Day",
+              countryCode: 'GE',
+              counties: null,
+              types: ['Public']
+            }
+          ]),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        );
+      }
+      return new Response('<html><body><table></table></body></html>', {
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8' }
+      });
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    // First call: should fetch from both providers
+    await getHolidaysForYear(2026);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    // Second call within 6h: should use cache (no additional fetches)
+    await getHolidaysForYear(2026);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    // Advance past 6h TTL (6 * 60 * 60 * 1000 = 21_600_000 ms) plus 1ms
+    vi.advanceTimersByTime(21_600_001);
+
+    // Third call after TTL expiry: should re-fetch
+    await getHolidaysForYear(2026);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+
+    vi.useRealTimers();
+  });
+
+  it('yell.ge fallback to body text when no <tr> rows', async () => {
+    const html = '<html><body>1 იანვარი 2026  ახალი წელი  7.01 - შობა</body></html>';
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response('nager down', { status: 500 });
+        }
+        return new Response(Buffer.from(html, 'utf8'), {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+      })
+    );
+
+    const entries = await getHolidaysForYear(2026);
+    const dates = entries.map((e) => e.date);
+    expect(dates).toContain('2026-01-01');
+    expect(dates).toContain('2026-01-07');
+  });
+
+  it('Nager entry with non-object element in array is skipped', async () => {
+    const nagerPayload = [
+      null,
+      42,
+      'string',
+      {
+        date: '2026-05-26',
+        localName: 'დამოუკიდებლობის დღე',
+        name: 'Independence Day',
+        countryCode: 'GE',
+        counties: null,
+        types: ['Public']
+      }
+    ];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response(JSON.stringify(nagerPayload), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+          });
+        }
+        return new Response('<html><body><table></table></body></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+      })
+    );
+
+    const entries = await getHolidaysForYear(2026);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].date).toBe('2026-05-26');
+  });
+
+  it('Nager entry with missing date field is skipped', async () => {
+    const nagerPayload = [
+      { localName: 'test' },
+      {
+        date: '2026-05-26',
+        localName: 'დამოუკიდებლობის დღე',
+        name: 'Independence Day',
+        countryCode: 'GE',
+        counties: null,
+        types: ['Public']
+      }
+    ];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response(JSON.stringify(nagerPayload), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+          });
+        }
+        return new Response('<html><body><table></table></body></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+      })
+    );
+
+    const entries = await getHolidaysForYear(2026);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].date).toBe('2026-05-26');
+  });
+
+  it('Nager entry with non-GE countryCode is filtered', async () => {
+    const nagerPayload = [
+      {
+        date: '2026-07-04',
+        localName: 'Independence Day',
+        name: 'Independence Day',
+        countryCode: 'US',
+        counties: null,
+        types: ['Public']
+      },
+      {
+        date: '2026-05-26',
+        localName: 'დამოუკიდებლობის დღე',
+        name: 'Independence Day',
+        countryCode: 'GE',
+        counties: null,
+        types: ['Public']
+      }
+    ];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response(JSON.stringify(nagerPayload), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+          });
+        }
+        return new Response('<html><body><table></table></body></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+      })
+    );
+
+    const entries = await getHolidaysForYear(2026);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].date).toBe('2026-05-26');
+  });
+
+  it('Nager entry with counties array is filtered (regional)', async () => {
+    const nagerPayload = [
+      {
+        date: '2026-06-15',
+        localName: 'Regional Holiday',
+        name: 'Regional Holiday',
+        countryCode: 'GE',
+        counties: ['Tbilisi'],
+        types: ['Public']
+      },
+      {
+        date: '2026-05-26',
+        localName: 'დამოუკიდებლობის დღე',
+        name: 'Independence Day',
+        countryCode: 'GE',
+        counties: null,
+        types: ['Public']
+      }
+    ];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response(JSON.stringify(nagerPayload), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+          });
+        }
+        return new Response('<html><body><table></table></body></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+      })
+    );
+
+    const entries = await getHolidaysForYear(2026);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].date).toBe('2026-05-26');
+  });
+
+  it('Nager duplicate dates within single response are merged', async () => {
+    const nagerPayload = [
+      {
+        date: '2026-01-01',
+        localName: 'ახალი წელი',
+        name: "New Year's Day",
+        countryCode: 'GE',
+        counties: null,
+        types: ['Public']
+      },
+      {
+        date: '2026-01-01',
+        localName: 'სხვა სახელი',
+        name: 'Other Name',
+        countryCode: 'GE',
+        counties: null,
+        types: ['Public']
+      }
+    ];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response(JSON.stringify(nagerPayload), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+          });
+        }
+        return new Response('<html><body><table></table></body></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+      })
+    );
+
+    const entries = await getHolidaysForYear(2026);
+    const jan1Entries = entries.filter((e) => e.date === '2026-01-01');
+    expect(jan1Entries).toHaveLength(1);
+    expect(jan1Entries[0].title).toBe('ახალი წელი');
+  });
+
+  it('getHolidaysForYear with includeStateOnly=true returns all including state-only', async () => {
+    const html = `
+      <html>
+        <body>
+          <table>
+            <tr><td>1 იანვარი - ახალი წელი</td></tr>
+            <tr><td>2 იანვარი - მხოლოდ სახელმწიფო ორგანიზაციისთვის</td></tr>
+          </table>
+        </body>
+      </html>
+    `;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response('nager down', { status: 500 });
+        }
+        return new Response(Buffer.from(html, 'utf8'), {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+      })
+    );
+
+    const withStateOnly = await getHolidaysForYear(2026, { includeStateOnly: true });
+    expect(withStateOnly.map((e) => e.date)).toEqual(['2026-01-01', '2026-01-02']);
+
+    __clearHolidayCacheForTests();
+
+    const withoutStateOnly = await getHolidaysForYear(2026, { includeStateOnly: false });
+    expect(withoutStateOnly.map((e) => e.date)).toEqual(['2026-01-01']);
+  });
+
+  it('charset detection from Content-Type header does not throw', async () => {
+    const nagerPayload = [
+      {
+        date: '2026-01-01',
+        localName: 'ახალი წელი',
+        name: "New Year's Day",
+        countryCode: 'GE',
+        counties: null,
+        types: ['Public']
+      }
+    ];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response(JSON.stringify(nagerPayload), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+          });
+        }
+        // yell.ge response with windows-1252 charset header but utf-8 content
+        return new Response(Buffer.from('<html><body><table></table></body></html>', 'utf8'), {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=windows-1252' }
+        });
+      })
+    );
+
+    const entries = await getHolidaysForYear(2026);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].date).toBe('2026-01-01');
+  });
+
+  it('non-standard charset falls back to utf-8', async () => {
+    const nagerPayload = [
+      {
+        date: '2026-01-01',
+        localName: 'ახალი წელი',
+        name: "New Year's Day",
+        countryCode: 'GE',
+        counties: null,
+        types: ['Public']
+      }
+    ];
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('date.nager.at')) {
+          return new Response(JSON.stringify(nagerPayload), {
+            status: 200,
+            headers: { 'content-type': 'application/json' }
+          });
+        }
+        // yell.ge response with a completely unknown charset
+        return new Response(Buffer.from('<html><body><table></table></body></html>', 'utf8'), {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=fake-encoding-xyz' }
+        });
+      })
+    );
+
+    // Should not throw even with unknown charset
+    const entries = await getHolidaysForYear(2026);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].date).toBe('2026-01-01');
+  });
 });

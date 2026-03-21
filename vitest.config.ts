@@ -6,13 +6,15 @@ export default defineConfig({
     include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
     coverage: {
       provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      reportsDirectory: 'coverage',
       include: ['src/lib/server/**/*.ts', 'src/hooks.server.ts'],
       exclude: ['src/lib/server/types.ts'],
       thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 70,
-        statements: 80
+        lines: 90,
+        functions: 100,
+        branches: 85,
+        statements: 90
       }
     }
   }

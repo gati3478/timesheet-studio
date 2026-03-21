@@ -130,4 +130,131 @@ describe('POST /api/timesheet/generate', () => {
     expect(response.headers.get('Content-Disposition')).toContain('timesheet');
     expect(response.headers.get('Cache-Control')).toBe('no-store');
   });
+
+  it('returns 200 with DOC format and correct MIME type', async () => {
+    const { convertDocxBufferToDoc } = await import('$lib/server/doc-conversion');
+    const { buildOutputFilename } = await import('$lib/server/filename');
+    vi.mocked(buildOutputFilename).mockReturnValue('test-timesheet.doc');
+
+    const request = new Request('http://localhost/api/timesheet/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        year: 2026,
+        month: 3,
+        companyCode: '405627530',
+        employeeName: 'Test User',
+        employeeId: '01005031116',
+        vacationDates: [],
+        outputFormat: 'doc'
+      })
+    });
+
+    const response = await POST({ request });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('application/msword');
+    expect(convertDocxBufferToDoc).toHaveBeenCalledOnce();
+  });
+
+  it('Content-Disposition uses RFC 5987 for non-ASCII filenames', async () => {
+    const { buildOutputFilename } = await import('$lib/server/filename');
+    vi.mocked(buildOutputFilename).mockReturnValue('გიორგი-mar-2026-timesheet.docx');
+
+    const request = new Request('http://localhost/api/timesheet/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        year: 2026,
+        month: 3,
+        companyCode: '405627530',
+        employeeName: 'გიორგი',
+        employeeId: '01005031116',
+        vacationDates: [],
+        outputFormat: 'docx'
+      })
+    });
+
+    const response = await POST({ request });
+    expect(response.status).toBe(200);
+    const cd = response.headers.get('Content-Disposition')!;
+    expect(cd).toContain('filename="timesheet.docx"');
+    expect(cd).toContain("filename*=UTF-8''");
+    expect(cd).toContain(encodeURIComponent('გიორგი-mar-2026-timesheet.docx'));
+  });
+
+  it('Content-Disposition uses simple format for ASCII filenames', async () => {
+    const { buildOutputFilename } = await import('$lib/server/filename');
+    vi.mocked(buildOutputFilename).mockReturnValue('test-user-mar-2026-timesheet.docx');
+
+    const request = new Request('http://localhost/api/timesheet/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        year: 2026,
+        month: 3,
+        companyCode: '405627530',
+        employeeName: 'Test User',
+        employeeId: '01005031116',
+        vacationDates: [],
+        outputFormat: 'docx'
+      })
+    });
+
+    const response = await POST({ request });
+    expect(response.status).toBe(200);
+    const cd = response.headers.get('Content-Disposition')!;
+    expect(cd).toBe('attachment; filename="test-user-mar-2026-timesheet.docx"');
+    expect(cd).not.toContain('filename*=');
+  });
+
+  it('returns 500 when DocConversionError is thrown', async () => {
+    const { convertDocxBufferToDoc } = await import('$lib/server/doc-conversion');
+    const { DocConversionError } = await import('$lib/server/doc-conversion');
+    vi.mocked(convertDocxBufferToDoc).mockRejectedValueOnce(
+      new DocConversionError('soffice not found')
+    );
+
+    const request = new Request('http://localhost/api/timesheet/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        year: 2026,
+        month: 3,
+        companyCode: '405627530',
+        employeeName: 'Test User',
+        employeeId: '01005031116',
+        vacationDates: [],
+        outputFormat: 'doc'
+      })
+    });
+
+    const response = await POST({ request });
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data.message).toBe('soffice not found');
+  });
+
+  it('returns 500 for unexpected errors during generation', async () => {
+    const { loadTemplateBuffer } = await import('$lib/server/template');
+    vi.mocked(loadTemplateBuffer).mockRejectedValueOnce(new Error('disk read failure'));
+
+    const request = new Request('http://localhost/api/timesheet/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        year: 2026,
+        month: 3,
+        companyCode: '405627530',
+        employeeName: 'Test User',
+        employeeId: '01005031116',
+        vacationDates: [],
+        outputFormat: 'docx'
+      })
+    });
+
+    const response = await POST({ request });
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data.message).toBe('Unexpected generation error.');
+  });
 });

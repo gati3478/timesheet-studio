@@ -119,6 +119,24 @@ describe('convertDocxBufferToDoc', () => {
     });
   });
 
+  it('wraps non-Error exceptions with "Unknown conversion failure"', async () => {
+    mockExecFile.mockImplementation(
+      (_cmd: string, _args: string[], cb: (err: Error | null) => void) => {
+        cb(null);
+      }
+    );
+    // writeFile succeeds, execFile succeeds, but readFile throws a non-Error value
+    mockWriteFile.mockRejectedValueOnce('disk error string');
+
+    const fakeBuffer = Buffer.from('PK\x03\x04fake-docx-content');
+    await expect(convertDocxBufferToDoc(fakeBuffer)).rejects.toThrow(DocConversionError);
+    // Reset for second call
+    mockWriteFile.mockRejectedValueOnce('disk error string');
+    await expect(convertDocxBufferToDoc(fakeBuffer)).rejects.toThrow(
+      'DOC conversion failed via LibreOffice: Unknown conversion failure'
+    );
+  });
+
   it('calls soffice with correct arguments', async () => {
     mockExecFile.mockImplementation(
       (_cmd: string, _args: string[], cb: (err: Error | null) => void) => {

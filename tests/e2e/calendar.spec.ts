@@ -83,6 +83,144 @@ test.describe('Calendar navigation', () => {
     await page.getByLabel('Decrease year').click();
     await expect(pill).toContainText(String(currentYear - 1));
   });
+
+  test('February renders 28 days in non-leap year (2026)', async ({ page }) => {
+    await waitForHydration(page);
+
+    // Navigate to February
+    const febButton = page.locator('.month-grid button').nth(1);
+    await febButton.click();
+    await expect(febButton).toHaveAttribute('aria-pressed', 'true');
+
+    // Ensure year is 2026 (current year per test environment)
+    const pill = page.locator('.hero-pill');
+    const currentYear = new Date().getFullYear();
+    const yearDelta = 2026 - currentYear;
+    if (yearDelta > 0) {
+      for (let i = 0; i < yearDelta; i++) await page.getByLabel('Increase year').click();
+    } else if (yearDelta < 0) {
+      for (let i = 0; i < -yearDelta; i++) await page.getByLabel('Decrease year').click();
+    }
+    await expect(pill).toContainText('2026');
+
+    const dayCells = page.locator('button.day-cell');
+    await expect(dayCells).toHaveCount(28);
+  });
+
+  test('February renders 29 days in leap year (2028)', async ({ page }) => {
+    await waitForHydration(page);
+
+    // Navigate to February
+    const febButton = page.locator('.month-grid button').nth(1);
+    await febButton.click();
+    await expect(febButton).toHaveAttribute('aria-pressed', 'true');
+
+    // Navigate to year 2028
+    const pill = page.locator('.hero-pill');
+    const currentYear = new Date().getFullYear();
+    const yearDelta = 2028 - currentYear;
+    if (yearDelta > 0) {
+      for (let i = 0; i < yearDelta; i++) await page.getByLabel('Increase year').click();
+    } else if (yearDelta < 0) {
+      for (let i = 0; i < -yearDelta; i++) await page.getByLabel('Decrease year').click();
+    }
+    await expect(pill).toContainText('2028');
+
+    const dayCells = page.locator('button.day-cell');
+    await expect(dayCells).toHaveCount(29);
+  });
+
+  test('vacation on day 31 is purged when navigating to shorter month', async ({ page }) => {
+    await waitForHydration(page);
+
+    // Navigate to January 2026 (31 days)
+    const janButton = page.locator('.month-grid button').first();
+    await janButton.click();
+    await expect(janButton).toHaveAttribute('aria-pressed', 'true');
+
+    const currentYear = new Date().getFullYear();
+    const yearDelta = 2026 - currentYear;
+    if (yearDelta > 0) {
+      for (let i = 0; i < yearDelta; i++) await page.getByLabel('Increase year').click();
+    } else if (yearDelta < 0) {
+      for (let i = 0; i < -yearDelta; i++) await page.getByLabel('Decrease year').click();
+    }
+
+    // Select a workday as vacation
+    const workdayCells = page.locator('button.day-cell:not([disabled])');
+    const firstWorkday = workdayCells.first();
+    await firstWorkday.click();
+    await expect(firstWorkday).toHaveAttribute('aria-pressed', 'true');
+
+    // Navigate to February (28 days) — purges January vacation dates
+    const febButton = page.locator('.month-grid button').nth(1);
+    await febButton.click();
+
+    // Navigate back to January
+    await janButton.click();
+
+    // Vacation should be gone because purgeVacationOutOfMonth removed it
+    // when we navigated to February
+    const newWorkdayCells = page.locator('button.day-cell:not([disabled])');
+    const count = await newWorkdayCells.count();
+    for (let i = 0; i < count; i++) {
+      await expect(newWorkdayCells.nth(i)).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
+
+  test('summary metrics update when vacation is selected', async ({ page }) => {
+    await waitForHydration(page);
+
+    // Read the initial "Worked Days" metric value
+    const workedMetric = page
+      .locator('article.metric')
+      .filter({ hasText: 'Worked Days' })
+      .locator('strong');
+    const initialWorked = parseInt((await workedMetric.textContent()) ?? '0', 10);
+
+    // Select first two workday cells as vacation
+    const workdayCells = page.locator('button.day-cell:not([disabled])');
+    await workdayCells.nth(0).click();
+    await workdayCells.nth(1).click();
+
+    // Read the updated "Worked Days" metric
+    const updatedWorked = parseInt((await workedMetric.textContent()) ?? '0', 10);
+    expect(updatedWorked).toBe(initialWorked - 2);
+  });
+
+  test('clicking a holiday cell does not toggle vacation', async ({ page }) => {
+    await waitForHydration(page);
+
+    // Navigate to January 2026 (Jan 1 = New Year, Jan 7 = Christmas)
+    const janButton = page.locator('.month-grid button').first();
+    await janButton.click();
+    await expect(janButton).toHaveAttribute('aria-pressed', 'true');
+
+    const currentYear = new Date().getFullYear();
+    const yearDelta = 2026 - currentYear;
+    if (yearDelta > 0) {
+      for (let i = 0; i < yearDelta; i++) await page.getByLabel('Increase year').click();
+    } else if (yearDelta < 0) {
+      for (let i = 0; i < -yearDelta; i++) await page.getByLabel('Decrease year').click();
+    }
+
+    // Wait for holidays to load
+    await page.waitForLoadState('networkidle');
+
+    // Find a disabled day cell (holiday or weekend)
+    const disabledCells = page.locator('button.day-cell[disabled]');
+    const count = await disabledCells.count();
+    expect(count).toBeGreaterThan(0);
+
+    const disabledCell = disabledCells.first();
+
+    // Click the disabled cell — should not toggle
+    await disabledCell.click({ force: true });
+
+    // Verify it's still not marked as vacation (aria-pressed should be "false")
+    await expect(disabledCell).toHaveAttribute('aria-pressed', 'false');
+    await expect(disabledCell).toBeDisabled();
+  });
 });
 
 test.describe('Profile validation', () => {

@@ -2,7 +2,6 @@ import { access, readFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
 import path from 'node:path';
 
-export const DOC_TEMPLATE_SOURCE_PATH = path.resolve(process.cwd(), 'timesheet_template.doc');
 export const DOCX_TEMPLATE_PATH = path.resolve(
   process.cwd(),
   'static',

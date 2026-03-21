@@ -40,6 +40,11 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
     );
   }
 
+  const invalidEntries = body.vacationDates.filter((entry: unknown) => typeof entry !== 'string');
+  if (invalidEntries.length > 0) {
+    throw new TimesheetValidationError('All vacation dates must be strings.', []);
+  }
+
   if (!isValidOutputFormat(body.outputFormat)) {
     throw new TimesheetValidationError('Output format must be either docx or doc.', []);
   }

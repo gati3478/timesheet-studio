@@ -83,6 +83,10 @@ export const POST: RequestHandler = async ({ request }) => {
       }
     });
   } catch (error) {
+    if (error instanceof SyntaxError) {
+      return json({ message: 'Request body must be valid JSON.' }, { status: 400 });
+    }
+
     if (error instanceof TimesheetValidationError) {
       return json({ message: error.message, details: error.details }, { status: 400 });
     }

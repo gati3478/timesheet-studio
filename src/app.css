@@ -27,11 +27,6 @@
   --space-8: 2rem;
   --shadow-sm: 0 6px 16px rgba(31, 68, 126, 0.1);
   --shadow-md: 0 14px 28px rgba(31, 68, 126, 0.12);
-  --text: var(--text-primary);
-  --muted: var(--text-secondary);
-  --line: var(--border-subtle);
-  --primary: var(--accent);
-  --primary-strong: var(--accent-strong);
 }
 
 * {
@@ -53,7 +48,7 @@ body {
     radial-gradient(circle at 10% 12%, rgba(131, 177, 255, 0.28), transparent 45%),
     radial-gradient(circle at 85% 4%, rgba(117, 178, 255, 0.22), transparent 44%),
     linear-gradient(180deg, var(--bg-0), var(--bg-1));
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 button:focus-visible,

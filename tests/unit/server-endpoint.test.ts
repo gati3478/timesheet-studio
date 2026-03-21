@@ -89,7 +89,7 @@ describe('POST /api/timesheet/generate', () => {
     expect(data.message).toBe('Request body too large.');
   });
 
-  it('returns 500 for malformed JSON body', async () => {
+  it('returns 400 for malformed JSON body', async () => {
     const request = new Request('http://localhost/api/timesheet/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -97,7 +97,10 @@ describe('POST /api/timesheet/generate', () => {
     });
 
     const response = await POST({ request });
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
+
+    const data = await response.json();
+    expect(data.message).toBe('Request body must be valid JSON.');
   });
 
   it('returns 400 for validation errors in payload', async () => {

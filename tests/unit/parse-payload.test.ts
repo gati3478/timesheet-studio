@@ -211,6 +211,12 @@ describe('parsePayload', () => {
     expect(result.employeeId.length).toBe(20);
   });
 
+  it('rejects non-string elements in vacationDates array', () => {
+    const payload = { ...VALID_PAYLOAD, vacationDates: [123, null, '2026-03-15'] };
+    expect(() => parsePayload(payload as unknown)).toThrow(TimesheetValidationError);
+    expect(() => parsePayload(payload as unknown)).toThrow('All vacation dates must be strings.');
+  });
+
   it('rejects vacationDates array exceeding 31 entries', () => {
     const dates = Array.from({ length: 32 }, (_, i) => `2026-03-${String(i + 1).padStart(2, '0')}`);
     const payload = { ...VALID_PAYLOAD, vacationDates: dates };

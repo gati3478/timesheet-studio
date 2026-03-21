@@ -454,36 +454,26 @@ function getStaticHolidaysForYear(year: number): HolidayEntry[] {
 }
 
 async function fetchMergedHolidays(year: number): Promise<HolidayEntry[]> {
-  let nagerEntries: HolidayEntry[] = [];
-  let yellEntries: HolidayEntry[] = [];
-  let nagerError: Error | null = null;
-  let yellError: Error | null = null;
+  const results = await Promise.allSettled([fetchNagerHolidays(year), fetchYellHolidays(year)]);
 
-  try {
-    nagerEntries = await fetchNagerHolidays(year);
-  } catch (error) {
-    nagerError = error instanceof Error ? error : new Error('Unknown nager fetch error.');
-  }
-
-  try {
-    yellEntries = await fetchYellHolidays(year);
-  } catch (error) {
-    yellError = error instanceof Error ? error : new Error('Unknown yell fetch error.');
-  }
+  const nagerEntries = results[0].status === 'fulfilled' ? results[0].value : [];
+  const yellEntries = results[1].status === 'fulfilled' ? results[1].value : [];
 
   const merged = mergeHolidayEntries(nagerEntries, yellEntries);
   if (merged.length > 0) {
     return merged;
   }
 
-  if (nagerError && yellError) {
+  if (results[0].status === 'rejected' && results[1].status === 'rejected') {
+    const nagerMsg = results[0].reason instanceof Error ? results[0].reason.message : 'Unknown';
+    const yellMsg = results[1].reason instanceof Error ? results[1].reason.message : 'Unknown';
     console.warn(
-      `Both holiday providers failed; using static fallback. Nager: ${nagerError.message} Yell: ${yellError.message}`
+      `Both holiday providers failed; using static fallback. Nager: ${nagerMsg} Yell: ${yellMsg}`
     );
-    return getStaticHolidaysForYear(year);
+  } else {
+    console.warn('Holiday providers returned no entries; using static fallback.');
   }
 
-  console.warn('Holiday providers returned no entries; using static fallback.');
   return getStaticHolidaysForYear(year);
 }
 

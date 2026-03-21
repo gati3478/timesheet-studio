@@ -6,5 +6,6 @@ static/
 coverage/
 test-results/
 playwright-report/
+src-tauri/
 *.doc
 *.docx

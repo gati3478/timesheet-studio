@@ -4,8 +4,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2-ff3e00.svg)](https://kit.svelte.dev/)
+[![Tauri](https://img.shields.io/badge/Tauri-2-ffc131.svg)](https://v2.tauri.app/)
 
 A SvelteKit web application that automates generating Georgian-format monthly timesheets. It computes worked days, vacation days, and public holidays, fills an official DOCX template via XML manipulation, and returns the completed document — ready for submission.
+
+Available as a **web app** (browser-based) and a **desktop app** (macOS, Windows, Linux) via [Tauri](https://v2.tauri.app/).
 
 Built for organizations operating under Georgian labor regulations that require standardized monthly timesheet forms.
 
@@ -115,6 +118,9 @@ npm run doctor
 | `npm run prepare:template` | Convert `.doc` → `.docx` template                    |
 | `npm run doctor`           | Environment health check                             |
 | `npm run clean`            | Remove build artifacts                               |
+| `npm run tauri:build`      | Build desktop app (macOS/Windows/Linux)              |
+| `npm run tauri:dev`        | Launch Tauri dev window (needs `npm run dev` first)  |
+| `npm run bundle:sidecar`   | Bundle SvelteKit server + Node.js for Tauri sidecar  |
 
 ### Code Quality
 
@@ -158,6 +164,65 @@ Test the production build before deploying:
 ```bash
 npm run build
 npm run preview
+```
+
+## Desktop App
+
+Timesheet Studio is also available as a standalone desktop application powered by [Tauri v2](https://v2.tauri.app/). No Node.js or browser required — just download and run.
+
+### Download
+
+> Pre-built binaries for macOS, Windows, and Linux are available on the [Releases](https://github.com/gati3478/timesheet-generator/releases) page.
+
+| Platform              | Format              | Size   |
+| --------------------- | ------------------- | ------ |
+| macOS (Apple Silicon) | `.dmg`              | ~40 MB |
+| macOS (Intel)         | `.dmg`              | ~40 MB |
+| Windows               | `.msi`              | ~40 MB |
+| Linux                 | `.AppImage`, `.deb` | ~45 MB |
+
+### Build from Source
+
+Prerequisites: [Node.js](https://nodejs.org/) v18+, [Rust](https://rustup.rs/) toolchain, platform-specific dependencies ([Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)).
+
+```bash
+# One command builds everything: SvelteKit → sidecar bundle → Tauri app
+npm run tauri:build
+```
+
+The output is in `src-tauri/target/release/bundle/` — a `.dmg` on macOS, `.msi` on Windows, or `.AppImage`/`.deb` on Linux.
+
+### How It Works
+
+The desktop app uses Tauri's **sidecar** architecture: Tauri provides a lightweight native window using the OS webview (WebKit on macOS, WebView2 on Windows), while the SvelteKit server runs as a bundled Node.js process inside the app. The webview connects to the server via `localhost` on a random port. On exit, Tauri gracefully shuts down the server.
+
+```
+┌─────────────────────────────────────┐
+│  Tauri App (.app / .exe / .AppImage)│
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │ Native Webview (OS WebKit)    │  │
+│  │ → http://127.0.0.1:<port>    │  │
+│  └──────────────┬────────────────┘  │
+│                 │                    │
+│  ┌──────────────▼────────────────┐  │
+│  │ Node.js Sidecar               │  │
+│  │ (SvelteKit server, bundled    │  │
+│  │  with esbuild into ~3 MB)     │  │
+│  └───────────────────────────────┘  │
+└─────────────────────────────────────┘
+```
+
+### Desktop Development
+
+For working on the desktop app itself:
+
+```bash
+# Terminal 1: Start the SvelteKit dev server
+npm run dev
+
+# Terminal 2: Launch Tauri with hot-reload
+npm run tauri:dev
 ```
 
 ## How It Works
@@ -306,7 +371,20 @@ src/
 scripts/
 ├── start.mjs                            # Unified launcher (npm start)
 ├── prepare-template.mjs                 # .doc → .docx template conversion
-└── doctor.sh                            # Environment health check
+├── bundle-sidecar.mjs                   # Tauri sidecar bundler (esbuild + Node download)
+├── doctor.mjs                           # Environment health check
+└── clean.mjs                            # Build artifact cleanup
+
+src-tauri/                               # Tauri desktop app (Rust)
+├── src/
+│   ├── main.rs                          # Entry point
+│   └── lib.rs                           # Sidecar lifecycle (port, spawn, health, cleanup)
+├── tauri.conf.json                      # App config (CSP, resources, sidecar)
+├── capabilities/default.json            # Permission scope (shell:allow-spawn only)
+├── Cargo.toml                           # Rust dependencies
+├── icons/                               # Generated app icons (all platforms)
+├── binaries/                            # Node.js sidecar binary (gitignored)
+└── resources/                           # Bundled server + assets (gitignored)
 
 static/
 └── templates/
@@ -349,6 +427,8 @@ tests/
 | Date Handling       | [date-fns](https://date-fns.org/)                                                                                                       |
 | HTML Parsing        | [Cheerio](https://cheerio.js.org/) (holiday fallback source)                                                                            |
 | Testing             | [Vitest](https://vitest.dev/) (unit/integration) · [Playwright](https://playwright.dev/) (e2e)                                          |
+| Desktop App         | [Tauri 2](https://v2.tauri.app/) (Rust shell + OS native webview)                                                                       |
+| Sidecar Bundling    | [esbuild](https://esbuild.github.io/) (server → single-file ESM bundle)                                                                 |
 | CI                  | [GitHub Actions](https://github.com/features/actions)                                                                                   |
 
 ## Pre-Release Checklist
@@ -361,7 +441,7 @@ tests/
 - [ ] **Create v1.0.0 tag** — `git tag v1.0.0 && git push origin v1.0.0`
 - [ ] **Create GitHub Release** — Use the v1.0.0 tag with brief release notes
 - [ ] **Set repository description** — "Georgian-format monthly timesheet generator with interactive calendar and DOCX template filling"
-- [ ] **Set repository topics** — `timesheet`, `sveltekit`, `svelte`, `docx`, `georgia`, `document-generation`, `typescript`
+- [ ] **Set repository topics** — `timesheet`, `sveltekit`, `svelte`, `tauri`, `docx`, `georgia`, `document-generation`, `typescript`, `desktop-app`
 - [ ] **Review repository settings** — Ensure Issues are enabled; optionally enable Discussions and configure branch protection for `main`
 
 ## License

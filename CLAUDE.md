@@ -17,6 +17,9 @@ npm run test:all         # Unit + e2e sequentially
 npm run test:coverage    # Unit tests with coverage report
 npm run doctor           # Environment health check (cross-platform)
 npm run clean            # Remove build artifacts (cross-platform)
+npm run bundle:sidecar   # Bundle SvelteKit server + Node binary for Tauri
+npm run tauri:dev        # Tauri desktop dev mode (needs `npm run dev` first)
+npm run tauri:build      # Full production desktop app build
 ```
 
 ## Conventions
@@ -41,3 +44,4 @@ npm run clean            # Remove build artifacts (cross-platform)
 - **Holidays**: Fetched from date.nager.at (primary) with yell.ge fallback (Cheerio HTML scraping). Cached 6 hours in memory. Falls back to bundled static holiday data (`src/lib/server/georgian-holidays.json`) when both providers are unreachable.
 - **Output formats**: DOCX works standalone. DOC requires LibreOffice CLI (`soffice`) for conversion — detected at runtime via `GET /api/capabilities`. Frontend hides DOC option when unavailable.
 - **Deployment**: adapter-node produces `build/` with `index.js` entry point. Run with `node build`. Supports `PORT`, `HOST`, `ORIGIN` env vars. Docker multi-stage build available (`Dockerfile` + `docker-compose.yml`).
+- **Desktop app**: Tauri v2 wraps the SvelteKit server as a Node.js sidecar. The `src-tauri/` directory contains the Rust project. `scripts/bundle-sidecar.mjs` bundles the server + downloads the Node binary. `TEMPLATE_DIR` env var in `template.ts` allows the sidecar to specify the template location. CI builds for macOS/Windows/Linux via `.github/workflows/tauri-build.yml` (triggered by version tags or manual dispatch).

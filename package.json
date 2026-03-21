@@ -15,10 +15,12 @@
   "keywords": [
     "timesheet",
     "sveltekit",
+    "tauri",
     "docx",
     "georgia",
     "document-generation",
-    "holidays"
+    "holidays",
+    "desktop-app"
   ],
   "type": "module",
   "engines": {
@@ -41,15 +43,23 @@
     "prepare:template": "node scripts/prepare-template.mjs",
     "start:prod": "node build",
     "doctor": "node scripts/doctor.mjs",
-    "clean": "node scripts/clean.mjs"
+    "clean": "node scripts/clean.mjs",
+    "bundle:sidecar": "node scripts/bundle-sidecar.mjs",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "npm run build && npm run bundle:sidecar && tauri build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.53.0",
     "@sveltejs/adapter-node": "^5.2.0",
     "@sveltejs/kit": "2.53.3",
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/cli": "^2.10.1",
+    "@tauri-apps/plugin-shell": "^2.3.5",
     "@types/node": "^20.11.30",
     "@vitest/coverage-v8": "^2.1.9",
+    "esbuild": "^0.27.4",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.15.2",

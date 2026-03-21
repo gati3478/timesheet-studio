@@ -35,3 +35,8 @@ Thumbs.db
 # Generated timesheet outputs
 example-*.doc
 example-*.docx
+
+# Tauri
+src-tauri/target/
+src-tauri/binaries/node-server-*
+src-tauri/resources/

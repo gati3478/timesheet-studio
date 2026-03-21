@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Desktop app via Tauri v2 — native macOS, Windows, and Linux binaries
+- Sidecar bundler script (`scripts/bundle-sidecar.mjs`) — esbuild bundles the SvelteKit server + Node.js binary into a Tauri-managed sidecar
+- Cross-platform CI workflow for desktop builds (`.github/workflows/tauri-build.yml`)
+- `TEMPLATE_DIR` env var support in `template.ts` for sidecar resource path resolution
+- `npm run tauri:build` — single command to build the desktop app
+- `npm run tauri:dev` — Tauri development mode with hot-reload
+
 ## [1.0.0] - 2026-03-19
 
 ### Added

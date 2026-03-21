@@ -1,97 +1,38 @@
-# Timesheet Generator
+# Timesheet Studio
 
-A SvelteKit web application that automates generating Georgian-format monthly timesheets. It computes worked/vacation/holiday days, fills a DOCX template via XML manipulation, and returns the completed document.
+Georgian-format monthly timesheet generator — SvelteKit 2, Svelte 5, TypeScript. See README.md for full documentation.
 
-## Tech Stack
-
-- **Framework**: SvelteKit 2 + Svelte 5
-- **Language**: TypeScript
-- **Build Tool**: Vite 6
-- **Code Quality**: ESLint + Prettier
-- **Testing**: Vitest (unit) + Playwright (e2e)
-- **Document Processing**: jszip, @xmldom/xmldom, xpath, cheerio
-- **Date Handling**: date-fns
-
-## Project Structure
-
-```
-src/
-  app.html                          # Root HTML template (SvelteKit entry point)
-  app.d.ts                          # Global TypeScript ambient declarations
-  app.css                           # Global stylesheet
-  routes/
-    +page.svelte                    # Main UI (calendar, controls, profile editor)
-    +layout.svelte                  # Root layout
-    api/
-      holidays/+server.ts           # GET /api/holidays?year=
-      timesheet/generate/+server.ts # POST /api/timesheet/generate
-      system/shutdown/+server.ts    # POST /api/system/shutdown
-  lib/server/
-    types.ts                        # Shared TypeScript types
-    timesheet.ts                    # Day-code computation logic
-    docx.ts                         # DOCX XML template filling
-    doc-conversion.ts               # DOCX → DOC conversion
-    holidays.ts                     # Holiday fetching & caching
-    filename.ts                     # Output filename generation
-    template.ts                     # Template buffer loader
-scripts/
-  start.mjs                        # Unified launcher (npm start)
-  prepare-template.mjs             # Converts .doc template to .docx
-  doctor.sh                        # Environment health check
-static/                            # Static assets & DOCX template
-tests/                             # Unit and integration tests
-```
-
-## Common Commands
+## Commands
 
 ```bash
-npm start                # Launch app (install deps, prep template, open browser)
-npm run dev              # Start dev server (port 5173)
-npm run build            # Build production bundle
-npm run preview          # Preview production build
+npm run dev              # Dev server (port 5173)
 npm run check            # Type-check with svelte-check
-npm run lint             # Run prettier + eslint
+npm run lint             # Prettier + ESLint check
 npm run format           # Auto-format all files
-npm run test:unit        # Run Vitest unit tests (unit + integration)
-npm run prepare:template # Convert .doc template to .docx
-npm run doctor           # Check environment health
-npm run clean            # Remove build artifacts
+npm run test:unit        # Vitest unit + integration tests
+npm run test:e2e         # Playwright e2e tests (needs dev server)
+npm run test:all         # Unit + e2e sequentially
+npm run test:coverage    # Unit tests with coverage report
 ```
 
-## API Endpoints
+## Conventions
 
-### `GET /api/holidays?year={yyyy}`
+- **Svelte reactivity**: Components use Svelte 4 `$:` reactive syntax, not Svelte 5 runes. An ESLint override disables `svelte/prefer-svelte-reactivity`. Do NOT migrate to runes unless explicitly asked.
+- **Server/client boundary**: Server logic in `src/lib/server/`, UI components in `src/lib/components/`. The `$lib/server` alias enforces server-only imports.
+- **Georgian text**: Day code `შ` (Georgian "shin") = paid vacation. The DOCX template uses Sylfaen font for Georgian character rendering. Do not substitute Latin characters.
+- **Validation errors**: Use `TimesheetValidationError` (from `timesheet.ts`) for all user-facing validation. It carries `details: string[]` for field-level errors. Endpoint handlers return 400 with JSON `{ error, details }`.
+- **Dates**: ISO 8601 (`yyyy-MM-dd`) in API transit, `dd.MM.yyyy` for display labels. Use `date-fns` exclusively — no raw `Date` formatting.
+- **Code style**: Single quotes, no trailing commas, 100 char print width (see `.prettierrc`). TypeScript strict mode enabled.
 
-Returns Georgian public holidays for a given year (cached 6h).
+## Testing
 
-### `POST /api/timesheet/generate`
+- **Unit/integration**: Vitest. Coverage scope: `src/lib/server/**/*.ts` + `src/hooks.server.ts` (excludes `types.ts`). Thresholds: 80% lines/functions/statements, 70% branches.
+- **E2E**: Playwright, Chromium only. Config auto-starts dev server on port 5173.
+- **Test helpers**: Use `makeComputedTimesheet()` and `makeTimesheetInput()` from `tests/helpers/fixtures.ts` for test data. Use `tests/helpers/docx-assertions.ts` for DOCX content assertions. Always prefer these over inline fixtures.
+- **CI**: Lint, type-check, unit tests (with coverage), e2e tests, and build all run on push/PR to main.
 
-Accepts a JSON body and returns the filled document as a binary file download.
+## Domain
 
-**Request body:**
-
-```json
-{
-  "year": 2026,
-  "month": 1,
-  "companyCode": "string",
-  "employeeName": "string",
-  "employeeId": "string",
-  "vacationDates": ["2026-01-15"],
-  "outputFormat": "docx" | "doc"
-}
-```
-
-**Response:** Binary file with `Content-Disposition: attachment; filename="{name-slug}-{mon}-{year}-timesheet.{ext}"`.
-MIME type is `application/vnd.openxmlformats-officedocument.wordprocessingml.document` for DOCX or `application/msword` for DOC.
-
-### `POST /api/system/shutdown`
-
-Shuts down the local Node process via `SIGTERM` (for desktop app mode). Only available in dev mode (`NODE_ENV=development`); returns 404 in production.
-
-## Key Concepts
-
-- **Day Codes**: `8` = worked day, `შ` (Georgian letter) = paid vacation, `X` = holiday/weekend
-- **Template**: A `.docx` file with XML cells that get filled via XPath-based DOM manipulation
-- **Holidays**: Fetched from date.nager.at (primary) and yell.ge (fallback), cached 6 hours
-- **Output formats**: DOCX (modern) or DOC (legacy, via LibreOffice conversion)
+- **DOCX pipeline**: Template is a ZIP of XML files. Filling: JSZip extract → xmldom parse → XPath locate cells → fill text + apply styles → repack ZIP. Entry point: `src/lib/server/docx.ts`.
+- **Holidays**: Fetched from date.nager.at (primary) with yell.ge fallback (Cheerio HTML scraping). Cached 6 hours in memory.
+- **Output formats**: DOCX works standalone. DOC requires LibreOffice CLI (`soffice`) for conversion.

@@ -47,9 +47,14 @@ test.describe('Profile persistence', () => {
     // Verify default is DOCX
     await expect(formatSelect).toHaveValue('docx');
 
-    // Change to DOC
-    await formatSelect.selectOption('doc');
-    await expect(formatSelect).toHaveValue('doc');
+    // DOC option only appears when LibreOffice is installed (docExportAvailable)
+    const docOption = formatSelect.locator('option[value="doc"]');
+    const hasDocOption = (await docOption.count()) > 0;
+
+    if (hasDocOption) {
+      await formatSelect.selectOption('doc');
+      await expect(formatSelect).toHaveValue('doc');
+    }
   });
 
   test('profile reset clears fields', async ({ page }) => {

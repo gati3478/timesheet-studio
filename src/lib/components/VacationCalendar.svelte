@@ -7,10 +7,115 @@
   export let calendarCells: CalendarCell[];
   export let loadingHolidays: boolean = false;
   export let hasVacation: boolean = false;
-  export let onToggleVacation: (item: DayItem) => void;
+  export let onBatchSetVacation: (dateIsos: string[], isVacation: boolean) => void;
   export let onSelectAll: () => void = () => {};
   export let onClearAll: () => void = () => {};
 
+  // ── Drag state ───────────────────────────────────────────
+  let dragging = false;
+  let dragIntent: 'select' | 'deselect' = 'select';
+  let dragStartDay: number | null = null;
+  let dragCurrentDay: number | null = null;
+
+  $: dragRangeDates = (() => {
+    if (!dragging || dragStartDay === null || dragCurrentDay === null) {
+      return new Set<string>();
+    }
+    const lo = Math.min(dragStartDay, dragCurrentDay);
+    const hi = Math.max(dragStartDay, dragCurrentDay);
+    const dates = new Set<string>();
+    for (const cell of calendarCells) {
+      if (cell.kind !== 'day') continue;
+      const item = cell.item;
+      if (item.day >= lo && item.day <= hi && !item.isWeekend && !item.isHoliday) {
+        dates.add(item.dateIso);
+      }
+    }
+    return dates;
+  })();
+
+  function dayFromPoint(clientX: number, clientY: number): number | null {
+    const el = document.elementFromPoint(clientX, clientY);
+    if (!el) return null;
+    const btn = (el as HTMLElement).closest('[data-day]') as HTMLElement | null;
+    if (!btn) return null;
+    const val = parseInt(btn.dataset.day!, 10);
+    return Number.isFinite(val) ? val : null;
+  }
+
+  function findDayItem(day: number): DayItem | null {
+    for (const cell of calendarCells) {
+      if (cell.kind === 'day' && cell.item.day === day) return cell.item;
+    }
+    return null;
+  }
+
+  function resetDrag(): void {
+    dragging = false;
+    dragStartDay = null;
+    dragCurrentDay = null;
+  }
+
+  function commitDrag(): void {
+    if (loadingHolidays) {
+      resetDrag();
+      return;
+    }
+    const dates = [...dragRangeDates];
+    if (dates.length > 0) {
+      onBatchSetVacation(dates, dragIntent === 'select');
+    }
+    resetDrag();
+  }
+
+  function handlePointerDown(e: PointerEvent): void {
+    if (loadingHolidays || dragging || e.button !== 0) return;
+    const day = dayFromPoint(e.clientX, e.clientY);
+    if (day === null) return;
+
+    const item = findDayItem(day);
+    if (!item || item.isWeekend || item.isHoliday) return;
+
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+
+    dragging = true;
+    dragStartDay = day;
+    dragCurrentDay = day;
+    dragIntent = item.isVacation ? 'deselect' : 'select';
+
+    e.preventDefault();
+  }
+
+  function handlePointerMove(e: PointerEvent): void {
+    if (!dragging) return;
+    const day = dayFromPoint(e.clientX, e.clientY);
+    if (day !== null && day !== dragCurrentDay) {
+      dragCurrentDay = day;
+    }
+  }
+
+  function handlePointerUp(): void {
+    if (!dragging) return;
+    commitDrag();
+  }
+
+  function handleCellClick(e: MouseEvent, item: DayItem): void {
+    if (e.detail !== 0) return;
+    if (loadingHolidays || item.isWeekend || item.isHoliday) return;
+    onBatchSetVacation([item.dateIso], !item.isVacation);
+  }
+
+  function handleKeyDown(e: KeyboardEvent): void {
+    if (e.key === 'Escape' && dragging) {
+      resetDrag();
+    }
+  }
+
+  function handleWindowBlur(): void {
+    if (dragging) resetDrag();
+  }
+
+  // ── Accessibility ────────────────────────────────────────
   function dayAriaLabel(item: DayItem): string {
     const date = `${MONTHS[selectedMonth - 1].label} ${item.day}, ${year}`;
 
@@ -20,6 +125,8 @@
     return `${date}. Workday selected. Activate to set as paid vacation.`;
   }
 </script>
+
+<svelte:window on:keydown={handleKeyDown} on:blur={handleWindowBlur} />
 
 <div class="section-title">
   <h2>Paid Vacation Picker</h2>
@@ -63,7 +170,15 @@
 </div>
 
 <div class="calendar-wrapper" class:loading={loadingHolidays}>
-  <div class="calendar-grid">
+  <div
+    class="calendar-grid"
+    class:dragging
+    role="group"
+    aria-label="Vacation day picker — drag across days to select a range"
+    on:pointerdown={handlePointerDown}
+    on:pointermove={handlePointerMove}
+    on:pointerup={handlePointerUp}
+  >
     {#each calendarCells as cell (cell.key)}
       {#if cell.kind === 'empty'}
         <div class="day-cell empty" aria-hidden="true"></div>
@@ -77,7 +192,10 @@
           class:selected={item.isVacation}
           class:holidayCell={item.isHoliday}
           class:weekendCell={item.isWeekend && !item.isHoliday}
-          on:click={() => onToggleVacation(item)}
+          class:drag-select={dragIntent === 'select' && dragRangeDates.has(item.dateIso)}
+          class:drag-deselect={dragIntent === 'deselect' && dragRangeDates.has(item.dateIso)}
+          on:click={(e) => handleCellClick(e, item)}
+          data-day={item.day}
           disabled={blocked}
           aria-pressed={item.isVacation}
           aria-label={dayAriaLabel(item)}
@@ -259,6 +377,16 @@
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: var(--space-2);
+    touch-action: none;
+  }
+
+  .calendar-grid.dragging {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .calendar-grid.dragging .day-cell:not(.blocked) {
+    cursor: grabbing;
   }
 
   .day-cell {
@@ -306,6 +434,33 @@
   .day-cell.selected strong,
   .day-cell.selected span {
     color: #f7fbff;
+  }
+
+  .day-cell.drag-select {
+    background: rgba(47, 111, 221, 0.12);
+    border-color: rgba(47, 111, 221, 0.45);
+    box-shadow: 0 0 0 1px rgba(47, 111, 221, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .day-cell.drag-select strong {
+    color: var(--accent-strong);
+  }
+
+  .day-cell.drag-deselect {
+    opacity: 0.5;
+    border-color: rgba(168, 106, 125, 0.4);
+    background: rgba(249, 241, 244, 0.7);
+    transform: none;
+    box-shadow: none;
+  }
+
+  .day-cell.selected.drag-deselect {
+    background: linear-gradient(145deg, #8aa4cc, #7a94bc);
+    border-color: rgba(100, 130, 175, 0.6);
+    box-shadow: none;
+    opacity: 0.55;
+    transform: none;
   }
 
   .day-cell.blocked {

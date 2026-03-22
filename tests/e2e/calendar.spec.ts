@@ -223,15 +223,155 @@ test.describe('Calendar navigation', () => {
   });
 });
 
+test.describe('Drag-to-select vacation', () => {
+  test('dragging across workday cells selects the entire range', async ({ page }) => {
+    await waitForHydration(page);
+
+    const workdayCells = page.locator('button.day-cell:not([disabled])');
+    const count = await workdayCells.count();
+    expect(count).toBeGreaterThanOrEqual(3);
+
+    // Get bounding boxes of the first and third workday cells
+    const startBox = (await workdayCells.nth(0).boundingBox())!;
+    const endBox = (await workdayCells.nth(2).boundingBox())!;
+
+    // Drag from center of first to center of third
+    const startX = startBox.x + startBox.width / 2;
+    const startY = startBox.y + startBox.height / 2;
+    const endX = endBox.x + endBox.width / 2;
+    const endY = endBox.y + endBox.height / 2;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(endX, endY, { steps: 5 });
+    await page.mouse.up();
+
+    // All three workday cells should now be selected
+    await expect(workdayCells.nth(0)).toHaveAttribute('aria-pressed', 'true');
+    await expect(workdayCells.nth(1)).toHaveAttribute('aria-pressed', 'true');
+    await expect(workdayCells.nth(2)).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('dragging from a vacation day deselects the range', async ({ page }) => {
+    await waitForHydration(page);
+
+    const workdayCells = page.locator('button.day-cell:not([disabled])');
+
+    // First, select two workdays via clicks
+    await workdayCells.nth(0).click();
+    await workdayCells.nth(1).click();
+    await expect(workdayCells.nth(0)).toHaveAttribute('aria-pressed', 'true');
+    await expect(workdayCells.nth(1)).toHaveAttribute('aria-pressed', 'true');
+
+    // Drag from the first (selected) cell to the second — intent should be "deselect"
+    const startBox = (await workdayCells.nth(0).boundingBox())!;
+    const endBox = (await workdayCells.nth(1).boundingBox())!;
+
+    await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, { steps: 3 });
+    await page.mouse.up();
+
+    // Both cells should now be deselected
+    await expect(workdayCells.nth(0)).toHaveAttribute('aria-pressed', 'false');
+    await expect(workdayCells.nth(1)).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('drag skips weekend and holiday cells', async ({ page }) => {
+    await waitForHydration(page);
+
+    // Navigate to January 2026 where weekends are interspersed
+    const janButton = page.locator('.month-grid button').first();
+    await janButton.click();
+
+    const currentYear = new Date().getFullYear();
+    const yearDelta = 2026 - currentYear;
+    if (yearDelta > 0) {
+      for (let i = 0; i < yearDelta; i++) await page.getByLabel('Increase year').click();
+    } else if (yearDelta < 0) {
+      for (let i = 0; i < -yearDelta; i++) await page.getByLabel('Decrease year').click();
+    }
+    await page.waitForLoadState('networkidle');
+
+    // Drag from the first day cell to the 7th (crosses a weekend)
+    const allCells = page.locator('button.day-cell');
+    const firstCell = allCells.nth(0);
+    const seventhCell = allCells.nth(6);
+
+    const startBox = (await firstCell.boundingBox())!;
+    const endBox = (await seventhCell.boundingBox())!;
+
+    await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, { steps: 5 });
+    await page.mouse.up();
+
+    // Verify weekends and holidays remain unselected
+    for (let i = 0; i < 7; i++) {
+      const cell = allCells.nth(i);
+      const isDisabled = await cell.isDisabled();
+      if (isDisabled) {
+        await expect(cell).toHaveAttribute('aria-pressed', 'false');
+      }
+    }
+  });
+
+  test('escape cancels drag without committing', async ({ page }) => {
+    await waitForHydration(page);
+
+    const workdayCells = page.locator('button.day-cell:not([disabled])');
+    const startBox = (await workdayCells.nth(0).boundingBox())!;
+    const endBox = (await workdayCells.nth(2).boundingBox())!;
+
+    // Start a drag
+    await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, { steps: 3 });
+
+    // Press Escape to cancel
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+
+    // No cells should be selected
+    await expect(workdayCells.nth(0)).toHaveAttribute('aria-pressed', 'false');
+    await expect(workdayCells.nth(1)).toHaveAttribute('aria-pressed', 'false');
+    await expect(workdayCells.nth(2)).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('drag updates summary metrics correctly', async ({ page }) => {
+    await waitForHydration(page);
+
+    const workedMetric = page
+      .locator('article.metric')
+      .filter({ hasText: 'Worked Days' })
+      .locator('strong');
+    const initialWorked = parseInt((await workedMetric.textContent()) ?? '0', 10);
+
+    // Drag across 3 workday cells
+    const workdayCells = page.locator('button.day-cell:not([disabled])');
+    const startBox = (await workdayCells.nth(0).boundingBox())!;
+    const endBox = (await workdayCells.nth(2).boundingBox())!;
+
+    await page.mouse.move(startBox.x + startBox.width / 2, startBox.y + startBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, { steps: 5 });
+    await page.mouse.up();
+
+    // Worked days should decrease by 3
+    const updatedWorked = parseInt((await workedMetric.textContent()) ?? '0', 10);
+    expect(updatedWorked).toBe(initialWorked - 3);
+  });
+});
+
 test.describe('Profile validation', () => {
   test('save with empty fields shows error', async ({ page }) => {
     await waitForHydration(page);
 
     await page.getByRole('button', { name: 'Edit Profile' }).click();
 
-    const companyInput = page.locator('input[placeholder="405627530"]');
-    const nameInput = page.locator('input[placeholder="Employee full name"]');
-    const idInput = page.locator('input[placeholder="Personal ID"]');
+    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const nameInput = page.locator('input[placeholder="e.g. First Last"]');
+    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
 
     // Clear all fields
     await companyInput.fill('');
@@ -249,13 +389,13 @@ test.describe('Profile validation', () => {
 
     await page.getByRole('button', { name: 'Edit Profile' }).click();
 
-    const companyInput = page.locator('input[placeholder="405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
     await companyInput.fill('abc');
 
-    const nameInput = page.locator('input[placeholder="Employee full name"]');
+    const nameInput = page.locator('input[placeholder="e.g. First Last"]');
     await nameInput.fill('Test User');
 
-    const idInput = page.locator('input[placeholder="Personal ID"]');
+    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
     await idInput.fill('01005031116');
 
     await page.getByRole('button', { name: 'Save Profile' }).click();
@@ -269,13 +409,13 @@ test.describe('Profile validation', () => {
 
     await page.getByRole('button', { name: 'Edit Profile' }).click();
 
-    const companyInput = page.locator('input[placeholder="405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
     await companyInput.fill('405627530');
 
-    const nameInput = page.locator('input[placeholder="Employee full name"]');
+    const nameInput = page.locator('input[placeholder="e.g. First Last"]');
     await nameInput.fill('Test User');
 
-    const idInput = page.locator('input[placeholder="Personal ID"]');
+    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
     await idInput.fill('123'); // Too short
 
     await page.getByRole('button', { name: 'Save Profile' }).click();

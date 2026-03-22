@@ -187,13 +187,11 @@
 
   // ── Vacation ─────────────────────────────────────────────
 
-  function toggleVacation(item: DayItem): void {
-    if (loadingHolidays || item.isWeekend || item.isHoliday) return;
-
-    if (vacationDates.has(item.dateIso)) {
-      vacationDates.delete(item.dateIso);
-    } else {
-      vacationDates.add(item.dateIso);
+  function batchSetVacation(dateIsos: string[], isVacation: boolean): void {
+    if (loadingHolidays) return;
+    for (const dateIso of dateIsos) {
+      if (isVacation) vacationDates.add(dateIso);
+      else vacationDates.delete(dateIso);
     }
     vacationDates = new Set(vacationDates);
   }
@@ -635,7 +633,7 @@
         {calendarCells}
         {loadingHolidays}
         {hasVacation}
-        onToggleVacation={toggleVacation}
+        onBatchSetVacation={batchSetVacation}
         onSelectAll={selectAllWorkdays}
         onClearAll={clearAllVacation}
       />

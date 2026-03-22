@@ -100,7 +100,7 @@ test.describe('Profile editing', () => {
   test('edit and cancel profile', async ({ page }) => {
     await waitForHydration(page);
 
-    const companyInput = page.locator('input[placeholder="405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
     await expect(companyInput).toBeDisabled();
 
     // Click Edit Profile and wait for Save to appear
@@ -123,9 +123,9 @@ test.describe('Generation', () => {
     await page.getByRole('button', { name: 'Edit Profile' }).click();
     await expect(page.getByRole('button', { name: 'Save Profile' })).toBeVisible();
 
-    const companyInput = page.locator('input[placeholder="405627530"]');
-    const nameInput = page.locator('input[placeholder="Employee full name"]');
-    const idInput = page.locator('input[placeholder="Personal ID"]');
+    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const nameInput = page.locator('input[placeholder="e.g. First Last"]');
+    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
 
     await expect(companyInput).toBeEnabled();
 

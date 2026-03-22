@@ -15,9 +15,9 @@ test.describe('Profile persistence', () => {
     await expect(page.getByRole('button', { name: 'Save Profile' })).toBeVisible();
 
     // Fill profile fields
-    const companyInput = page.locator('input[placeholder="405627530"]');
-    const nameInput = page.locator('input[placeholder="Employee full name"]');
-    const idInput = page.locator('input[placeholder="Personal ID"]');
+    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const nameInput = page.locator('input[placeholder="e.g. First Last"]');
+    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
 
     await companyInput.fill('405627530');
     await nameInput.fill('Persist Test');
@@ -40,12 +40,15 @@ test.describe('Profile persistence', () => {
   test('output format selection is preserved', async ({ page }) => {
     await waitForHydration(page);
 
-    // The format select is always enabled
     const formatSelect = page.locator('select');
     await expect(formatSelect).toBeVisible();
 
     // Verify default is DOCX
     await expect(formatSelect).toHaveValue('docx');
+
+    // Enter edit mode so the select is enabled
+    await page.getByRole('button', { name: 'Edit Profile' }).click();
+    await expect(page.getByRole('button', { name: 'Save Profile' })).toBeVisible();
 
     // DOC option only appears when LibreOffice is installed (docExportAvailable)
     const docOption = formatSelect.locator('option[value="doc"]');
@@ -60,9 +63,9 @@ test.describe('Profile persistence', () => {
   test('profile reset clears fields', async ({ page }) => {
     await waitForHydration(page);
 
-    const companyInput = page.locator('input[placeholder="405627530"]');
-    const nameInput = page.locator('input[placeholder="Employee full name"]');
-    const idInput = page.locator('input[placeholder="Personal ID"]');
+    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const nameInput = page.locator('input[placeholder="e.g. First Last"]');
+    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
 
     // Capture the default values (from env vars) shown on initial load
     const defaultCompany = await companyInput.inputValue();

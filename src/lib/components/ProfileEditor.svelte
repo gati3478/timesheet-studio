@@ -5,6 +5,7 @@
   export let outputFormat: 'docx' | 'doc';
   export let isEditing: boolean;
   export let error: string;
+  export let errorDetails: string[] = [];
   export let message: string;
 
   export let docExportAvailable: boolean;
@@ -30,13 +31,30 @@
   {/if}
 </div>
 
-<div class="input-grid" class:editing={isEditing}>
+{#if error}
+  <div class="status status-error">
+    <p>{error}</p>
+    {#if errorDetails.length > 0}
+      <ul class="status-list">
+        {#each errorDetails as detail, i (i)}
+          <li>{detail}</li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
+{/if}
+
+{#if message}
+  <p class="status status-success">{message}</p>
+{/if}
+
+<div class="input-grid" class:editing={isEditing} class:has-error={!!error}>
   <label>
     <span>Company Code</span>
     <input
       type="text"
       bind:value={draftCompanyCode}
-      placeholder="405627530"
+      placeholder="e.g. 405627530"
       disabled={!isEditing}
     />
   </label>
@@ -46,7 +64,7 @@
     <input
       type="text"
       bind:value={draftEmployeeName}
-      placeholder="Employee full name"
+      placeholder="e.g. First Last"
       disabled={!isEditing}
     />
   </label>
@@ -56,14 +74,14 @@
     <input
       type="text"
       bind:value={draftEmployeeId}
-      placeholder="Personal ID"
+      placeholder="e.g. 01005031116"
       disabled={!isEditing}
     />
   </label>
 
   <label>
     <span>Output Format</span>
-    <select bind:value={outputFormat}>
+    <select bind:value={outputFormat} disabled={!isEditing}>
       <option value="docx">DOCX</option>
       {#if docExportAvailable}
         <option value="doc">DOC</option>
@@ -71,14 +89,6 @@
     </select>
   </label>
 </div>
-
-{#if error}
-  <p class="status status-error">{error}</p>
-{/if}
-
-{#if message}
-  <p class="status status-success">{message}</p>
-{/if}
 
 <style>
   .section-title {
@@ -147,12 +157,28 @@
     margin-top: var(--space-3);
     display: grid;
     gap: var(--space-3);
+    border-left: 3px solid transparent;
+    padding-left: 0;
+    transition:
+      border-color 200ms ease,
+      padding-left 200ms ease;
+  }
+
+  .input-grid.editing {
+    border-left-color: var(--accent);
+    padding-left: var(--space-3);
   }
 
   .input-grid.editing input,
   .input-grid.editing select {
-    border-color: var(--border-strong);
-    background: rgba(247, 252, 255, 0.96);
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 1px rgba(47, 111, 221, 0.12);
+  }
+
+  .input-grid.has-error input:placeholder-shown {
+    border-color: rgba(188, 96, 118, 0.6);
+    box-shadow: 0 0 0 1px rgba(188, 96, 118, 0.12);
   }
 
   label {
@@ -175,14 +201,17 @@
     color: var(--text-primary);
     padding: 0.6rem 0.76rem;
     transition:
-      border-color 120ms ease,
-      background-color 120ms ease;
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease,
+      color 180ms ease;
   }
 
-  input:disabled {
-    color: var(--text-secondary);
-    background: rgba(244, 248, 253, 0.98);
-    border-color: rgba(130, 156, 197, 0.35);
+  input:disabled,
+  select:disabled {
+    color: var(--text-tertiary);
+    background: rgba(235, 240, 248, 0.92);
+    border-color: rgba(150, 170, 200, 0.3);
     cursor: not-allowed;
   }
 
@@ -201,9 +230,31 @@
     border-color: rgba(188, 96, 118, 0.35);
   }
 
+  .status-error p {
+    margin: 0;
+  }
+
+  .status-error p::before {
+    content: '⚠ ';
+  }
+
+  .status-list {
+    margin: var(--space-2) 0 0;
+    padding-left: 1.25rem;
+    font-size: 0.84rem;
+  }
+
+  .status-list li + li {
+    margin-top: 0.2rem;
+  }
+
   .status-success {
     color: #26684d;
     background: rgba(232, 248, 240, 0.92);
     border-color: rgba(78, 152, 117, 0.35);
+  }
+
+  .status-success::before {
+    content: '✓ ';
   }
 </style>

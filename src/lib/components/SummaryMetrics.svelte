@@ -27,8 +27,8 @@
   </article>
   <article class="card metric">
     <p>Month Split</p>
-    <strong>{firstHalfHours} / {secondHalfHours}</strong>
-    <small>First-half / second-half hours</small>
+    <strong>{firstHalfHours} <span class="split-sep">|</span> {secondHalfHours}</strong>
+    <small>1st half hours | 2nd half hours</small>
   </article>
 </section>
 
@@ -60,11 +60,17 @@
   }
 
   .metric strong {
-    margin-top: var(--space-2);
+    margin-top: var(--space-3);
     display: block;
     font-size: 1.52rem;
     letter-spacing: -0.02em;
     color: var(--text-primary);
+  }
+
+  .split-sep {
+    color: var(--text-tertiary);
+    font-weight: 400;
+    margin: 0 0.1em;
   }
 
   .metric small {

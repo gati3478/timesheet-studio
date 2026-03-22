@@ -28,6 +28,7 @@
   let draftEmployeeId = employeeId;
   let isEditingProfile = false;
   let profileError = '';
+  let profileDetails: string[] = [];
   let profileMessage = '';
 
   let outputFormat: 'docx' | 'doc' = 'docx';
@@ -187,7 +188,7 @@
   // ── Vacation ─────────────────────────────────────────────
 
   function toggleVacation(item: DayItem): void {
-    if (item.isWeekend || item.isHoliday) return;
+    if (loadingHolidays || item.isWeekend || item.isHoliday) return;
 
     if (vacationDates.has(item.dateIso)) {
       vacationDates.delete(item.dateIso);
@@ -195,6 +196,20 @@
       vacationDates.add(item.dateIso);
     }
     vacationDates = new Set(vacationDates);
+  }
+
+  function selectAllWorkdays(): void {
+    if (loadingHolidays) return;
+    for (const item of dayItems) {
+      if (!item.isWeekend && !item.isHoliday) vacationDates.add(item.dateIso);
+    }
+    vacationDates = new Set(vacationDates);
+  }
+
+  function clearAllVacation(): void {
+    const prefix = `${selectedYear}-${pad2(selectedMonth)}-`;
+    const filtered = [...vacationDates].filter((d) => !d.startsWith(prefix));
+    vacationDates = new Set(filtered);
   }
 
   // ── Generation ───────────────────────────────────────────
@@ -276,6 +291,7 @@
     draftEmployeeName = employeeName;
     draftEmployeeId = employeeId;
     profileError = '';
+    profileDetails = [];
     profileMessage = '';
     isEditingProfile = true;
   }
@@ -285,6 +301,7 @@
     draftEmployeeName = employeeName;
     draftEmployeeId = employeeId;
     profileError = '';
+    profileDetails = [];
     profileMessage = '';
     isEditingProfile = false;
   }
@@ -294,23 +311,21 @@
     const nextEmployeeName = draftEmployeeName.trim();
     const nextEmployeeId = draftEmployeeId.trim();
 
-    if (!nextCompanyCode || !nextEmployeeName || !nextEmployeeId) {
-      profileError = 'Company code, name, and ID are all required.';
-      profileMessage = '';
-      return;
-    }
-    if (!/^\d{6,12}$/.test(nextCompanyCode)) {
-      profileError = 'Company code must be numeric (6-12 digits).';
-      profileMessage = '';
-      return;
-    }
-    if (!looksLikeName(nextEmployeeName)) {
-      profileError = 'Employee name must contain text.';
-      profileMessage = '';
-      return;
-    }
-    if (!/^\d{11}$/.test(nextEmployeeId)) {
-      profileError = 'Employee ID must be exactly 11 digits.';
+    const errors: string[] = [];
+    if (!nextCompanyCode) errors.push('Company code is required.');
+    else if (!/^\d{6,12}$/.test(nextCompanyCode))
+      errors.push('Company code must be numeric (6–12 digits).');
+
+    if (!nextEmployeeName) errors.push('Employee name is required.');
+    else if (!looksLikeName(nextEmployeeName)) errors.push('Employee name must contain text.');
+
+    if (!nextEmployeeId) errors.push('Employee ID is required.');
+    else if (!/^\d{11}$/.test(nextEmployeeId))
+      errors.push('Employee ID must be exactly 11 digits.');
+
+    if (errors.length > 0) {
+      profileError = 'Please fix the following:';
+      profileDetails = errors;
       profileMessage = '';
       return;
     }
@@ -325,6 +340,7 @@
     persistProfile();
     isEditingProfile = false;
     profileError = '';
+    profileDetails = [];
     profileMessage = 'Profile saved.';
   }
 
@@ -337,6 +353,7 @@
     draftEmployeeId = employeeId;
     isEditingProfile = false;
     profileError = '';
+    profileDetails = [];
     profileMessage = 'Profile reset to defaults.';
     persistProfile();
   }
@@ -477,6 +494,7 @@
 
   $: dayItems = buildDayItems(selectedYear, selectedMonth, holidayDates, vacationDates);
   $: calendarCells = buildCalendarCells(selectedYear, selectedMonth, dayItems);
+  $: hasVacation = dayItems.some((item) => item.isVacation);
 
   $: summary = (() => {
     let worked = 0,
@@ -545,6 +563,7 @@
         {docExportAvailable}
         isEditing={isEditingProfile}
         error={profileError}
+        errorDetails={profileDetails}
         message={profileMessage}
         onEdit={openProfileEditor}
         onSave={saveProfile}
@@ -586,7 +605,11 @@
         {#if holidayError}
           <p class="status status-error">{holidayError}</p>
         {:else if loadingHolidays}
-          <p class="status status-info">Refreshing holiday calendar…</p>
+          <p class="status status-info">
+            Refreshing holiday calendar<span class="loading-dots"
+              ><span>.</span><span>.</span><span>.</span></span
+            >
+          </p>
         {/if}
       </div>
 
@@ -597,6 +620,7 @@
             class="utility-button"
             on:click={shutdownApp}
             disabled={isGenerating || isShuttingDown}
+            title="Stops the local Node.js server powering this page"
           >
             {#if isShuttingDown}Stopping…{:else}Quit local app{/if}
           </button>
@@ -609,7 +633,11 @@
         year={selectedYear}
         {selectedMonth}
         {calendarCells}
+        {loadingHolidays}
+        {hasVacation}
         onToggleVacation={toggleVacation}
+        onSelectAll={selectAllWorkdays}
+        onClearAll={clearAllVacation}
       />
     </article>
   </section>
@@ -729,9 +757,10 @@
   }
 
   .button-row button:disabled {
-    opacity: 0.72;
-    cursor: progress;
+    opacity: 0.45;
+    cursor: not-allowed;
     box-shadow: none;
+    filter: saturate(0.6);
   }
 
   .utility-row {
@@ -762,8 +791,8 @@
   }
 
   .utility-button:disabled {
-    opacity: 0.68;
-    cursor: progress;
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   .status-stack {
@@ -789,14 +818,22 @@
     border-color: rgba(188, 96, 118, 0.35);
   }
 
+  .status-error::before {
+    content: '⚠ ';
+  }
+
   .status-info {
     color: #395f9a;
     background: rgba(234, 242, 255, 0.9);
     border-color: rgba(95, 138, 205, 0.35);
   }
 
+  .status-info::before {
+    content: 'ℹ ';
+  }
+
   .status-list {
-    margin: 0;
+    margin: var(--space-2) 0 0;
     padding-left: 1.25rem;
     color: #8a2f45;
     font-size: 0.84rem;
@@ -804,6 +841,31 @@
 
   .status-list li + li {
     margin-top: 0.2rem;
+  }
+
+  @keyframes pulse-dots {
+    0%,
+    20% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .status-info .loading-dots span {
+    animation: pulse-dots 1.4s infinite;
+  }
+
+  .status-info .loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .status-info .loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
   }
 
   @media (max-width: 1024px) {

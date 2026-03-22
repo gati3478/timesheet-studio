@@ -5,7 +5,11 @@
   export let year: number;
   export let selectedMonth: number;
   export let calendarCells: CalendarCell[];
+  export let loadingHolidays: boolean = false;
+  export let hasVacation: boolean = false;
   export let onToggleVacation: (item: DayItem) => void;
+  export let onSelectAll: () => void = () => {};
+  export let onClearAll: () => void = () => {};
 
   function dayAriaLabel(item: DayItem): string {
     const date = `${MONTHS[selectedMonth - 1].label} ${item.day}, ${year}`;
@@ -22,11 +26,34 @@
   <p>Weekends and holidays are locked as X</p>
 </div>
 
-<div class="legend">
-  <span><i class="dot work"></i>Workday</span>
-  <span><i class="dot vacation"></i>Paid Vacation</span>
-  <span><i class="dot holiday"></i>Holiday (X)</span>
-  <span><i class="dot blocked"></i>Weekend (X)</span>
+<div class="legend-row">
+  <div class="legend">
+    <span><i class="dot work"></i>Workday</span>
+    <span><i class="dot vacation"></i>Paid Vacation</span>
+    <span><i class="dot holiday"></i>Holiday (X)</span>
+    <span><i class="dot blocked"></i>Weekend (X)</span>
+  </div>
+  <div class="bulk-actions">
+    <button
+      type="button"
+      class="bulk-btn"
+      on:click={onSelectAll}
+      disabled={loadingHolidays}
+      title="Mark all workdays as paid vacation"
+    >
+      Select all
+    </button>
+    {#if hasVacation}
+      <button
+        type="button"
+        class="bulk-btn clear"
+        on:click={onClearAll}
+        title="Remove all vacation selections"
+      >
+        Clear
+      </button>
+    {/if}
+  </div>
 </div>
 
 <div class="weekday-row">
@@ -35,48 +62,55 @@
   {/each}
 </div>
 
-<div class="calendar-grid">
-  {#each calendarCells as cell (cell.key)}
-    {#if cell.kind === 'empty'}
-      <div class="day-cell empty" aria-hidden="true"></div>
-    {:else}
-      {@const item = cell.item}
-      {@const blocked = item.isWeekend || item.isHoliday}
-      <button
-        type="button"
-        class="day-cell"
-        class:blocked
-        class:selected={item.isVacation}
-        class:holidayCell={item.isHoliday}
-        class:weekendCell={item.isWeekend && !item.isHoliday}
-        on:click={() => onToggleVacation(item)}
-        disabled={blocked}
-        aria-pressed={item.isVacation}
-        aria-label={dayAriaLabel(item)}
-        title={item.dateIso}
-      >
-        <strong>{item.day}</strong>
-        {#if item.isHoliday}
-          <em class="status-pill holiday-pill">X</em>
-        {:else if item.isWeekend}
-          <em class="status-pill weekend-pill">X</em>
-        {:else if item.isVacation}
-          <em class="status-pill vacation-pill">შ</em>
-        {/if}
-        <span>
+<div class="calendar-wrapper" class:loading={loadingHolidays}>
+  <div class="calendar-grid">
+    {#each calendarCells as cell (cell.key)}
+      {#if cell.kind === 'empty'}
+        <div class="day-cell empty" aria-hidden="true"></div>
+      {:else}
+        {@const item = cell.item}
+        {@const blocked = item.isWeekend || item.isHoliday}
+        <button
+          type="button"
+          class="day-cell"
+          class:blocked
+          class:selected={item.isVacation}
+          class:holidayCell={item.isHoliday}
+          class:weekendCell={item.isWeekend && !item.isHoliday}
+          on:click={() => onToggleVacation(item)}
+          disabled={blocked}
+          aria-pressed={item.isVacation}
+          aria-label={dayAriaLabel(item)}
+          title={item.dateIso}
+        >
+          <strong>{item.day}</strong>
           {#if item.isHoliday}
-            X Holiday
+            <em class="status-pill holiday-pill">X</em>
           {:else if item.isWeekend}
-            X Weekend
+            <em class="status-pill weekend-pill">X</em>
           {:else if item.isVacation}
-            შ Vacation
-          {:else}
-            8 Work
+            <em class="status-pill vacation-pill">შ</em>
           {/if}
-        </span>
-      </button>
-    {/if}
-  {/each}
+          <span>
+            {#if item.isHoliday}
+              X Holiday
+            {:else if item.isWeekend}
+              X Weekend
+            {:else if item.isVacation}
+              შ Vacation
+            {:else}
+              8 Work
+            {/if}
+          </span>
+        </button>
+      {/if}
+    {/each}
+  </div>
+  {#if loadingHolidays}
+    <div class="loading-overlay" aria-hidden="true">
+      <span>Loading holidays…</span>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -93,6 +127,14 @@
     font-size: 0.85rem;
   }
 
+  .legend-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
   .legend {
     display: flex;
     flex-wrap: wrap;
@@ -107,11 +149,76 @@
     gap: var(--space-2);
   }
 
+  .bulk-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .bulk-btn {
+    min-height: 30px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(243, 248, 255, 0.85);
+    color: var(--accent-strong);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.74rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease;
+  }
+
+  .bulk-btn:hover:not(:disabled) {
+    background: rgba(233, 243, 255, 0.95);
+    border-color: var(--border-strong);
+  }
+
+  .bulk-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .bulk-btn.clear {
+    color: #7a3d4d;
+    border-color: rgba(168, 106, 125, 0.32);
+    background: rgba(249, 241, 244, 0.92);
+  }
+
+  .calendar-wrapper {
+    position: relative;
+  }
+
+  .calendar-wrapper.loading .calendar-grid {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .loading-overlay span {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+
   .dot {
-    width: 0.58rem;
-    height: 0.58rem;
+    width: 0.72rem;
+    height: 0.72rem;
     border-radius: 999px;
     display: inline-block;
+    border: 1.5px solid transparent;
   }
 
   .dot.work {
@@ -124,10 +231,12 @@
 
   .dot.blocked {
     background: #9fa8b8;
+    border-color: #7a8496;
   }
 
   .dot.holiday {
     background: #c07b88;
+    border-color: #a05a6a;
   }
 
   .weekday-row {
@@ -296,8 +405,13 @@
   }
 
   @media (max-width: 430px) {
+    .calendar-grid {
+      gap: 2px;
+    }
+
     .weekday-row {
       font-size: 0.68rem;
+      gap: 2px;
     }
 
     .day-cell strong {

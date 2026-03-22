@@ -28,7 +28,19 @@ export async function assertTemplateExists(): Promise<void> {
   }
 }
 
+let cachedTemplate: Buffer | null = null;
+
 export async function loadTemplateBuffer(): Promise<Buffer> {
-  await assertTemplateExists();
-  return readFile(DOCX_TEMPLATE_PATH);
+  if (cachedTemplate) {
+    return cachedTemplate;
+  }
+
+  try {
+    cachedTemplate = await readFile(DOCX_TEMPLATE_PATH);
+    return cachedTemplate;
+  } catch {
+    throw new Error(
+      'Template DOCX is missing. Run `npm run prepare:template` to convert timesheet_template.doc.'
+    );
+  }
 }

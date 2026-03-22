@@ -297,7 +297,7 @@ describe('POST /api/timesheet/generate', () => {
     const response = await POST({ request });
     expect(response.status).toBe(500);
     const data = await response.json();
-    expect(data.message).toBe('soffice not found');
+    expect(data.message).toBe('DOC conversion failed. Please try DOCX format instead.');
   });
 
   it('returns 500 for unexpected errors during generation', async () => {

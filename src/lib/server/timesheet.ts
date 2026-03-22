@@ -72,6 +72,11 @@ export function computeTimesheet(input: TimesheetComputationInput): ComputedTime
   }
 
   const dayCodesByDay = new Map<number, DayCode>();
+  let firstHalfHours = 0;
+  let secondHalfHours = 0;
+  let workedDays = 0;
+  let paidVacationHours = 0;
+  let weekdayHolidayCount = 0;
 
   for (let day = 1; day <= 31; day += 1) {
     if (day > monthDays) {
@@ -81,42 +86,26 @@ export function computeTimesheet(input: TimesheetComputationInput): ComputedTime
 
     const current = new Date(year, month - 1, day);
     const key = toDateKey(current);
+    const weekday = isWeekday(current);
 
-    if (!isWeekday(current) || holidayDates.has(key)) {
+    if (!weekday || holidayDates.has(key)) {
       dayCodesByDay.set(day, 'X');
+      if (weekday && holidayDates.has(key)) {
+        weekdayHolidayCount++;
+      }
       continue;
     }
 
     if (vacationSet.has(key)) {
       dayCodesByDay.set(day, 'შ');
+      paidVacationHours += 8;
       continue;
     }
 
     dayCodesByDay.set(day, '8');
-  }
-
-  let firstHalfHours = 0;
-  let secondHalfHours = 0;
-  let workedDays = 0;
-  let paidVacationHours = 0;
-  let weekdayHolidayCount = 0;
-
-  for (let day = 1; day <= monthDays; day++) {
-    const code = dayCodesByDay.get(day);
-    if (code === '8') {
-      workedDays++;
-      if (day <= 15) firstHalfHours += 8;
-      else secondHalfHours += 8;
-    } else if (code === 'შ') {
-      paidVacationHours += 8;
-    }
-
-    if (code === 'X') {
-      const current = new Date(year, month - 1, day);
-      if (isWeekday(current) && holidayDates.has(toDateKey(current))) {
-        weekdayHolidayCount++;
-      }
-    }
+    workedDays++;
+    if (day <= 15) firstHalfHours += 8;
+    else secondHalfHours += 8;
   }
 
   let lastWorkday = monthEnd;

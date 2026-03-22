@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import xpath from 'xpath';
-import type { ComputedTimesheet } from './types';
+import type { ComputedTimesheet, DayCode } from './types';
 
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const DOCUMENT_XML_PATH = 'word/document.xml';
@@ -293,8 +293,7 @@ function enforceSylfaenInStyles(stylesXml: string): string {
   return serializer.serializeToString(stylesDocument);
 }
 
-function getTableCell(document: Document, target: TableCellRef): Element {
-  const tables = xpath.select("//*[local-name()='tbl']", document) as Node[];
+function getTableCell(tables: Node[], target: TableCellRef): Element {
   const table = tables[target.table] as Element | undefined;
   if (!table) {
     throw new Error(`Table ${target.table} is missing in template.`);
@@ -315,8 +314,7 @@ function getTableCell(document: Document, target: TableCellRef): Element {
   return cell;
 }
 
-function getEmployeeRowCells(document: Document): Element[] {
-  const tables = xpath.select("//*[local-name()='tbl']", document) as Node[];
+function getEmployeeRowCells(tables: Node[]): Element[] {
   const table = tables[EMPLOYEE_ROW_TABLE] as Element | undefined;
   if (!table) {
     throw new Error(`Employee table ${EMPLOYEE_ROW_TABLE} missing in template.`);
@@ -381,9 +379,8 @@ function dayToCellIndex(day: number): number {
   return day <= 15 ? day + 2 : day + 3;
 }
 
-function applyDayColumnShading(document: Document, dayCodesByDay: Map<number, string>): void {
-  const tables = xpath.select("//*[local-name()='tbl']", document) as Element[];
-  const employeeTable = tables[EMPLOYEE_ROW_TABLE];
+function applyDayColumnShading(tables: Node[], dayCodesByDay: Map<number, DayCode>): void {
+  const employeeTable = tables[EMPLOYEE_ROW_TABLE] as Element | undefined;
   if (!employeeTable) {
     return;
   }
@@ -418,15 +415,16 @@ export async function fillTimesheetTemplate(input: FillTemplateInput): Promise<B
   }
 
   const documentNode = new DOMParser().parseFromString(documentXml, 'application/xml');
+  const tables = xpath.select("//*[local-name()='tbl']", documentNode) as Node[];
 
-  setStyledCellText(getTableCell(documentNode, LEFT_DATE_CELL), input.computed.lastWorkdayLabel, {
+  setStyledCellText(getTableCell(tables, LEFT_DATE_CELL), input.computed.lastWorkdayLabel, {
     bold: true
   });
-  setStyledCellText(getTableCell(documentNode, START_DATE_CELL), input.computed.startDateLabel);
-  setStyledCellText(getTableCell(documentNode, END_DATE_CELL), input.computed.endDateLabel);
-  setStyledCellText(getTableCell(documentNode, COMPANY_CODE_CELL), input.companyCode);
+  setStyledCellText(getTableCell(tables, START_DATE_CELL), input.computed.startDateLabel);
+  setStyledCellText(getTableCell(tables, END_DATE_CELL), input.computed.endDateLabel);
+  setStyledCellText(getTableCell(tables, COMPANY_CODE_CELL), input.companyCode);
 
-  const rowCells = getEmployeeRowCells(documentNode);
+  const rowCells = getEmployeeRowCells(tables);
 
   setStyledCellText(rowCells[1], input.employeeName);
   setStyledCellText(rowCells[2], input.employeeId);
@@ -456,7 +454,7 @@ export async function fillTimesheetTemplate(input: FillTemplateInput): Promise<B
   for (const [idx, value] of totalsCells) {
     setStyledCellText(rowCells[idx], String(value), totalsStyle);
   }
-  applyDayColumnShading(documentNode, input.computed.dayCodesByDay as Map<number, string>);
+  applyDayColumnShading(tables, input.computed.dayCodesByDay);
   enforceSylfaenOnAllRuns(documentNode);
 
   const serializer = new XMLSerializer();

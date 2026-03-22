@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parsePayload, isValidOutputFormat } from '../../src/lib/server/parse-payload';
+import { parsePayload } from '../../src/lib/server/parse-payload';
 import { TimesheetValidationError } from '../../src/lib/server/timesheet';
 
 const VALID_PAYLOAD = {
@@ -11,40 +11,6 @@ const VALID_PAYLOAD = {
   vacationDates: [],
   outputFormat: 'docx' as const
 };
-
-describe('isValidOutputFormat', () => {
-  it('accepts docx', () => {
-    expect(isValidOutputFormat('docx')).toBe(true);
-  });
-
-  it('accepts doc', () => {
-    expect(isValidOutputFormat('doc')).toBe(true);
-  });
-
-  it('rejects pdf', () => {
-    expect(isValidOutputFormat('pdf')).toBe(false);
-  });
-
-  it('rejects empty string', () => {
-    expect(isValidOutputFormat('')).toBe(false);
-  });
-
-  it('rejects null', () => {
-    expect(isValidOutputFormat(null)).toBe(false);
-  });
-
-  it('rejects undefined', () => {
-    expect(isValidOutputFormat(undefined)).toBe(false);
-  });
-
-  it('rejects number', () => {
-    expect(isValidOutputFormat(42)).toBe(false);
-  });
-
-  it('rejects uppercase DOCX', () => {
-    expect(isValidOutputFormat('DOCX')).toBe(false);
-  });
-});
 
 describe('parsePayload', () => {
   it('accepts a valid payload', () => {
@@ -215,6 +181,17 @@ describe('parsePayload', () => {
     const payload = { ...VALID_PAYLOAD, vacationDates: [123, null, '2026-03-15'] };
     expect(() => parsePayload(payload as unknown)).toThrow(TimesheetValidationError);
     expect(() => parsePayload(payload as unknown)).toThrow('All vacation dates must be strings.');
+  });
+
+  it('rejects malformed vacation date strings', () => {
+    const payload = { ...VALID_PAYLOAD, vacationDates: ['not-a-date'] };
+    expect(() => parsePayload(payload)).toThrow(TimesheetValidationError);
+    expect(() => parsePayload(payload)).toThrow('Vacation dates must be in YYYY-MM-DD format.');
+  });
+
+  it('rejects partial date formats in vacationDates', () => {
+    const payload = { ...VALID_PAYLOAD, vacationDates: ['2026-3-15'] };
+    expect(() => parsePayload(payload)).toThrow('Vacation dates must be in YYYY-MM-DD format.');
   });
 
   it('rejects vacationDates array exceeding 31 entries', () => {

@@ -491,6 +491,8 @@ function getCachedEntries(year: number): HolidayEntry[] | null {
   return cached.entries;
 }
 
+const inFlightFetches = new Map<number, Promise<HolidayEntry[]>>();
+
 export async function getHolidaysForYear(
   year: number,
   options: { includeStateOnly?: boolean } = {}
@@ -501,11 +503,17 @@ export async function getHolidaysForYear(
 
   let entries = getCachedEntries(year);
   if (!entries) {
-    entries = await fetchMergedHolidays(year);
-    holidayCache.set(year, {
-      fetchedAt: Date.now(),
-      entries
-    });
+    let promise = inFlightFetches.get(year);
+    if (!promise) {
+      promise = fetchMergedHolidays(year)
+        .then((result) => {
+          holidayCache.set(year, { fetchedAt: Date.now(), entries: result });
+          return result;
+        })
+        .finally(() => inFlightFetches.delete(year));
+      inFlightFetches.set(year, promise);
+    }
+    entries = await promise;
   }
 
   if (options.includeStateOnly) {
@@ -517,4 +525,5 @@ export async function getHolidaysForYear(
 
 export function __clearHolidayCacheForTests(): void {
   holidayCache.clear();
+  inFlightFetches.clear();
 }

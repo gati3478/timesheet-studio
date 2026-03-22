@@ -47,19 +47,6 @@
 </div>
 
 <style>
-  .section-title h2 {
-    margin: 0;
-    font-size: 1.08rem;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-  }
-
-  .section-title p {
-    margin: var(--space-1) 0 0;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-  }
-
   .period-shell {
     margin-top: var(--space-4);
     border: 1px solid var(--border-subtle);

@@ -95,19 +95,6 @@
     margin-top: var(--space-5);
   }
 
-  .section-title h2 {
-    margin: 0;
-    font-size: 1.08rem;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-  }
-
-  .section-title p {
-    margin: var(--space-1) 0 0;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-  }
-
   .profile-actions {
     margin-top: var(--space-3);
     display: flex;

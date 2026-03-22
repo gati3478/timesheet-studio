@@ -69,6 +69,38 @@ async function sha256(filepath) {
   return createHash('sha256').update(data).digest('hex');
 }
 
+/** Verify a downloaded Node.js archive against the official SHASUMS256.txt */
+async function verifyNodeIntegrity(archivePath, archiveName, nodeVersion) {
+  const shasumsUrl = `https://nodejs.org/dist/v${nodeVersion}/SHASUMS256.txt`;
+  console.log(`  Verifying integrity against ${shasumsUrl}`);
+
+  const response = await fetch(shasumsUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch SHASUMS256.txt: HTTP ${response.status}`);
+  }
+
+  const shasumsText = await response.text();
+  const expectedLine = shasumsText.split('\n').find((line) => line.endsWith(archiveName));
+
+  if (!expectedLine) {
+    throw new Error(`Archive "${archiveName}" not found in SHASUMS256.txt`);
+  }
+
+  const expectedHash = expectedLine.trim().split(/\s+/)[0];
+  const actualHash = await sha256(archivePath);
+
+  if (actualHash !== expectedHash) {
+    throw new Error(
+      `Integrity check FAILED for ${archiveName}:\n` +
+        `  Expected: ${expectedHash}\n` +
+        `  Actual:   ${actualHash}\n` +
+        'The downloaded binary may be corrupted or tampered with.'
+    );
+  }
+
+  console.log(`  Integrity verified: ${actualHash.substring(0, 12)}…`);
+}
+
 async function main() {
   const targetTriple = getTargetTriple();
   const { os: nodeOs, arch: nodeArch, isWindows } = getNodePlatform();
@@ -139,6 +171,7 @@ async function main() {
       const url = `https://nodejs.org/dist/v${NODE_VERSION}/${zipName}`;
       const zipPath = join(BINARIES, zipName);
       await download(url, zipPath);
+      await verifyNodeIntegrity(zipPath, zipName, NODE_VERSION);
 
       // Use PowerShell on Windows (unzip may not exist)
       execFileSync(
@@ -162,6 +195,7 @@ async function main() {
       const url = `https://nodejs.org/dist/v${NODE_VERSION}/${tarName}`;
       const tarPath = join(BINARIES, tarName);
       await download(url, tarPath);
+      await verifyNodeIntegrity(tarPath, tarName, NODE_VERSION);
 
       execFileSync(
         'tar',

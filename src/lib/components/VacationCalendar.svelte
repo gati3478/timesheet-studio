@@ -232,19 +232,6 @@
 </div>
 
 <style>
-  .section-title h2 {
-    margin: 0;
-    font-size: 1.08rem;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-  }
-
-  .section-title p {
-    margin: var(--space-1) 0 0;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-  }
-
   .legend-row {
     display: flex;
     align-items: flex-start;

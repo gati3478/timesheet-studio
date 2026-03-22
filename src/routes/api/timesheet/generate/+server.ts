@@ -18,7 +18,18 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   try {
-    const payload = await request.json();
+    const body = await request.text();
+    if (Buffer.byteLength(body) > MAX_BODY_SIZE) {
+      return json({ message: 'Request body too large.' }, { status: 413 });
+    }
+
+    let payload: unknown;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      return json({ message: 'Request body must be valid JSON.' }, { status: 400 });
+    }
+
     const input = parsePayload(payload);
 
     if (input.outputFormat === 'doc') {
@@ -83,16 +94,16 @@ export const POST: RequestHandler = async ({ request }) => {
       }
     });
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return json({ message: 'Request body must be valid JSON.' }, { status: 400 });
-    }
-
     if (error instanceof TimesheetValidationError) {
       return json({ message: error.message, details: error.details }, { status: 400 });
     }
 
     if (error instanceof DocConversionError) {
-      return json({ message: error.message }, { status: 500 });
+      console.error('DOC conversion failed:', error.message);
+      return json(
+        { message: 'DOC conversion failed. Please try DOCX format instead.' },
+        { status: 500 }
+      );
     }
 
     if (error instanceof Error) {

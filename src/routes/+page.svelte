@@ -9,6 +9,7 @@
   import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
   import { isTauriApp } from '$lib/tauri';
+  import { slugify } from '$lib/slugify';
   import type { PageData } from './$types';
 
   export let data: PageData;
@@ -165,7 +166,7 @@
   // ── Holidays ─────────────────────────────────────────────
 
   async function loadHolidays(year: number): Promise<void> {
-    if (loadedHolidayYear === year && holidayDates.size > 0) return;
+    if (loadedHolidayYear === year) return;
 
     loadingHolidays = true;
     holidayError = '';
@@ -234,8 +235,7 @@
 
   async function generateTimesheet(): Promise<void> {
     if (isEditingProfile) {
-      saveProfile();
-      if (isEditingProfile) return; // validation failed, errors already shown
+      if (!saveProfile()) return;
     }
 
     generationError = '';
@@ -265,12 +265,7 @@
       }
 
       const blob = await response.blob();
-      const nameSlug =
-        employeeName
-          .toLowerCase()
-          .replace(/[^a-z0-9\u10D0-\u10FF\s-]/g, '')
-          .trim()
-          .replace(/\s+/g, '-') || 'timesheet';
+      const nameSlug = slugify(employeeName) || 'timesheet';
       const fallbackFilename = `${nameSlug}-${MONTHS[selectedMonth - 1].short.toLowerCase()}-${selectedYear}-timesheet.${outputFormat}`;
       const filename =
         parseFilename(response.headers.get('content-disposition')) ?? fallbackFilename;
@@ -312,7 +307,7 @@
     isEditingProfile = false;
   }
 
-  function saveProfile(): void {
+  function saveProfile(): boolean {
     const nextCompanyCode = draftCompanyCode.trim();
     const nextEmployeeName = draftEmployeeName.trim();
     const nextEmployeeId = draftEmployeeId.trim();
@@ -333,7 +328,7 @@
       profileError = 'Please fix the following:';
       profileDetails = errors;
       profileMessage = '';
-      return;
+      return false;
     }
 
     companyCode = nextCompanyCode;
@@ -348,6 +343,7 @@
     profileError = '';
     profileDetails = [];
     profileMessage = 'Profile saved.';
+    return true;
   }
 
   function resetProfile(): void {
@@ -378,12 +374,12 @@
       const data = await response.json();
       if (!response.ok) {
         shutdownError = data.message ?? 'Failed to shut down server.';
+        isShuttingDown = false;
         return;
       }
       shutdownMessage = data.message ?? 'Server is shutting down...';
     } catch (error) {
       shutdownError = error instanceof Error ? error.message : 'Unexpected shutdown error.';
-    } finally {
       isShuttingDown = false;
     }
   }

@@ -6,7 +6,7 @@ const MAX_COMPANY_CODE_LENGTH = 20;
 const MAX_EMPLOYEE_ID_LENGTH = 20;
 const MAX_VACATION_DATES = 31;
 
-export function isValidOutputFormat(value: unknown): value is 'docx' | 'doc' {
+function isValidOutputFormat(value: unknown): value is 'docx' | 'doc' {
   return value === 'docx' || value === 'doc';
 }
 
@@ -43,6 +43,12 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
   const invalidEntries = body.vacationDates.filter((entry: unknown) => typeof entry !== 'string');
   if (invalidEntries.length > 0) {
     throw new TimesheetValidationError('All vacation dates must be strings.', []);
+  }
+
+  const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  const malformedDates = body.vacationDates.filter((d: string) => !ISO_DATE_RE.test(d));
+  if (malformedDates.length > 0) {
+    throw new TimesheetValidationError('Vacation dates must be in YYYY-MM-DD format.', []);
   }
 
   if (!isValidOutputFormat(body.outputFormat)) {

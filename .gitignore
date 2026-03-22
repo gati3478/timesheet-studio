@@ -32,6 +32,9 @@ Thumbs.db
 # Runtime outputs
 *.tmp
 
+# UI audit screenshots
+screenshots/
+
 # Generated timesheet outputs
 example-*.doc
 example-*.docx

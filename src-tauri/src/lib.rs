@@ -44,6 +44,8 @@ pub fn run() {
                 .title("Timesheet Studio [DEV]")
                 .inner_size(1100.0, 800.0)
                 .min_inner_size(800.0, 600.0)
+                .decorations(false)
+                .shadow(true)
                 .center()
                 .build()?;
                 return Ok(());
@@ -117,6 +119,8 @@ pub fn run() {
             .title("Timesheet Studio")
             .inner_size(1100.0, 800.0)
             .min_inner_size(800.0, 600.0)
+            .decorations(false)
+            .shadow(true)
             .center()
             .build()?;
 

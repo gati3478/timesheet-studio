@@ -69,6 +69,10 @@ button {
   cursor: pointer;
 }
 
+body.tauri-app {
+  padding-top: 38px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

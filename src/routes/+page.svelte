@@ -8,6 +8,7 @@
   import SummaryMetrics from '$lib/components/SummaryMetrics.svelte';
   import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
+  import { isTauriApp } from '$lib/tauri';
 
   const PROFILE_STORAGE_KEY = 'timesheet.profile.v1';
   const DEFAULT_COMPANY_CODE = env.PUBLIC_DEFAULT_COMPANY_CODE ?? '';
@@ -46,6 +47,8 @@
   let shutdownError = '';
   let shutdownMessage = '';
   let isShuttingDown = false;
+
+  let isTauri = false;
 
   // ── Helpers ──────────────────────────────────────────────
 
@@ -443,6 +446,8 @@
     if (!docExportAvailable && outputFormat === 'doc') {
       outputFormat = 'docx';
     }
+
+    isTauri = isTauriApp();
   });
 
   // ── Reactive statements ──────────────────────────────────
@@ -585,16 +590,18 @@
         {/if}
       </div>
 
-      <div class="utility-row">
-        <button
-          type="button"
-          class="utility-button"
-          on:click={shutdownApp}
-          disabled={isGenerating || isShuttingDown}
-        >
-          {#if isShuttingDown}Stopping…{:else}Quit local app{/if}
-        </button>
-      </div>
+      {#if !isTauri}
+        <div class="utility-row">
+          <button
+            type="button"
+            class="utility-button"
+            on:click={shutdownApp}
+            disabled={isGenerating || isShuttingDown}
+          >
+            {#if isShuttingDown}Stopping…{:else}Quit local app{/if}
+          </button>
+        </div>
+      {/if}
     </article>
 
     <article class="card calendar-panel">

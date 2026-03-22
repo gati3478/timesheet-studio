@@ -4,6 +4,7 @@
 
   let isTauri = false;
   let closeWindow: (() => Promise<void>) | null = null;
+  let startDrag: (() => Promise<void>) | null = null;
   let closeReady = false;
 
   onMount(async () => {
@@ -14,6 +15,7 @@
         const { getCurrentWindow } = await import('@tauri-apps/api/window');
         const appWindow = getCurrentWindow();
         closeWindow = () => appWindow.close();
+        startDrag = () => appWindow.startDragging();
       } catch (error) {
         console.error('TitleBar: Failed to initialize Tauri window API.', error);
       } finally {
@@ -28,6 +30,17 @@
     }
   });
 
+  async function handleDragStart(e: MouseEvent): Promise<void> {
+    if (e.button !== 0) return;
+    if (e.target instanceof Element && e.target.closest('.titlebar-close')) return;
+    if (!startDrag) return;
+    try {
+      await startDrag();
+    } catch (error) {
+      console.error('TitleBar: Failed to start window drag.', error);
+    }
+  }
+
   async function handleClose(): Promise<void> {
     if (!closeWindow) return;
     try {
@@ -39,7 +52,8 @@
 </script>
 
 {#if isTauri}
-  <header class="titlebar" data-tauri-drag-region>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <header class="titlebar" data-tauri-drag-region on:mousedown={handleDragStart}>
     <span class="titlebar-label" data-tauri-drag-region>Timesheet Studio</span>
     <button
       type="button"

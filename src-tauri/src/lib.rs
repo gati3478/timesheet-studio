@@ -12,6 +12,38 @@ fn get_free_port() -> Result<u16, Box<dyn std::error::Error>> {
     Ok(listener.local_addr()?.port())
 }
 
+/// Return the system PATH augmented with well-known LibreOffice binary directories.
+/// GUI apps on macOS inherit a minimal PATH from launchd that excludes LibreOffice.
+fn augment_path_for_libreoffice() -> String {
+    let extra_dirs: &[&str] = if cfg!(target_os = "macos") {
+        &["/Applications/LibreOffice.app/Contents/MacOS"]
+    } else if cfg!(target_os = "linux") {
+        &["/usr/lib/libreoffice/program", "/snap/bin"]
+    } else if cfg!(target_os = "windows") {
+        &[
+            r"C:\Program Files\LibreOffice\program",
+            r"C:\Program Files (x86)\LibreOffice\program",
+        ]
+    } else {
+        &[]
+    };
+
+    let current_path = std::env::var("PATH").unwrap_or_default();
+    let separator = if cfg!(target_os = "windows") { ";" } else { ":" };
+
+    let existing_extras: Vec<&str> = extra_dirs
+        .iter()
+        .filter(|d| std::path::Path::new(d).is_dir())
+        .copied()
+        .collect();
+
+    if existing_extras.is_empty() {
+        return current_path;
+    }
+
+    format!("{}{}{}", current_path, separator, existing_extras.join(separator))
+}
+
 /// Poll the sidecar server until it responds or timeout is reached.
 /// Uses a raw TCP connect check — no HTTP library needed for localhost.
 fn wait_for_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
@@ -42,8 +74,8 @@ pub fn run() {
                     WebviewUrl::External("http://localhost:5173".parse().unwrap()),
                 )
                 .title("Timesheet Studio [DEV]")
-                .inner_size(1100.0, 800.0)
-                .min_inner_size(800.0, 600.0)
+                .inner_size(1280.0, 900.0)
+                .min_inner_size(960.0, 680.0)
                 .decorations(false)
                 .shadow(true)
                 .center()
@@ -82,6 +114,7 @@ pub fn run() {
                 .env("ORIGIN", format!("http://127.0.0.1:{}", port))
                 .env("TEMPLATE_DIR", template_path)
                 .env("NODE_ENV", "production")
+                .env("PATH", augment_path_for_libreoffice())
                 .spawn()
                 .map_err(|e| format!("Failed to spawn server: {}", e))?;
 
@@ -117,8 +150,8 @@ pub fn run() {
                 WebviewUrl::External(url.parse().map_err(|e| format!("Invalid URL: {}", e))?),
             )
             .title("Timesheet Studio")
-            .inner_size(1100.0, 800.0)
-            .min_inner_size(800.0, 600.0)
+            .inner_size(1280.0, 900.0)
+            .min_inner_size(960.0, 680.0)
             .decorations(false)
             .shadow(true)
             .center()

@@ -2,9 +2,14 @@
   import { onMount, onDestroy } from 'svelte';
   import { isTauriApp } from '$lib/tauri';
 
+  type TauriWindow = {
+    close(): Promise<void>;
+    startDragging(): Promise<void>;
+    toggleMaximize(): Promise<void>;
+  };
+
   let isTauri = false;
-  let closeWindow: (() => Promise<void>) | null = null;
-  let startDrag: (() => Promise<void>) | null = null;
+  let appWindow: TauriWindow | null = null;
   let closeReady = false;
 
   onMount(async () => {
@@ -13,9 +18,7 @@
       document.body.classList.add('tauri-app');
       try {
         const { getCurrentWindow } = await import('@tauri-apps/api/window');
-        const appWindow = getCurrentWindow();
-        closeWindow = () => appWindow.close();
-        startDrag = () => appWindow.startDragging();
+        appWindow = getCurrentWindow();
       } catch (error) {
         console.error('TitleBar: Failed to initialize Tauri window API.', error);
       } finally {
@@ -30,21 +33,21 @@
     }
   });
 
-  async function handleDragStart(e: MouseEvent): Promise<void> {
-    if (e.button !== 0) return;
+  function handleDragStart(e: MouseEvent): void {
+    if (e.buttons !== 1) return;
     if (e.target instanceof Element && e.target.closest('.titlebar-close')) return;
-    if (!startDrag) return;
-    try {
-      await startDrag();
-    } catch (error) {
-      console.error('TitleBar: Failed to start window drag.', error);
+    if (!appWindow) return;
+    if (e.detail === 2) {
+      appWindow.toggleMaximize();
+    } else {
+      appWindow.startDragging();
     }
   }
 
   async function handleClose(): Promise<void> {
-    if (!closeWindow) return;
+    if (!appWindow) return;
     try {
-      await closeWindow();
+      await appWindow.close();
     } catch (error) {
       console.error('TitleBar: Failed to close window.', error);
     }
@@ -59,7 +62,7 @@
       type="button"
       class="titlebar-close"
       on:click={handleClose}
-      disabled={!closeReady || !closeWindow}
+      disabled={!closeReady || !appWindow}
       aria-label="Close application"
       title="Close"
     >

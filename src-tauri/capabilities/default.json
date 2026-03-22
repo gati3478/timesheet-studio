@@ -3,10 +3,14 @@
   "identifier": "default",
   "description": "Default capability for the main window",
   "windows": ["main"],
+  "remote": {
+    "urls": ["http://127.0.0.1:*"]
+  },
   "permissions": [
     "core:default",
     "shell:allow-spawn",
     "core:window:allow-close",
-    "core:window:allow-start-dragging"
+    "core:window:allow-start-dragging",
+    "core:window:allow-toggle-maximize"
   ]
 }

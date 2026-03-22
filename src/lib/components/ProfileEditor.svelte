@@ -81,7 +81,7 @@
 
   <label>
     <span>Output Format</span>
-    <select bind:value={outputFormat} disabled={!isEditing}>
+    <select bind:value={outputFormat}>
       <option value="docx">DOCX</option>
       {#if docExportAvailable}
         <option value="doc">DOC</option>

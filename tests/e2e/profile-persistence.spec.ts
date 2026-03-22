@@ -37,20 +37,53 @@ test.describe('Profile persistence', () => {
     await expect(idInput).toHaveValue('01005031116');
   });
 
-  test('output format selection is preserved', async ({ page }) => {
+  test('updating a saved profile replaces the old values', async ({ page }) => {
+    await waitForHydration(page);
+
+    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const nameInput = page.locator('input[placeholder="e.g. First Last"]');
+    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
+
+    // Save initial profile
+    await page.getByRole('button', { name: 'Edit Profile' }).click();
+    await companyInput.fill('405627530');
+    await nameInput.fill('Original Name');
+    await idInput.fill('01005031116');
+    await page.getByRole('button', { name: 'Save Profile' }).click();
+    await expect(page.getByRole('button', { name: 'Edit Profile' })).toBeVisible();
+
+    // Re-enter edit mode and change the values
+    await page.getByRole('button', { name: 'Edit Profile' }).click();
+    await companyInput.fill('999888777');
+    await nameInput.fill('Updated Name');
+    await idInput.fill('99988877766');
+
+    // Save the updated profile
+    await page.getByRole('button', { name: 'Save Profile' }).click();
+    await expect(page.getByRole('button', { name: 'Edit Profile' })).toBeVisible();
+
+    // Verify updated values are shown
+    await expect(companyInput).toHaveValue('999888777');
+    await expect(nameInput).toHaveValue('Updated Name');
+    await expect(idInput).toHaveValue('99988877766');
+
+    // Verify updated values survive a reload
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await expect(companyInput).toHaveValue('999888777');
+    await expect(nameInput).toHaveValue('Updated Name');
+    await expect(idInput).toHaveValue('99988877766');
+  });
+
+  test('output format select is always interactive without edit mode', async ({ page }) => {
     await waitForHydration(page);
 
     const formatSelect = page.locator('select');
     await expect(formatSelect).toBeVisible();
-
-    // Verify default is DOCX
+    await expect(formatSelect).toBeEnabled();
     await expect(formatSelect).toHaveValue('docx');
 
-    // Enter edit mode so the select is enabled
-    await page.getByRole('button', { name: 'Edit Profile' }).click();
-    await expect(page.getByRole('button', { name: 'Save Profile' })).toBeVisible();
-
-    // DOC option only appears when LibreOffice is installed (docExportAvailable)
+    // DOC option only appears when LibreOffice is installed
     const docOption = formatSelect.locator('option[value="doc"]');
     const hasDocOption = (await docOption.count()) > 0;
 

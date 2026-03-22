@@ -9,6 +9,9 @@
   import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
   import { isTauriApp } from '$lib/tauri';
+  import type { PageData } from './$types';
+
+  export let data: PageData;
 
   const PROFILE_STORAGE_KEY = 'timesheet.profile.v1';
   const DEFAULT_COMPANY_CODE = env.PUBLIC_DEFAULT_COMPANY_CODE ?? '';
@@ -32,7 +35,7 @@
   let profileMessage = '';
 
   let outputFormat: 'docx' | 'doc' = 'docx';
-  let docExportAvailable = false;
+  let docExportAvailable = data.docExportAvailable;
 
   let holidayDates = new Set<string>();
   let holidayError = '';
@@ -230,6 +233,11 @@
   }
 
   async function generateTimesheet(): Promise<void> {
+    if (isEditingProfile) {
+      saveProfile();
+      if (isEditingProfile) return; // validation failed, errors already shown
+    }
+
     generationError = '';
     generationDetails = [];
     isGenerating = true;
@@ -448,20 +456,6 @@
       }
     }
 
-    try {
-      const response = await fetch('/api/capabilities');
-      if (response.ok) {
-        const data = await response.json();
-        docExportAvailable = data.docExportAvailable === true;
-      }
-    } catch {
-      docExportAvailable = false;
-    }
-
-    if (!docExportAvailable && outputFormat === 'doc') {
-      outputFormat = 'docx';
-    }
-
     isTauri = isTauriApp();
   });
 
@@ -485,6 +479,15 @@
       profileMessage = 'Profile was auto-repaired.';
       profileError = '';
     }
+  }
+
+  // Clear stale profile errors when the user edits any field
+  $: if (isEditingProfile) {
+    void draftCompanyCode;
+    void draftEmployeeName;
+    void draftEmployeeId;
+    profileError = '';
+    profileDetails = [];
   }
 
   $: monthLabel = `${MONTHS[selectedMonth - 1].label} ${selectedYear}`;

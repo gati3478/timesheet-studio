@@ -12,6 +12,16 @@
   --accent: #2f6fdd;
   --accent-strong: #1d57bf;
   --danger-subtle: #b95d72;
+  --color-error: #8a2f45;
+  --color-error-bg: rgba(252, 238, 242, 0.9);
+  --color-error-border: rgba(188, 96, 118, 0.35);
+  --color-success: #1f6f53;
+  --color-success-bg: rgba(232, 248, 240, 0.92);
+  --color-success-border: rgba(78, 152, 117, 0.35);
+  --color-info: #395f9a;
+  --color-info-bg: rgba(234, 242, 255, 0.9);
+  --color-info-border: rgba(95, 138, 205, 0.35);
+  --color-destructive: #7a3d4d;
   --focus-ring: #1f6ff5;
   --radius-sm: 10px;
   --radius-md: 12px;
@@ -84,6 +94,58 @@ body.tauri-app {
   margin: var(--space-1) 0 0;
   color: var(--text-secondary);
   font-size: 0.85rem;
+}
+
+/* ── Status messages ────────────────────────────── */
+
+.status {
+  margin: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  padding: 0.48rem 0.64rem;
+}
+
+.status-error {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border-color: var(--color-error-border);
+}
+
+.status-error::before {
+  content: '⚠ ';
+}
+
+.status-success {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+
+.status-success::before {
+  content: '✓ ';
+}
+
+.status-info {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
+
+.status-info::before {
+  content: 'ℹ ';
+}
+
+.status-list {
+  margin: var(--space-2) 0 0;
+  padding-left: 1.25rem;
+  color: inherit;
+  font-size: 0.84rem;
+}
+
+.status-list li + li {
+  margin-top: 0.2rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

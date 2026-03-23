@@ -31,6 +31,8 @@ function formatLeftDate(date: Date): string {
 export function computeTimesheet(input: TimesheetComputationInput): ComputedTimesheet {
   const { year, month, vacationDates, holidayDates } = input;
 
+  // Defense-in-depth: re-validate even though parsePayload checks these,
+  // because computeTimesheet may be called from other entry points.
   if (!Number.isInteger(year) || year < 2000 || year > 2100) {
     throw new TimesheetValidationError('Year must be between 2000 and 2100.', []);
   }

@@ -10,7 +10,6 @@
 
   let isTauri = false;
   let appWindow: TauriWindow | null = null;
-  let closeReady = false;
 
   onMount(async () => {
     if (isTauriApp()) {
@@ -21,8 +20,6 @@
         appWindow = getCurrentWindow();
       } catch (error) {
         console.error('TitleBar: Failed to initialize Tauri window API.', error);
-      } finally {
-        closeReady = true;
       }
     }
   });
@@ -62,7 +59,7 @@
       type="button"
       class="titlebar-close"
       on:click={handleClose}
-      disabled={!closeReady || !appWindow}
+      disabled={!appWindow}
       aria-label="Close application"
       title="Close"
     >

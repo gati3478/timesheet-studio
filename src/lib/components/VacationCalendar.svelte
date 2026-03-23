@@ -286,7 +286,7 @@
   }
 
   .bulk-btn.clear {
-    color: #7a3d4d;
+    color: var(--color-destructive);
     border-color: rgba(168, 106, 125, 0.32);
     background: rgba(249, 241, 244, 0.92);
   }

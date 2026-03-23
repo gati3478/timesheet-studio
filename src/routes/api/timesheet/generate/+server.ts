@@ -14,20 +14,20 @@ const MAX_BODY_SIZE = 1024 * 1024; // 1 MB
 export const POST: RequestHandler = async ({ request }) => {
   const contentLength = Number(request.headers.get('content-length') ?? 0);
   if (contentLength > MAX_BODY_SIZE) {
-    return json({ message: 'Request body too large.' }, { status: 413 });
+    return json({ message: 'Request body too large.', details: [] }, { status: 413 });
   }
 
   try {
     const body = await request.text();
     if (Buffer.byteLength(body) > MAX_BODY_SIZE) {
-      return json({ message: 'Request body too large.' }, { status: 413 });
+      return json({ message: 'Request body too large.', details: [] }, { status: 413 });
     }
 
     let payload: unknown;
     try {
       payload = JSON.parse(body);
     } catch {
-      return json({ message: 'Request body must be valid JSON.' }, { status: 400 });
+      return json({ message: 'Request body must be valid JSON.', details: [] }, { status: 400 });
     }
 
     const input = parsePayload(payload);
@@ -45,7 +45,7 @@ export const POST: RequestHandler = async ({ request }) => {
       }
     }
 
-    const holidays = await getHolidaysForYear(input.year, { includeStateOnly: false });
+    const holidays = await getHolidaysForYear(input.year);
     const holidayDates = new Set(holidays.map((holiday) => holiday.date));
 
     const computed = computeTimesheet({
@@ -101,7 +101,7 @@ export const POST: RequestHandler = async ({ request }) => {
     if (error instanceof DocConversionError) {
       console.error('DOC conversion failed:', error.message);
       return json(
-        { message: 'DOC conversion failed. Please try DOCX format instead.' },
+        { message: 'DOC conversion failed. Please try DOCX format instead.', details: [] },
         { status: 500 }
       );
     }
@@ -109,6 +109,6 @@ export const POST: RequestHandler = async ({ request }) => {
     if (error instanceof Error) {
       console.error('Timesheet generation error:', error);
     }
-    return json({ message: 'Unexpected generation error.' }, { status: 500 });
+    return json({ message: 'Unexpected generation error.', details: [] }, { status: 500 });
   }
 };

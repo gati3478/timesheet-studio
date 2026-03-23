@@ -10,11 +10,16 @@
   import { env } from '$env/dynamic/public';
   import { isTauriApp } from '$lib/tauri';
   import { slugify } from '$lib/slugify';
+  import {
+    repairProfileSnapshot,
+    persistProfile,
+    loadSavedProfile,
+    looksLikeName
+  } from '$lib/profile';
   import type { PageData } from './$types';
 
   export let data: PageData;
 
-  const PROFILE_STORAGE_KEY = 'timesheet.profile.v1';
   const DEFAULT_COMPANY_CODE = env.PUBLIC_DEFAULT_COMPANY_CODE ?? '';
   const DEFAULT_EMPLOYEE_NAME = env.PUBLIC_DEFAULT_EMPLOYEE_NAME ?? '';
   const DEFAULT_EMPLOYEE_ID = env.PUBLIC_DEFAULT_EMPLOYEE_ID ?? '';
@@ -59,68 +64,6 @@
 
   function pad2(value: number): string {
     return String(value).padStart(2, '0');
-  }
-
-  function isNumeric(value: string): boolean {
-    return /^\d+$/.test(value.trim());
-  }
-
-  function looksLikeName(value: string): boolean {
-    return /[^\d\s]/.test(value.trim());
-  }
-
-  function normalizeCompanyCode(value: string): string {
-    const trimmed = value.trim();
-    if (trimmed.length === 0) return '';
-    if (trimmed.length < 6 || trimmed.length > 12 || !isNumeric(trimmed)) return '';
-    return trimmed;
-  }
-
-  function normalizeEmployeeId(value: string): string {
-    const trimmed = value.trim();
-    if (trimmed.length === 0) return '';
-    if (!/^\d{11}$/.test(trimmed)) return '';
-    return trimmed;
-  }
-
-  function normalizeEmployeeName(value: string): string {
-    const trimmed = value.trim();
-    if (trimmed.length === 0) return '';
-    if (!looksLikeName(trimmed)) return '';
-    return trimmed;
-  }
-
-  function repairProfileSnapshot(snapshot: {
-    companyCode: string;
-    employeeName: string;
-    employeeId: string;
-  }) {
-    let nextCompanyCode = snapshot.companyCode.trim();
-    let nextEmployeeName = snapshot.employeeName.trim();
-    const nextEmployeeId = snapshot.employeeId.trim();
-
-    if (
-      !isNumeric(nextCompanyCode) &&
-      looksLikeName(nextCompanyCode) &&
-      isNumeric(nextEmployeeName) &&
-      isNumeric(nextEmployeeId)
-    ) {
-      nextEmployeeName = nextCompanyCode;
-      nextCompanyCode = '';
-    }
-
-    return {
-      companyCode: normalizeCompanyCode(nextCompanyCode),
-      employeeName: normalizeEmployeeName(nextEmployeeName),
-      employeeId: normalizeEmployeeId(nextEmployeeId)
-    };
-  }
-
-  function persistProfile(): void {
-    localStorage.setItem(
-      PROFILE_STORAGE_KEY,
-      JSON.stringify({ companyCode, employeeName, employeeId })
-    );
   }
 
   function isoDate(year: number, month: number, day: number): string {
@@ -338,7 +281,7 @@
     draftEmployeeName = employeeName;
     draftEmployeeId = employeeId;
 
-    persistProfile();
+    persistProfile({ companyCode, employeeName, employeeId });
     isEditingProfile = false;
     profileError = '';
     profileDetails = [];
@@ -357,7 +300,7 @@
     profileError = '';
     profileDetails = [];
     profileMessage = 'Profile reset to defaults.';
-    persistProfile();
+    persistProfile({ companyCode, employeeName, employeeId });
   }
 
   // ── Shutdown ─────────────────────────────────────────────
@@ -424,32 +367,14 @@
   // ── Lifecycle ────────────────────────────────────────────
 
   onMount(async () => {
-    const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
+    const saved = loadSavedProfile();
     if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as Partial<{
-          companyCode: string;
-          employeeName: string;
-          employeeId: string;
-        }>;
-
-        const fixed = repairProfileSnapshot({
-          companyCode: typeof parsed.companyCode === 'string' ? parsed.companyCode : '',
-          employeeName: typeof parsed.employeeName === 'string' ? parsed.employeeName : '',
-          employeeId: typeof parsed.employeeId === 'string' ? parsed.employeeId : ''
-        });
-
-        companyCode = fixed.companyCode;
-        employeeName = fixed.employeeName;
-        employeeId = fixed.employeeId;
-        draftCompanyCode = companyCode;
-        draftEmployeeName = employeeName;
-        draftEmployeeId = employeeId;
-
-        persistProfile();
-      } catch {
-        localStorage.removeItem(PROFILE_STORAGE_KEY);
-      }
+      companyCode = saved.companyCode;
+      employeeName = saved.employeeName;
+      employeeId = saved.employeeId;
+      draftCompanyCode = companyCode;
+      draftEmployeeName = employeeName;
+      draftEmployeeId = employeeId;
     }
 
     isTauri = isTauriApp();
@@ -471,7 +396,8 @@
       draftCompanyCode = companyCode;
       draftEmployeeName = employeeName;
       draftEmployeeId = employeeId;
-      if (typeof localStorage !== 'undefined') persistProfile();
+      if (typeof localStorage !== 'undefined')
+        persistProfile({ companyCode, employeeName, employeeId });
       profileMessage = 'Profile was auto-repaired.';
       profileError = '';
     }
@@ -798,46 +724,6 @@
     display: grid;
     align-content: start;
     gap: var(--space-2);
-  }
-
-  .status {
-    margin: 0;
-    border-radius: var(--radius-md);
-    border: 1px solid transparent;
-    font-size: 0.85rem;
-    line-height: 1.35;
-    padding: 0.48rem 0.64rem;
-  }
-
-  .status-error {
-    color: #8a2f45;
-    background: rgba(252, 238, 242, 0.9);
-    border-color: rgba(188, 96, 118, 0.35);
-  }
-
-  .status-error::before {
-    content: '⚠ ';
-  }
-
-  .status-info {
-    color: #395f9a;
-    background: rgba(234, 242, 255, 0.9);
-    border-color: rgba(95, 138, 205, 0.35);
-  }
-
-  .status-info::before {
-    content: 'ℹ ';
-  }
-
-  .status-list {
-    margin: var(--space-2) 0 0;
-    padding-left: 1.25rem;
-    color: #8a2f45;
-    font-size: 0.84rem;
-  }
-
-  .status-list li + li {
-    margin-top: 0.2rem;
   }
 
   @keyframes pulse-dots {

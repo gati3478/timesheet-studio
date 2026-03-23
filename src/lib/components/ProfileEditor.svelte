@@ -32,16 +32,14 @@
 </div>
 
 {#if error}
-  <div class="status status-error">
-    <p>{error}</p>
-    {#if errorDetails.length > 0}
-      <ul class="status-list">
-        {#each errorDetails as detail, i (i)}
-          <li>{detail}</li>
-        {/each}
-      </ul>
-    {/if}
-  </div>
+  <p class="status status-error">{error}</p>
+  {#if errorDetails.length > 0}
+    <ul class="status-list status-error-list">
+      {#each errorDetails as detail, i (i)}
+        <li>{detail}</li>
+      {/each}
+    </ul>
+  {/if}
 {/if}
 
 {#if message}
@@ -123,13 +121,13 @@
   }
 
   .ghost.save {
-    color: #1f6f53;
-    border-color: rgba(73, 157, 119, 0.4);
-    background: rgba(230, 249, 240, 0.95);
+    color: var(--color-success);
+    border-color: var(--color-success-border);
+    background: var(--color-success-bg);
   }
 
   .ghost.cancel {
-    color: #7a3d4d;
+    color: var(--color-destructive);
     border-color: rgba(168, 106, 125, 0.32);
     background: rgba(249, 241, 244, 0.92);
   }
@@ -164,8 +162,12 @@
   }
 
   .input-grid.has-error input:placeholder-shown {
-    border-color: rgba(188, 96, 118, 0.6);
+    border-color: var(--color-error-border);
     box-shadow: 0 0 0 1px rgba(188, 96, 118, 0.12);
+  }
+
+  .status-error-list {
+    color: var(--color-error);
   }
 
   label {
@@ -203,45 +205,6 @@
   }
 
   .status {
-    margin: var(--space-3) 0 0;
-    border-radius: var(--radius-md);
-    border: 1px solid transparent;
-    font-size: 0.85rem;
-    line-height: 1.35;
-    padding: 0.48rem 0.64rem;
-  }
-
-  .status-error {
-    color: #8a2f45;
-    background: rgba(252, 238, 242, 0.9);
-    border-color: rgba(188, 96, 118, 0.35);
-  }
-
-  .status-error p {
-    margin: 0;
-  }
-
-  .status-error p::before {
-    content: '⚠ ';
-  }
-
-  .status-list {
-    margin: var(--space-2) 0 0;
-    padding-left: 1.25rem;
-    font-size: 0.84rem;
-  }
-
-  .status-list li + li {
-    margin-top: 0.2rem;
-  }
-
-  .status-success {
-    color: #26684d;
-    background: rgba(232, 248, 240, 0.92);
-    border-color: rgba(78, 152, 117, 0.35);
-  }
-
-  .status-success::before {
-    content: '✓ ';
+    margin-top: var(--space-3);
   }
 </style>

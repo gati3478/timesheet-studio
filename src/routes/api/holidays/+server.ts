@@ -26,7 +26,9 @@ export const GET: RequestHandler = async ({ url }) => {
     const entries = await getHolidaysForYear(year, { includeStateOnly: false });
     return json({ year, entries });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unexpected holiday parsing error.';
-    return json({ message, details: [] }, { status: 502 });
+    if (error instanceof Error) {
+      console.error('Holiday fetch error:', error.message);
+    }
+    return json({ message: 'Failed to load holiday data.', details: [] }, { status: 502 });
   }
 };

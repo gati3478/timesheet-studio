@@ -80,7 +80,7 @@ describe('GET /api/holidays', () => {
 
     expect(response.status).toBe(502);
     const data = await response.json();
-    expect(data.message).toBe('Network timeout');
+    expect(data.message).toBe('Failed to load holiday data.');
   });
 
   it('returns 502 with generic message for non-Error throws', async () => {
@@ -92,6 +92,6 @@ describe('GET /api/holidays', () => {
 
     expect(response.status).toBe(502);
     const data = await response.json();
-    expect(data.message).toBe('Unexpected holiday parsing error.');
+    expect(data.message).toBe('Failed to load holiday data.');
   });
 });

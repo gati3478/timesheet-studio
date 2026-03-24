@@ -160,21 +160,40 @@ describe('parsePayload', () => {
     expect(() => parsePayload(payload)).toThrow('Company code cannot exceed 20 characters.');
   });
 
-  it('accepts companyCode at exactly 20 characters', () => {
-    const payload = { ...VALID_PAYLOAD, companyCode: '1'.repeat(20) };
-    const result = parsePayload(payload);
-    expect(result.companyCode.length).toBe(20);
+  it('rejects non-numeric companyCode', () => {
+    const payload = { ...VALID_PAYLOAD, companyCode: 'abc123' };
+    expect(() => parsePayload(payload)).toThrow('Company code must be numeric (6\u201312 digits).');
   });
 
-  it('rejects employeeId exceeding 20 characters', () => {
-    const payload = { ...VALID_PAYLOAD, employeeId: '0'.repeat(21) };
-    expect(() => parsePayload(payload)).toThrow('Employee id cannot exceed 20 characters.');
+  it('rejects companyCode shorter than 6 digits', () => {
+    const payload = { ...VALID_PAYLOAD, companyCode: '12345' };
+    expect(() => parsePayload(payload)).toThrow('Company code must be numeric (6\u201312 digits).');
   });
 
-  it('accepts employeeId at exactly 20 characters', () => {
-    const payload = { ...VALID_PAYLOAD, employeeId: '0'.repeat(20) };
-    const result = parsePayload(payload);
-    expect(result.employeeId.length).toBe(20);
+  it('rejects companyCode longer than 12 digits', () => {
+    const payload = { ...VALID_PAYLOAD, companyCode: '1'.repeat(13) };
+    expect(() => parsePayload(payload)).toThrow('Company code must be numeric (6\u201312 digits).');
+  });
+
+  it('accepts companyCode at boundary lengths (6 and 12 digits)', () => {
+    expect(parsePayload({ ...VALID_PAYLOAD, companyCode: '123456' }).companyCode).toBe('123456');
+    expect(parsePayload({ ...VALID_PAYLOAD, companyCode: '123456789012' }).companyCode).toBe(
+      '123456789012'
+    );
+  });
+
+  it('rejects employeeId that is not exactly 11 digits', () => {
+    expect(() => parsePayload({ ...VALID_PAYLOAD, employeeId: '1234567890' })).toThrow(
+      'Employee ID must be exactly 11 digits.'
+    );
+    expect(() => parsePayload({ ...VALID_PAYLOAD, employeeId: '123456789012' })).toThrow(
+      'Employee ID must be exactly 11 digits.'
+    );
+  });
+
+  it('rejects non-numeric employeeId', () => {
+    const payload = { ...VALID_PAYLOAD, employeeId: '0100503111a' };
+    expect(() => parsePayload(payload)).toThrow('Employee ID must be exactly 11 digits.');
   });
 
   it('rejects non-string elements in vacationDates array', () => {

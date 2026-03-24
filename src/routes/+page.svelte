@@ -111,12 +111,12 @@
 
     try {
       const response = await fetch(`/api/holidays?year=${year}`);
-      const data = await response.json();
+      const body = await response.json();
 
-      if (!response.ok) throw new Error(data.message ?? 'Failed to load holidays.');
+      if (!response.ok) throw new Error(body.message ?? 'Failed to load holidays.');
 
       holidayDates = new Set<string>(
-        (data.entries ?? []).map((entry: { date: string }) => entry.date)
+        (body.entries ?? []).map((entry: { date: string }) => entry.date)
       );
       loadedHolidayYear = year;
     } catch (error) {
@@ -161,6 +161,7 @@
 
     generationError = '';
     generationDetails = [];
+    profileMessage = '';
     isGenerating = true;
 
     try {
@@ -179,9 +180,9 @@
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        generationError = data.message ?? 'Failed to generate timesheet.';
-        generationDetails = Array.isArray(data.details) ? data.details : [];
+        const body = await response.json();
+        generationError = body.message ?? 'Failed to generate timesheet.';
+        generationDetails = Array.isArray(body.details) ? body.details : [];
 
         // Auto-open profile editor for validation errors so user can fix fields
         if (response.status === 400 && generationDetails.length > 0 && !isEditingProfile) {
@@ -281,13 +282,13 @@
     isShuttingDown = true;
     try {
       const response = await fetch('/api/system/shutdown', { method: 'POST' });
-      const data = await response.json();
+      const body = await response.json();
       if (!response.ok) {
-        shutdownError = data.message ?? 'Failed to shut down server.';
+        shutdownError = body.message ?? 'Failed to shut down server.';
         isShuttingDown = false;
         return;
       }
-      shutdownMessage = data.message ?? 'Server is shutting down...';
+      shutdownMessage = body.message ?? 'Server is shutting down...';
     } catch (error) {
       shutdownError = error instanceof Error ? error.message : 'Unexpected shutdown error.';
       isShuttingDown = false;

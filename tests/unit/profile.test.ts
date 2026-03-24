@@ -9,8 +9,6 @@ import {
   persistProfile,
   loadSavedProfile,
   validateProfile,
-  validateProfileFields,
-  identifyInvalidFields,
   NO_FIELD_ERRORS
 } from '../../src/lib/profile';
 
@@ -171,69 +169,6 @@ describe('repairProfileSnapshot', () => {
   });
 });
 
-describe('validateProfileFields', () => {
-  const valid = {
-    companyCode: '405627530',
-    employeeName: 'John Doe',
-    employeeId: '01005031116'
-  };
-
-  it('returns no errors for a valid snapshot', () => {
-    expect(validateProfileFields(valid)).toEqual([]);
-  });
-
-  it('returns error for empty company code', () => {
-    const errors = validateProfileFields({ ...valid, companyCode: '' });
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toMatch(/company code/i);
-  });
-
-  it('returns error for non-numeric company code', () => {
-    const errors = validateProfileFields({ ...valid, companyCode: 'abc123' });
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toMatch(/numeric/i);
-  });
-
-  it('returns error for too-short company code', () => {
-    const errors = validateProfileFields({ ...valid, companyCode: '12345' });
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toMatch(/numeric.*6/i);
-  });
-
-  it('returns error for empty employee name', () => {
-    const errors = validateProfileFields({ ...valid, employeeName: '' });
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toMatch(/employee name/i);
-  });
-
-  it('returns error for digit-only employee name', () => {
-    const errors = validateProfileFields({ ...valid, employeeName: '12345' });
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toMatch(/text/i);
-  });
-
-  it('returns error for empty employee ID', () => {
-    const errors = validateProfileFields({ ...valid, employeeId: '' });
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toMatch(/employee id/i);
-  });
-
-  it('returns error for wrong-length employee ID', () => {
-    const errors = validateProfileFields({ ...valid, employeeId: '12345' });
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toMatch(/11 digits/i);
-  });
-
-  it('returns multiple errors when all fields are empty', () => {
-    const errors = validateProfileFields({
-      companyCode: '',
-      employeeName: '',
-      employeeId: ''
-    });
-    expect(errors).toHaveLength(3);
-  });
-});
-
 describe('validateProfile', () => {
   const valid = {
     companyCode: '405627530',
@@ -259,88 +194,6 @@ describe('validateProfile', () => {
       employeeName: true,
       employeeId: true
     });
-  });
-
-  it('is consistent with validateProfileFields and identifyInvalidFields', () => {
-    const snapshot = { companyCode: 'bad', employeeName: '12345', employeeId: 'short' };
-    const result = validateProfile(snapshot);
-    expect(result.messages).toEqual(validateProfileFields(snapshot));
-    expect(result.fieldErrors).toEqual(identifyInvalidFields(snapshot));
-  });
-});
-
-describe('identifyInvalidFields', () => {
-  const valid = {
-    companyCode: '405627530',
-    employeeName: 'John Doe',
-    employeeId: '01005031116'
-  };
-
-  it('returns all false for a valid snapshot', () => {
-    expect(identifyInvalidFields(valid)).toEqual(NO_FIELD_ERRORS);
-  });
-
-  it('marks companyCode true when empty', () => {
-    const result = identifyInvalidFields({ ...valid, companyCode: '' });
-    expect(result.companyCode).toBe(true);
-    expect(result.employeeName).toBe(false);
-    expect(result.employeeId).toBe(false);
-  });
-
-  it('marks companyCode true when non-numeric', () => {
-    expect(identifyInvalidFields({ ...valid, companyCode: 'abc' }).companyCode).toBe(true);
-  });
-
-  it('marks employeeName true when empty', () => {
-    const result = identifyInvalidFields({ ...valid, employeeName: '' });
-    expect(result.employeeName).toBe(true);
-    expect(result.companyCode).toBe(false);
-  });
-
-  it('marks employeeName true when digit-only', () => {
-    expect(identifyInvalidFields({ ...valid, employeeName: '12345' }).employeeName).toBe(true);
-  });
-
-  it('marks employeeId true when empty', () => {
-    const result = identifyInvalidFields({ ...valid, employeeId: '' });
-    expect(result.employeeId).toBe(true);
-    expect(result.companyCode).toBe(false);
-  });
-
-  it('marks employeeId true when wrong length', () => {
-    expect(identifyInvalidFields({ ...valid, employeeId: '12345' }).employeeId).toBe(true);
-  });
-
-  it('marks all fields true when all are empty', () => {
-    const result = identifyInvalidFields({
-      companyCode: '',
-      employeeName: '',
-      employeeId: ''
-    });
-    expect(result).toEqual({ companyCode: true, employeeName: true, employeeId: true });
-  });
-
-  it('agrees with validateProfileFields on which fields are invalid', () => {
-    const snapshots = [
-      { companyCode: '', employeeName: 'Name', employeeId: '01005031116' },
-      { companyCode: '405627530', employeeName: '', employeeId: '01005031116' },
-      { companyCode: '405627530', employeeName: 'Name', employeeId: '' },
-      { companyCode: 'bad', employeeName: '12345', employeeId: 'short' },
-      { companyCode: '405627530', employeeName: 'Name', employeeId: '01005031116' }
-    ];
-
-    for (const snapshot of snapshots) {
-      const errors = validateProfileFields(snapshot);
-      const fields = identifyInvalidFields(snapshot);
-
-      const hasCompanyError = errors.some((e) => /company/i.test(e));
-      const hasNameError = errors.some((e) => /employee name/i.test(e));
-      const hasIdError = errors.some((e) => /employee id/i.test(e));
-
-      expect(fields.companyCode).toBe(hasCompanyError);
-      expect(fields.employeeName).toBe(hasNameError);
-      expect(fields.employeeId).toBe(hasIdError);
-    }
   });
 });
 

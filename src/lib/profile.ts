@@ -95,14 +95,6 @@ export function validateProfile(snapshot: ProfileSnapshot): ProfileValidationRes
   return { messages, fieldErrors };
 }
 
-export function identifyInvalidFields(snapshot: ProfileSnapshot): FieldErrors {
-  return validateProfile(snapshot).fieldErrors;
-}
-
-export function validateProfileFields(snapshot: ProfileSnapshot): string[] {
-  return validateProfile(snapshot).messages;
-}
-
 export function repairProfileSnapshot(snapshot: ProfileSnapshot): ProfileSnapshot {
   let nextCompanyCode = snapshot.companyCode.trim();
   let nextEmployeeName = snapshot.employeeName.trim();

@@ -30,8 +30,8 @@ const COMPANY_CODE_CELL: TableCellRef = { table: 0, row: 3, cell: 1 };
 
 const EMPLOYEE_ROW_TABLE = 1;
 const EMPLOYEE_ROW_INDEX = 5;
-const FIRST_DAY_INDEX = 1;
-const LAST_DAY_INDEX = 31;
+const FIRST_DAY_NUMBER = 1;
+const LAST_DAY_NUMBER = 31;
 
 const FIRST_HALF_HOURS_CELL = 18;
 const SECOND_HALF_HOURS_CELL = 35;
@@ -386,7 +386,7 @@ function applyDayColumnShading(tables: Node[], dayCodesByDay: Map<number, DayCod
     return;
   }
 
-  for (let day = FIRST_DAY_INDEX; day <= LAST_DAY_INDEX; day += 1) {
+  for (let day = FIRST_DAY_NUMBER; day <= LAST_DAY_NUMBER; day += 1) {
     const columnIndex = dayToCellIndex(day);
     const shouldShade = dayCodesByDay.get(day) === 'X';
 

@@ -47,6 +47,14 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
     MAX_COMPANY_CODE_LENGTH
   );
 
+  if (!/^\d{6,12}$/.test(companyCode)) {
+    throw new TimesheetValidationError('Company code must be numeric (6\u201312 digits).', []);
+  }
+
+  if (!/^\d{11}$/.test(employeeId)) {
+    throw new TimesheetValidationError('Employee ID must be exactly 11 digits.', []);
+  }
+
   if (!Array.isArray(body.vacationDates)) {
     throw new TimesheetValidationError('Vacation dates must be an array.', []);
   }

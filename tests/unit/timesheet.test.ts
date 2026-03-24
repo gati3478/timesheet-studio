@@ -237,6 +237,23 @@ describe('computeTimesheet', () => {
     expect(result.lastWorkdayLabel).toBe('29.12');
   });
 
+  it('all weekdays are holidays → lastWorkday falls back to month end', () => {
+    const allWeekdayHolidays = new Set(
+      [2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 30, 31].map(
+        (d) => `2026-03-${String(d).padStart(2, '0')}`
+      )
+    );
+
+    const result = computeTimesheet(
+      makeTimesheetInput({
+        holidayDates: allWeekdayHolidays
+      })
+    );
+
+    // No workday exists, so lastWorkdayLabel should fall back to month end (31.03)
+    expect(result.lastWorkdayLabel).toBe('31.03');
+  });
+
   it('February 2026 lastWorkdayLabel is 27.02 when month ends on Saturday', () => {
     // Feb 2026: 28th is Saturday, so last weekday is Friday the 27th
     const result = computeTimesheet(

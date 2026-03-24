@@ -143,7 +143,7 @@
 
   .month-grid button {
     border-radius: var(--radius-sm);
-    min-height: 40px;
+    min-height: 44px;
     padding: var(--space-2) var(--space-1);
     border: 1px solid var(--border-subtle);
     background: var(--surface-2);

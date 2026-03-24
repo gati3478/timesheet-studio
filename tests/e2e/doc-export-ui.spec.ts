@@ -41,12 +41,19 @@ test.describe('DOC export UI visibility', () => {
     }
   );
 
-  testOrSkip('format select is always interactive (no edit mode required)', async ({ page }) => {
-    await waitForHydration(page);
+  testOrSkip(
+    'format select is disabled in view mode and enabled in edit mode',
+    async ({ page }) => {
+      await waitForHydration(page);
 
-    const formatSelect = page.locator('select');
-    await expect(formatSelect).toBeEnabled();
-    await formatSelect.selectOption('doc');
-    await expect(formatSelect).toHaveValue('doc');
-  });
+      const formatSelect = page.locator('select');
+      await expect(formatSelect).toBeDisabled();
+
+      // Enter edit mode — select should become enabled and allow DOC selection
+      await page.getByRole('button', { name: 'Edit Profile' }).click();
+      await expect(formatSelect).toBeEnabled();
+      await formatSelect.selectOption('doc');
+      await expect(formatSelect).toHaveValue('doc');
+    }
+  );
 });

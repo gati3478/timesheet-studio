@@ -261,7 +261,7 @@
   }
 
   .bulk-btn {
-    min-height: 30px;
+    min-height: 44px;
     border: 1px solid var(--border-subtle);
     background: rgba(243, 248, 255, 0.85);
     color: var(--accent-strong);

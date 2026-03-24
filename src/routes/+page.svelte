@@ -15,8 +15,11 @@
     repairProfileSnapshot,
     persistProfile,
     loadSavedProfile,
-    validateProfileFields
+    validateProfileFields,
+    identifyInvalidFields,
+    NO_FIELD_ERRORS
   } from '$lib/profile';
+  import type { FieldErrors } from '$lib/profile';
   import type { PageData } from './$types';
 
   export let data: PageData;
@@ -40,6 +43,7 @@
   let profileError = '';
   let profileDetails: string[] = [];
   let profileMessage = '';
+  let fieldErrors: FieldErrors = { ...NO_FIELD_ERRORS };
 
   let outputFormat: 'docx' | 'doc' = 'docx';
   let docExportAvailable = data.docExportAvailable;
@@ -205,6 +209,11 @@
         const data = await response.json();
         generationError = data.message ?? 'Failed to generate timesheet.';
         generationDetails = Array.isArray(data.details) ? data.details : [];
+
+        // Auto-open profile editor for validation errors so user can fix fields
+        if (response.status === 400 && generationDetails.length > 0 && !isEditingProfile) {
+          openProfileEditor();
+        }
         return;
       }
 
@@ -237,6 +246,7 @@
     draftEmployeeId = employeeId;
     profileError = '';
     profileDetails = [];
+    fieldErrors = { ...NO_FIELD_ERRORS };
   }
 
   function openProfileEditor(): void {
@@ -262,6 +272,11 @@
       profileError = 'Please fix the following:';
       profileDetails = errors;
       profileMessage = '';
+      fieldErrors = identifyInvalidFields({
+        companyCode: draftCompanyCode,
+        employeeName: draftEmployeeName,
+        employeeId: draftEmployeeId
+      });
       return false;
     }
 
@@ -393,6 +408,7 @@
     void draftEmployeeId;
     profileError = '';
     profileDetails = [];
+    fieldErrors = { ...NO_FIELD_ERRORS };
   }
 
   $: monthLabel = `${MONTHS[selectedMonth - 1].label} ${selectedYear}`;
@@ -471,6 +487,7 @@
         error={profileError}
         errorDetails={profileDetails}
         message={profileMessage}
+        {fieldErrors}
         onEdit={openProfileEditor}
         onSave={saveProfile}
         onCancel={cancelProfileEdit}
@@ -481,6 +498,7 @@
         <button
           type="button"
           class="primary"
+          class:loading={isGenerating || loadingHolidays}
           on:click={generateTimesheet}
           disabled={isGenerating || loadingHolidays || isShuttingDown}
         >
@@ -652,6 +670,10 @@
     cursor: not-allowed;
     box-shadow: none;
     filter: saturate(0.6);
+  }
+
+  .button-row button.loading:disabled {
+    cursor: progress;
   }
 
   .utility-row {

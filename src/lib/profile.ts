@@ -35,6 +35,29 @@ export function normalizeEmployeeName(value: string): string {
   return trimmed;
 }
 
+export interface FieldErrors {
+  companyCode: boolean;
+  employeeName: boolean;
+  employeeId: boolean;
+}
+
+export const NO_FIELD_ERRORS: Readonly<FieldErrors> = Object.freeze({
+  companyCode: false,
+  employeeName: false,
+  employeeId: false
+});
+
+export function identifyInvalidFields(snapshot: ProfileSnapshot): FieldErrors {
+  const cc = snapshot.companyCode.trim();
+  const name = snapshot.employeeName.trim();
+  const id = snapshot.employeeId.trim();
+  return {
+    companyCode: !cc || cc.length < 6 || cc.length > 12 || !isNumeric(cc),
+    employeeName: !name || !looksLikeName(name),
+    employeeId: !id || !/^\d{11}$/.test(id)
+  };
+}
+
 export function validateProfileFields(snapshot: ProfileSnapshot): string[] {
   const errors: string[] = [];
   const cc = snapshot.companyCode.trim();

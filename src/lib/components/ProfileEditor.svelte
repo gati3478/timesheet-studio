@@ -9,6 +9,11 @@
   export let error: string;
   export let errorDetails: string[] = [];
   export let message: string;
+  export let fieldErrors: { companyCode: boolean; employeeName: boolean; employeeId: boolean } = {
+    companyCode: false,
+    employeeName: false,
+    employeeId: false
+  };
 
   export let docExportAvailable: boolean;
 
@@ -38,7 +43,7 @@
   <StatusMessage text={message} variant="success" />
 </div>
 
-<div class="input-grid" class:editing={isEditing} class:has-error={!!error}>
+<div class="input-grid" class:editing={isEditing}>
   <label>
     <span>Company Code</span>
     <input
@@ -46,6 +51,7 @@
       bind:value={draftCompanyCode}
       placeholder="e.g. 405627530"
       disabled={!isEditing}
+      class:field-error={fieldErrors.companyCode}
     />
   </label>
 
@@ -56,6 +62,7 @@
       bind:value={draftEmployeeName}
       placeholder="e.g. First Last"
       disabled={!isEditing}
+      class:field-error={fieldErrors.employeeName}
     />
   </label>
 
@@ -66,12 +73,13 @@
       bind:value={draftEmployeeId}
       placeholder="e.g. 01005031116"
       disabled={!isEditing}
+      class:field-error={fieldErrors.employeeId}
     />
   </label>
 
   <label>
     <span>Output Format</span>
-    <select bind:value={outputFormat}>
+    <select bind:value={outputFormat} disabled={!isEditing}>
       <option value="docx">DOCX</option>
       {#if docExportAvailable}
         <option value="doc">DOC</option>
@@ -93,7 +101,7 @@
   }
 
   .ghost {
-    min-height: 36px;
+    min-height: 44px;
     border: 1px solid var(--border-subtle);
     background: rgba(243, 248, 255, 0.85);
     color: var(--accent-strong);
@@ -119,9 +127,9 @@
   }
 
   .ghost.cancel {
-    color: var(--color-destructive);
-    border-color: rgba(168, 106, 125, 0.32);
-    background: rgba(249, 241, 244, 0.92);
+    color: var(--text-secondary);
+    border-color: var(--border-subtle);
+    background: rgba(243, 248, 255, 0.85);
   }
 
   .ghost.reset {
@@ -153,7 +161,7 @@
     box-shadow: 0 0 0 1px rgba(47, 111, 221, 0.12);
   }
 
-  .input-grid.has-error input:placeholder-shown {
+  .input-grid.editing input.field-error {
     border-color: var(--color-error-border);
     box-shadow: 0 0 0 1px rgba(188, 96, 118, 0.12);
   }

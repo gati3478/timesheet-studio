@@ -75,22 +75,19 @@ test.describe('Profile persistence', () => {
     await expect(idInput).toHaveValue('99988877766');
   });
 
-  test('output format select is always interactive without edit mode', async ({ page }) => {
+  test('output format select is disabled in view mode and enabled in edit mode', async ({
+    page
+  }) => {
     await waitForHydration(page);
 
     const formatSelect = page.locator('select');
     await expect(formatSelect).toBeVisible();
-    await expect(formatSelect).toBeEnabled();
+    await expect(formatSelect).toBeDisabled();
     await expect(formatSelect).toHaveValue('docx');
 
-    // DOC option only appears when LibreOffice is installed
-    const docOption = formatSelect.locator('option[value="doc"]');
-    const hasDocOption = (await docOption.count()) > 0;
-
-    if (hasDocOption) {
-      await formatSelect.selectOption('doc');
-      await expect(formatSelect).toHaveValue('doc');
-    }
+    // Enter edit mode — select should become enabled
+    await page.getByRole('button', { name: 'Edit Profile' }).click();
+    await expect(formatSelect).toBeEnabled();
   });
 
   test('profile reset clears fields', async ({ page }) => {

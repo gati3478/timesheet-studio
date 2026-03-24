@@ -7,10 +7,6 @@ const DIRS_TO_CLEAN = ['build', '.svelte-kit', 'test-results', 'playwright-repor
 
 for (const dir of DIRS_TO_CLEAN) {
   const target = resolve(dir);
-  try {
-    await rm(target, { recursive: true, force: true });
-    console.log(`Removed ${dir}`);
-  } catch {
-    // Already absent
-  }
+  await rm(target, { recursive: true, force: true });
+  console.log(`Removed ${dir}`);
 }

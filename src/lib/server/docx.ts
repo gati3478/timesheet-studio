@@ -132,6 +132,15 @@ function getOrCreateRunProperties(run: Element): Element {
   return runProperties;
 }
 
+function ensureRFonts(runProperties: Element): Element {
+  let rFonts = findChildByLocalName(runProperties, 'rFonts');
+  if (!rFonts) {
+    rFonts = createWElement(runProperties.ownerDocument!, 'rFonts');
+    runProperties.insertBefore(rFonts, runProperties.firstChild);
+  }
+  return rFonts;
+}
+
 function setRFontsToTarget(rFonts: Element): void {
   rFonts.setAttributeNS(W_NS, w('ascii'), TARGET_FONT);
   rFonts.setAttributeNS(W_NS, w('hAnsi'), TARGET_FONT);
@@ -158,13 +167,7 @@ function setRunValueStyle(
   }
 ): void {
   const runProperties = getOrCreateRunProperties(run);
-
-  let runFonts = findChildByLocalName(runProperties, 'rFonts');
-  if (!runFonts) {
-    runFonts = createWElement(run.ownerDocument!, 'rFonts');
-    runProperties.insertBefore(runFonts, runProperties.firstChild);
-  }
-  setRFontsToTarget(runFonts);
+  setRFontsToTarget(ensureRFonts(runProperties));
 
   let size = findChildByLocalName(runProperties, 'sz');
   if (!size) {
@@ -232,14 +235,7 @@ function setStyledCellText(
 function enforceSylfaenOnAllRuns(document: Document): void {
   const runs = xpath.select("//*[local-name()='r']", document) as Element[];
   for (const run of runs) {
-    const runProperties = getOrCreateRunProperties(run);
-    let rFonts = findChildByLocalName(runProperties, 'rFonts');
-    if (!rFonts) {
-      rFonts = createWElement(document, 'rFonts');
-      runProperties.insertBefore(rFonts, runProperties.firstChild);
-    }
-
-    setRFontsToTarget(rFonts);
+    setRFontsToTarget(ensureRFonts(getOrCreateRunProperties(run)));
   }
 }
 
@@ -429,16 +425,9 @@ export async function fillTimesheetTemplate(input: FillTemplateInput): Promise<B
   setStyledCellText(rowCells[1], input.employeeName);
   setStyledCellText(rowCells[2], input.employeeId);
 
-  for (let day = 1; day <= 15; day += 1) {
-    const rowCell = rowCells[2 + day];
+  for (let day = 1; day <= 31; day += 1) {
     const code = input.computed.dayCodesByDay.get(day) ?? '';
-    setDayCellValue(rowCell, code);
-  }
-
-  for (let day = 16; day <= 31; day += 1) {
-    const rowCell = rowCells[day + 3];
-    const code = input.computed.dayCodesByDay.get(day) ?? '';
-    setDayCellValue(rowCell, code);
+    setDayCellValue(rowCells[dayToCellIndex(day)], code);
   }
 
   const totalsStyle = { centered: true, sizeHalfPoints: VALUE_FONT_SIZE_HALF_POINTS } as const;

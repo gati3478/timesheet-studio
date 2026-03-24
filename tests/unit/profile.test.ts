@@ -142,7 +142,7 @@ describe('repairProfileSnapshot', () => {
       employeeName: '405627530',
       employeeId: '01005031116'
     });
-    expect(result.companyCode).toBe('');
+    expect(result.companyCode).toBe('405627530');
     expect(result.employeeName).toBe('John Doe');
     expect(result.employeeId).toBe('01005031116');
   });

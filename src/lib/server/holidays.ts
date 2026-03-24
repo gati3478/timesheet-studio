@@ -162,14 +162,12 @@ type MonthContext = {
 function extractMonthContext(text: string, fallbackYear: number): MonthContext | null {
   const monthWithYearRegex = /([ა-ჰ]+)\s*,?\s*(\d{4})/giu;
 
-  let withYearMatch: RegExpExecArray | null = monthWithYearRegex.exec(text);
-  while (withYearMatch) {
+  for (const withYearMatch of text.matchAll(monthWithYearRegex)) {
     const month = findMonthNumber(withYearMatch[1]);
     const year = Number(withYearMatch[2]);
     if (month && Number.isInteger(year)) {
       return { month, year };
     }
-    withYearMatch = monthWithYearRegex.exec(text);
   }
 
   const normalized = normalizeText(text).replace(/[.,:;()[\]]/g, '');
@@ -231,6 +229,24 @@ function extractDayOnlyDatesFromText(
   }
 
   return [...found];
+}
+
+function mergeEntryIntoMap(map: Map<string, HolidayEntry>, entry: HolidayEntry): void {
+  const existing = map.get(entry.date);
+  if (!existing) {
+    map.set(entry.date, { ...entry });
+    return;
+  }
+
+  map.set(entry.date, {
+    date: entry.date,
+    title: existing.title || entry.title,
+    isStateOnly: existing.isStateOnly && entry.isStateOnly
+  });
+}
+
+function sortedMapValues(map: Map<string, HolidayEntry>): HolidayEntry[] {
+  return [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function isStateOnlyHoliday(text: string): boolean {
@@ -296,31 +312,12 @@ function parseHolidayEntries(html: string, year: number): HolidayEntry[] {
         continue;
       }
 
-      const existing = merged.get(date);
-      if (!existing) {
-        merged.set(date, { date, title: line, isStateOnly: stateOnly });
-        continue;
-      }
-
-      merged.set(date, {
-        date,
-        title: existing.title,
-        isStateOnly: existing.isStateOnly && stateOnly
-      });
+      mergeEntryIntoMap(merged, { date, title: line, isStateOnly: stateOnly });
     }
   }
 
-  return [...merged.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return sortedMapValues(merged);
 }
-
-type NagerHoliday = {
-  date?: unknown;
-  localName?: unknown;
-  name?: unknown;
-  countryCode?: unknown;
-  counties?: unknown;
-  types?: unknown;
-};
 
 function parseNagerHolidays(payload: unknown, year: number): HolidayEntry[] {
   if (!Array.isArray(payload)) {
@@ -334,7 +331,7 @@ function parseNagerHolidays(payload: unknown, year: number): HolidayEntry[] {
       continue;
     }
 
-    const entry = rawEntry as NagerHoliday;
+    const entry = rawEntry as Record<string, unknown>;
     const date = typeof entry.date === 'string' ? entry.date : '';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !date.startsWith(`${year}-`)) {
       continue;
@@ -365,20 +362,10 @@ function parseNagerHolidays(payload: unknown, year: number): HolidayEntry[] {
     const englishName = typeof entry.name === 'string' ? normalizeText(entry.name) : '';
     const title = localName || englishName || date;
 
-    const existing = merged.get(date);
-    if (!existing) {
-      merged.set(date, { date, title, isStateOnly: false });
-      continue;
-    }
-
-    merged.set(date, {
-      date,
-      title: existing.title || title,
-      isStateOnly: false
-    });
+    mergeEntryIntoMap(merged, { date, title, isStateOnly: false });
   }
 
-  return [...merged.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return sortedMapValues(merged);
 }
 
 function mergeHolidayEntries(...groups: HolidayEntry[][]): HolidayEntry[] {
@@ -386,21 +373,11 @@ function mergeHolidayEntries(...groups: HolidayEntry[][]): HolidayEntry[] {
 
   for (const group of groups) {
     for (const entry of group) {
-      const existing = merged.get(entry.date);
-      if (!existing) {
-        merged.set(entry.date, { ...entry });
-        continue;
-      }
-
-      merged.set(entry.date, {
-        date: entry.date,
-        title: existing.title || entry.title,
-        isStateOnly: existing.isStateOnly && entry.isStateOnly
-      });
+      mergeEntryIntoMap(merged, entry);
     }
   }
 
-  return [...merged.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return sortedMapValues(merged);
 }
 
 async function fetchYellHolidayPage(): Promise<string> {

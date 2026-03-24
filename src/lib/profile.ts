@@ -47,14 +47,26 @@ export const NO_FIELD_ERRORS: Readonly<FieldErrors> = Object.freeze({
   employeeId: false
 });
 
+function isValidCompanyCode(value: string): boolean {
+  return value.length >= 6 && value.length <= 12 && isNumeric(value);
+}
+
+function isValidEmployeeName(value: string): boolean {
+  return value.length > 0 && looksLikeName(value);
+}
+
+function isValidEmployeeId(value: string): boolean {
+  return /^\d{11}$/.test(value);
+}
+
 export function identifyInvalidFields(snapshot: ProfileSnapshot): FieldErrors {
   const cc = snapshot.companyCode.trim();
   const name = snapshot.employeeName.trim();
   const id = snapshot.employeeId.trim();
   return {
-    companyCode: !cc || cc.length < 6 || cc.length > 12 || !isNumeric(cc),
-    employeeName: !name || !looksLikeName(name),
-    employeeId: !id || !/^\d{11}$/.test(id)
+    companyCode: !cc || !isValidCompanyCode(cc),
+    employeeName: !name || !isValidEmployeeName(name),
+    employeeId: !id || !isValidEmployeeId(id)
   };
 }
 
@@ -65,14 +77,13 @@ export function validateProfileFields(snapshot: ProfileSnapshot): string[] {
   const id = snapshot.employeeId.trim();
 
   if (!cc) errors.push('Company code is required.');
-  else if (cc.length < 6 || cc.length > 12 || !isNumeric(cc))
-    errors.push('Company code must be numeric (6\u201312 digits).');
+  else if (!isValidCompanyCode(cc)) errors.push('Company code must be numeric (6\u201312 digits).');
 
   if (!name) errors.push('Employee name is required.');
-  else if (!looksLikeName(name)) errors.push('Employee name must contain text.');
+  else if (!isValidEmployeeName(name)) errors.push('Employee name must contain text.');
 
   if (!id) errors.push('Employee ID is required.');
-  else if (!/^\d{11}$/.test(id)) errors.push('Employee ID must be exactly 11 digits.');
+  else if (!isValidEmployeeId(id)) errors.push('Employee ID must be exactly 11 digits.');
 
   return errors;
 }
@@ -88,8 +99,9 @@ export function repairProfileSnapshot(snapshot: ProfileSnapshot): ProfileSnapsho
     isNumeric(nextEmployeeName) &&
     isNumeric(nextEmployeeId)
   ) {
+    const swapped = nextEmployeeName;
     nextEmployeeName = nextCompanyCode;
-    nextCompanyCode = '';
+    nextCompanyCode = swapped;
   }
 
   return {

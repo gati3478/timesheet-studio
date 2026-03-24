@@ -8,11 +8,14 @@ export const GET: RequestHandler = async ({ url }) => {
   const year = yearParam ? Number(yearParam) : now.getFullYear();
 
   if (!Number.isInteger(year)) {
-    return json({ message: 'Query param `year` must be an integer.' }, { status: 400 });
+    return json(
+      { message: 'Query param `year` must be an integer.', details: [] },
+      { status: 400 }
+    );
   }
 
   if (year < 2000 || year > 2100) {
-    return json({ message: 'Year must be between 2000 and 2100.' }, { status: 400 });
+    return json({ message: 'Year must be between 2000 and 2100.', details: [] }, { status: 400 });
   }
 
   try {
@@ -20,6 +23,6 @@ export const GET: RequestHandler = async ({ url }) => {
     return json({ year, entries });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected holiday parsing error.';
-    return json({ message }, { status: 502 });
+    return json({ message, details: [] }, { status: 502 });
   }
 };

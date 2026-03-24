@@ -101,7 +101,7 @@ export function computeTimesheet(input: TimesheetComputationInput): ComputedTime
   }
 
   let lastWorkday = monthEnd;
-  while (!isWeekday(lastWorkday)) {
+  while (!isWeekday(lastWorkday) || holidayDates.has(toDateKey(lastWorkday))) {
     lastWorkday = new Date(
       lastWorkday.getFullYear(),
       lastWorkday.getMonth(),

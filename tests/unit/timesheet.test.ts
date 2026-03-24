@@ -213,6 +213,30 @@ describe('computeTimesheet', () => {
     }
   });
 
+  it('lastWorkday skips holidays on terminal weekday', () => {
+    // Dec 2026: 31st is Thursday. Making it a holiday should retreat to 30th (Wednesday).
+    const result = computeTimesheet(
+      makeTimesheetInput({
+        month: 12,
+        holidayDates: new Set(['2026-12-31'])
+      })
+    );
+
+    expect(result.lastWorkdayLabel).toBe('30.12');
+  });
+
+  it('lastWorkday skips consecutive holidays at month end', () => {
+    // Dec 2026: 31st (Thu) and 30th (Wed) are both holidays → last workday is 29th (Tue)
+    const result = computeTimesheet(
+      makeTimesheetInput({
+        month: 12,
+        holidayDates: new Set(['2026-12-30', '2026-12-31'])
+      })
+    );
+
+    expect(result.lastWorkdayLabel).toBe('29.12');
+  });
+
   it('February 2026 lastWorkdayLabel is 27.02 when month ends on Saturday', () => {
     // Feb 2026: 28th is Saturday, so last weekday is Friday the 27th
     const result = computeTimesheet(

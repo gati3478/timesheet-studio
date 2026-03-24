@@ -27,7 +27,7 @@ npm run tauri:build      # Full production desktop app build
 - **Svelte reactivity**: Components use Svelte 4 `$:` reactive syntax, not Svelte 5 runes. An ESLint override disables `svelte/prefer-svelte-reactivity`. Do NOT migrate to runes unless explicitly asked.
 - **Server/client boundary**: Server logic in `src/lib/server/`, UI components in `src/lib/components/`. The `$lib/server` alias enforces server-only imports.
 - **Georgian text**: Day code `შ` (Georgian "shin") = paid vacation. The DOCX template uses Sylfaen font for Georgian character rendering. Do not substitute Latin characters.
-- **Validation errors**: Use `TimesheetValidationError` (from `timesheet.ts`) for all user-facing validation. It carries `details: string[]` for field-level errors. Endpoint handlers return 400 with JSON `{ error, details }`.
+- **Validation errors**: Use `TimesheetValidationError` (from `timesheet.ts`) for all user-facing validation. It carries `details: string[]` for field-level errors. Endpoint handlers return 400 with JSON `{ message, details }`.
 - **Dates**: ISO 8601 (`yyyy-MM-dd`) in API transit, `dd.MM.yyyy` for display labels. Use `date-fns` exclusively — no raw `Date` formatting.
 - **Code style**: Single quotes, no trailing commas, 100 char print width (see `.prettierrc`). TypeScript strict mode enabled.
 

@@ -11,6 +11,7 @@
   import { env } from '$env/dynamic/public';
   import { isTauriApp } from '$lib/tauri';
   import { slugify } from '$lib/slugify';
+  import { parseFilename } from '$lib/content-disposition';
   import {
     repairProfileSnapshot,
     persistProfile,
@@ -47,6 +48,7 @@
 
   let outputFormat: 'docx' | 'doc' = 'docx';
   let docExportAvailable = data.docExportAvailable;
+  let devMode = data.devMode;
 
   let holidayDates = new Set<string>();
   let holidayError = '';
@@ -163,23 +165,6 @@
   }
 
   // ── Generation ───────────────────────────────────────────
-
-  function parseFilename(contentDisposition: string | null): string | null {
-    if (!contentDisposition) return null;
-
-    // Prefer filename* (RFC 5987) — carries the full Unicode name
-    const extMatch = /filename\*=UTF-8''([^\s;]+)/i.exec(contentDisposition);
-    if (extMatch) {
-      try {
-        return decodeURIComponent(extMatch[1]);
-      } catch {
-        /* fall through to basic filename */
-      }
-    }
-
-    const match = /filename="?([a-zA-Z0-9\u10D0-\u10FF._-]+)"?/.exec(contentDisposition);
-    return match?.[1] ?? null;
-  }
 
   async function generateTimesheet(): Promise<void> {
     if (isEditingProfile) {
@@ -522,7 +507,7 @@
         {/if}
       </div>
 
-      {#if !isTauri}
+      {#if !isTauri && devMode}
         <div class="utility-row">
           <button
             type="button"

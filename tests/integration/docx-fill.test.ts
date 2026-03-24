@@ -11,6 +11,7 @@ import {
   hasShading,
   isCentered
 } from '../helpers/docx-assertions';
+import { makeComputedTimesheet } from '../helpers/fixtures';
 
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
@@ -64,7 +65,7 @@ async function buildTemplateBuffer(): Promise<Buffer> {
   return zip.generateAsync({ type: 'nodebuffer' });
 }
 
-function makeComputed(overrides: Partial<ComputedTimesheet> = {}): ComputedTimesheet {
+function makeTestTimesheet(overrides: Partial<ComputedTimesheet> = {}): ComputedTimesheet {
   const dayCodesByDay = new Map<number, DayCode>();
   for (let day = 1; day <= 31; day += 1) {
     dayCodesByDay.set(day, '');
@@ -73,18 +74,19 @@ function makeComputed(overrides: Partial<ComputedTimesheet> = {}): ComputedTimes
   dayCodesByDay.set(2, '8');
   dayCodesByDay.set(3, 'შ');
 
-  return {
-    dayCodesByDay: overrides.dayCodesByDay ?? dayCodesByDay,
-    firstHalfHours: overrides.firstHalfHours ?? 56,
-    secondHalfHours: overrides.secondHalfHours ?? 88,
-    workedDays: overrides.workedDays ?? 18,
-    totalWorkedHours: overrides.totalWorkedHours ?? 144,
-    paidVacationHours: overrides.paidVacationHours ?? 8,
-    weekdayHolidayCount: overrides.weekdayHolidayCount ?? 3,
-    startDateLabel: overrides.startDateLabel ?? '01.01.2026',
-    endDateLabel: overrides.endDateLabel ?? '31.01.2026',
-    lastWorkdayLabel: overrides.lastWorkdayLabel ?? '30.01'
-  };
+  return makeComputedTimesheet({
+    dayCodesByDay,
+    firstHalfHours: 56,
+    secondHalfHours: 88,
+    workedDays: 18,
+    totalWorkedHours: 144,
+    paidVacationHours: 8,
+    weekdayHolidayCount: 3,
+    startDateLabel: '01.01.2026',
+    endDateLabel: '31.01.2026',
+    lastWorkdayLabel: '30.01',
+    ...overrides
+  });
 }
 
 async function fillAndParse(computed: ComputedTimesheet): Promise<Document> {
@@ -103,7 +105,7 @@ async function fillAndParse(computed: ComputedTimesheet): Promise<Document> {
 
 describe('fillTimesheetTemplate', () => {
   it('writes dates, row values, totals and day-cell shading', async () => {
-    const computed = makeComputed();
+    const computed = makeTestTimesheet();
     const documentNode = await fillAndParse(computed);
 
     expect(getCellText(getCell(documentNode, 0, 5, 2))).toBe('30.01');
@@ -165,7 +167,7 @@ describe('fillTimesheetTemplate', () => {
       }
     }
 
-    const computed = makeComputed({
+    const computed = makeTestTimesheet({
       dayCodesByDay,
       firstHalfHours: 0,
       secondHalfHours: 0,
@@ -196,7 +198,7 @@ describe('fillTimesheetTemplate', () => {
     dayCodesByDay.set(30, '');
     dayCodesByDay.set(31, '');
 
-    const computed = makeComputed({
+    const computed = makeTestTimesheet({
       dayCodesByDay,
       firstHalfHours: 88,
       secondHalfHours: 80,

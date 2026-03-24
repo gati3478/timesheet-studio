@@ -21,14 +21,11 @@ export async function convertDocxBufferToDoc(docxBuffer: Buffer): Promise<Buffer
   try {
     await writeFile(inputFile, docxBuffer);
 
-    await execFileAsync('soffice', [
-      '--headless',
-      '--convert-to',
-      'doc',
-      '--outdir',
-      workDir,
-      inputFile
-    ]);
+    await execFileAsync(
+      'soffice',
+      ['--headless', '--convert-to', 'doc', '--outdir', workDir, inputFile],
+      { timeout: 30_000 }
+    );
 
     return await readFile(outputFile);
   } catch (error) {

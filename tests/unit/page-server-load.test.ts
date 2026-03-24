@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+vi.mock('$app/environment', () => ({
+  dev: true
+}));
+
 vi.mock('$lib/server/capabilities', () => ({
   isDocExportAvailable: vi.fn()
 }));
 
 describe('+page.server.ts load', () => {
-  let load: (event: unknown) => Promise<{ docExportAvailable: boolean }>;
+  let load: (event: unknown) => Promise<{ docExportAvailable: boolean; devMode: boolean }>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -18,7 +22,7 @@ describe('+page.server.ts load', () => {
     vi.mocked(isDocExportAvailable).mockResolvedValueOnce(true);
 
     const result = await load({});
-    expect(result).toEqual({ docExportAvailable: true });
+    expect(result).toEqual({ docExportAvailable: true, devMode: true });
   });
 
   it('returns docExportAvailable: false when soffice is unavailable', async () => {
@@ -26,7 +30,7 @@ describe('+page.server.ts load', () => {
     vi.mocked(isDocExportAvailable).mockResolvedValueOnce(false);
 
     const result = await load({});
-    expect(result).toEqual({ docExportAvailable: false });
+    expect(result).toEqual({ docExportAvailable: false, devMode: true });
   });
 
   it('calls isDocExportAvailable exactly once per load', async () => {

@@ -57,7 +57,7 @@ describe('convertDocxBufferToDoc', () => {
 
   it('wraps execFile errors in DocConversionError', async () => {
     mockExecFile.mockImplementation(
-      (_cmd: string, _args: string[], cb: (err: Error | null) => void) => {
+      (_cmd: string, _args: string[], _opts: unknown, cb: (err: Error | null) => void) => {
         cb(new Error('spawn soffice ENOENT'));
       }
     );
@@ -73,7 +73,7 @@ describe('convertDocxBufferToDoc', () => {
     const expectedOutput = Buffer.from('fake-doc-content');
 
     mockExecFile.mockImplementation(
-      (_cmd: string, _args: string[], cb: (err: Error | null) => void) => {
+      (_cmd: string, _args: string[], _opts: unknown, cb: (err: Error | null) => void) => {
         cb(null);
       }
     );
@@ -90,7 +90,7 @@ describe('convertDocxBufferToDoc', () => {
 
   it('cleans up temp directory on success', async () => {
     mockExecFile.mockImplementation(
-      (_cmd: string, _args: string[], cb: (err: Error | null) => void) => {
+      (_cmd: string, _args: string[], _opts: unknown, cb: (err: Error | null) => void) => {
         cb(null);
       }
     );
@@ -106,7 +106,7 @@ describe('convertDocxBufferToDoc', () => {
 
   it('cleans up temp directory on failure', async () => {
     mockExecFile.mockImplementation(
-      (_cmd: string, _args: string[], cb: (err: Error | null) => void) => {
+      (_cmd: string, _args: string[], _opts: unknown, cb: (err: Error | null) => void) => {
         cb(new Error('conversion failed'));
       }
     );
@@ -121,7 +121,7 @@ describe('convertDocxBufferToDoc', () => {
 
   it('wraps non-Error exceptions with "Unknown conversion failure"', async () => {
     mockExecFile.mockImplementation(
-      (_cmd: string, _args: string[], cb: (err: Error | null) => void) => {
+      (_cmd: string, _args: string[], _opts: unknown, cb: (err: Error | null) => void) => {
         cb(null);
       }
     );
@@ -139,7 +139,7 @@ describe('convertDocxBufferToDoc', () => {
 
   it('calls soffice with correct arguments', async () => {
     mockExecFile.mockImplementation(
-      (_cmd: string, _args: string[], cb: (err: Error | null) => void) => {
+      (_cmd: string, _args: string[], _opts: unknown, cb: (err: Error | null) => void) => {
         cb(null);
       }
     );
@@ -157,6 +157,7 @@ describe('convertDocxBufferToDoc', () => {
         '/tmp/timesheet-doc-convert-abc123',
         '/tmp/timesheet-doc-convert-abc123/generated-timesheet.docx'
       ],
+      { timeout: 30_000 },
       expect.any(Function)
     );
   });

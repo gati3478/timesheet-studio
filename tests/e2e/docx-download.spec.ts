@@ -19,7 +19,7 @@ test.describe('DOCX download', () => {
 
     expect(response.status()).toBe(200);
     const disposition = response.headers()['content-disposition'];
-    expect(disposition).toContain('test-user-jan-2026-timesheet.docx');
+    expect(disposition).toContain('test-user-jan-2026.docx');
   });
 
   test('Georgian name produces RFC 5987 encoded filename', async ({ request }) => {

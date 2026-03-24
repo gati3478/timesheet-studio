@@ -13,5 +13,5 @@ export function buildOutputFilename(
   }
 
   const slug = slugify(employeeName) || 'timesheet';
-  return `${slug}-${MONTHS[monthIndex].short.toLowerCase()}-${year}-timesheet.${extension}`;
+  return `${slug}-${MONTHS[monthIndex].short.toLowerCase()}-${year}.${extension}`;
 }

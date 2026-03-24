@@ -1,4 +1,13 @@
 import { test, expect, type Page } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+
+let hasLibreOffice = false;
+try {
+  execFileSync('soffice', ['--version'], { stdio: 'ignore' });
+  hasLibreOffice = true;
+} catch {
+  // LibreOffice not available
+}
 
 async function waitForHydration(page: Page): Promise<void> {
   await page.goto('/');
@@ -83,7 +92,7 @@ test.describe('Profile persistence', () => {
     const formatSelect = page.locator('select');
     await expect(formatSelect).toBeVisible();
     await expect(formatSelect).toBeDisabled();
-    await expect(formatSelect).toHaveValue('docx');
+    await expect(formatSelect).toHaveValue(hasLibreOffice ? 'doc' : 'docx');
 
     // Enter edit mode — select should become enabled
     await page.getByRole('button', { name: 'Edit Profile' }).click();

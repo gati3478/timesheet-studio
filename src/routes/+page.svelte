@@ -47,7 +47,7 @@
   let profileMessage = '';
   let fieldErrors: FieldErrors = { ...NO_FIELD_ERRORS };
 
-  let outputFormat: 'docx' | 'doc' = 'docx';
+  let outputFormat: 'docx' | 'doc' = data.docExportAvailable ? 'doc' : 'docx';
   let docExportAvailable = data.docExportAvailable;
   let devMode = data.devMode;
 
@@ -193,7 +193,7 @@
 
       const blob = await response.blob();
       const nameSlug = slugify(employeeName) || 'timesheet';
-      const fallbackFilename = `${nameSlug}-${MONTHS[selectedMonth - 1].short.toLowerCase()}-${selectedYear}-timesheet.${outputFormat}`;
+      const fallbackFilename = `${nameSlug}-${MONTHS[selectedMonth - 1].short.toLowerCase()}-${selectedYear}.${outputFormat}`;
       const filename =
         parseFilename(response.headers.get('content-disposition')) ?? fallbackFilename;
       const href = URL.createObjectURL(blob);

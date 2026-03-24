@@ -141,6 +141,6 @@ test.describe('Generation', () => {
     await page.getByRole('button', { name: 'Generate Timesheet' }).click();
     const download = await downloadPromise;
 
-    expect(download.suggestedFilename()).toContain('.docx');
+    expect(download.suggestedFilename()).toMatch(/\.docx?$/);
   });
 });

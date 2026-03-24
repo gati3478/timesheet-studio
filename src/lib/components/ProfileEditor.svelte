@@ -77,10 +77,10 @@
   <label>
     <span>Output Format</span>
     <select bind:value={outputFormat} disabled={!isEditing}>
-      <option value="docx">DOCX</option>
       {#if docExportAvailable}
         <option value="doc">DOC</option>
       {/if}
+      <option value="docx">DOCX</option>
     </select>
   </label>
 </div>

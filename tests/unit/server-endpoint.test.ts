@@ -20,7 +20,7 @@ vi.mock('$lib/server/docx', () => ({
 }));
 
 vi.mock('$lib/server/filename', () => ({
-  buildOutputFilename: vi.fn().mockReturnValue('test-timesheet.docx')
+  buildOutputFilename: vi.fn().mockReturnValue('test-user-mar-2026.docx')
 }));
 
 vi.mock('$lib/server/doc-conversion', () => ({
@@ -125,14 +125,14 @@ describe('POST /api/timesheet/generate', () => {
 
     const response = await POST({ request });
     expect(response.status).toBe(200);
-    expect(response.headers.get('Content-Disposition')).toContain('timesheet');
+    expect(response.headers.get('Content-Disposition')).toContain('test-user-mar-2026.docx');
     expect(response.headers.get('Cache-Control')).toBe('no-store');
   });
 
   it('returns 200 with DOC format and correct MIME type', async () => {
     const { convertDocxBufferToDoc } = await import('$lib/server/doc-conversion');
     const { buildOutputFilename } = await import('$lib/server/filename');
-    vi.mocked(buildOutputFilename).mockReturnValue('test-timesheet.doc');
+    vi.mocked(buildOutputFilename).mockReturnValue('test-mar-2026.doc');
 
     const request = new Request('http://localhost/api/timesheet/generate', {
       method: 'POST',
@@ -182,7 +182,7 @@ describe('POST /api/timesheet/generate', () => {
 
   it('Content-Disposition uses RFC 5987 for non-ASCII filenames', async () => {
     const { buildOutputFilename } = await import('$lib/server/filename');
-    vi.mocked(buildOutputFilename).mockReturnValue('გიორგი-mar-2026-timesheet.docx');
+    vi.mocked(buildOutputFilename).mockReturnValue('გიორგი-mar-2026.docx');
 
     const request = new Request('http://localhost/api/timesheet/generate', {
       method: 'POST',
@@ -203,12 +203,12 @@ describe('POST /api/timesheet/generate', () => {
     const cd = response.headers.get('Content-Disposition')!;
     expect(cd).toContain('filename="timesheet.docx"');
     expect(cd).toContain("filename*=UTF-8''");
-    expect(cd).toContain(encodeURIComponent('გიორგი-mar-2026-timesheet.docx'));
+    expect(cd).toContain(encodeURIComponent('გიორგი-mar-2026.docx'));
   });
 
   it('Content-Disposition uses simple format for ASCII filenames', async () => {
     const { buildOutputFilename } = await import('$lib/server/filename');
-    vi.mocked(buildOutputFilename).mockReturnValue('test-user-mar-2026-timesheet.docx');
+    vi.mocked(buildOutputFilename).mockReturnValue('test-user-mar-2026.docx');
 
     const request = new Request('http://localhost/api/timesheet/generate', {
       method: 'POST',
@@ -227,7 +227,7 @@ describe('POST /api/timesheet/generate', () => {
     const response = await POST({ request });
     expect(response.status).toBe(200);
     const cd = response.headers.get('Content-Disposition')!;
-    expect(cd).toBe('attachment; filename="test-user-mar-2026-timesheet.docx"');
+    expect(cd).toBe('attachment; filename="test-user-mar-2026.docx"');
     expect(cd).not.toContain('filename*=');
   });
 

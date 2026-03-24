@@ -1,33 +1,30 @@
 <script lang="ts">
-  export let workedDayCount: number;
-  export let vacationDayCount: number;
-  export let weekdayHolidayCount: number;
-  export let blockedDayCount: number;
-  export let totalHours: number;
-  export let vacationHours: number;
-  export let firstHalfHours: number;
-  export let secondHalfHours: number;
+  import type { SummaryResult } from '$lib/calendar-types';
+
+  export let summary: SummaryResult;
 </script>
 
 <section class="summary-grid">
   <article class="card metric">
     <p>Worked Days</p>
-    <strong>{workedDayCount}</strong>
-    <small>{totalHours} hours total</small>
+    <strong>{summary.workedDayCount}</strong>
+    <small>{summary.totalHours} hours total</small>
   </article>
   <article class="card metric">
     <p>Vacation</p>
-    <strong>{vacationDayCount}</strong>
-    <small>{vacationHours} paid hours</small>
+    <strong>{summary.vacationDayCount}</strong>
+    <small>{summary.vacationHours} paid hours</small>
   </article>
   <article class="card metric">
     <p>Weekday Holidays</p>
-    <strong>{weekdayHolidayCount}</strong>
-    <small>{blockedDayCount} blocked days overall</small>
+    <strong>{summary.weekdayHolidayCount}</strong>
+    <small>{summary.blockedDayCount} blocked days overall</small>
   </article>
   <article class="card metric">
     <p>Month Split</p>
-    <strong>{firstHalfHours} <span class="split-sep">|</span> {secondHalfHours}</strong>
+    <strong
+      >{summary.firstHalfHours} <span class="split-sep">|</span> {summary.secondHalfHours}</strong
+    >
     <small>1st half hours | 2nd half hours</small>
   </article>
 </section>

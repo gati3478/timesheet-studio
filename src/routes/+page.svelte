@@ -119,6 +119,13 @@
         (body.entries ?? []).map((entry: { date: string }) => entry.date)
       );
       loadedHolidayYear = year;
+
+      // Purge vacation dates that now conflict with newly-loaded holidays
+      const conflicting = [...vacationDates].filter((d) => holidayDates.has(d));
+      if (conflicting.length > 0) {
+        for (const d of conflicting) vacationDates.delete(d);
+        vacationDates = new Set(vacationDates);
+      }
     } catch (error) {
       holidayError = error instanceof Error ? error.message : 'Unexpected holiday loading error.';
       holidayDates = new Set<string>();
@@ -341,6 +348,22 @@
       companyCode = saved.companyCode;
       employeeName = saved.employeeName;
       employeeId = saved.employeeId;
+
+      // Repair stale/swapped fields from localStorage on first load
+      const fixed = repairProfileSnapshot({ companyCode, employeeName, employeeId });
+      const changed =
+        fixed.companyCode !== companyCode ||
+        fixed.employeeName !== employeeName ||
+        fixed.employeeId !== employeeId;
+
+      if (changed) {
+        companyCode = fixed.companyCode;
+        employeeName = fixed.employeeName;
+        employeeId = fixed.employeeId;
+        persistProfile({ companyCode, employeeName, employeeId });
+        profileMessage = 'Profile was auto-repaired.';
+      }
+
       draftCompanyCode = companyCode;
       draftEmployeeName = employeeName;
       draftEmployeeId = employeeId;
@@ -350,27 +373,6 @@
   });
 
   // ── Reactive statements ──────────────────────────────────
-
-  $: if (!isEditingProfile) {
-    const fixed = repairProfileSnapshot({ companyCode, employeeName, employeeId });
-    const changed =
-      fixed.companyCode !== companyCode ||
-      fixed.employeeName !== employeeName ||
-      fixed.employeeId !== employeeId;
-
-    if (changed) {
-      companyCode = fixed.companyCode;
-      employeeName = fixed.employeeName;
-      employeeId = fixed.employeeId;
-      draftCompanyCode = companyCode;
-      draftEmployeeName = employeeName;
-      draftEmployeeId = employeeId;
-      if (typeof localStorage !== 'undefined')
-        persistProfile({ companyCode, employeeName, employeeId });
-      profileMessage = 'Profile was auto-repaired.';
-      profileError = '';
-    }
-  }
 
   // Clear stale profile errors when the user edits any field
   $: if (isEditingProfile) {
@@ -493,16 +495,7 @@
     </article>
   </section>
 
-  <SummaryMetrics
-    workedDayCount={summary.workedDayCount}
-    vacationDayCount={summary.vacationDayCount}
-    weekdayHolidayCount={summary.weekdayHolidayCount}
-    blockedDayCount={summary.blockedDayCount}
-    totalHours={summary.totalHours}
-    vacationHours={summary.vacationHours}
-    firstHalfHours={summary.firstHalfHours}
-    secondHalfHours={summary.secondHalfHours}
-  />
+  <SummaryMetrics {summary} />
 </main>
 
 <style>

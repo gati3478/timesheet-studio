@@ -14,6 +14,7 @@ describe('Security headers hook', () => {
     expect(result.headers.get('X-XSS-Protection')).toBe('0');
     expect(result.headers.get('Content-Security-Policy')).toContain("default-src 'self'");
     expect(result.headers.get('Permissions-Policy')).toContain('camera=()');
+    expect(result.headers.get('Cross-Origin-Opener-Policy')).toBe('same-origin');
   });
 
   it('CSP includes all required directives', async () => {

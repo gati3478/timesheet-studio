@@ -112,6 +112,9 @@ export function computeTimesheet(input: TimesheetComputationInput): ComputedTime
       getDate(lastWorkday) - 1
     );
   }
+  // If every day in the month is a weekend or holiday (unrealistic for Georgia),
+  // the loop exits the month. Fall back to monthEnd for the label — the DOCX
+  // cell must contain a date, and the actual hour totals will be zero.
   if (lastWorkday.getMonth() !== month - 1) {
     lastWorkday = monthEnd;
   }

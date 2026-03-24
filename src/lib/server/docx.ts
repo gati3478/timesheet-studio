@@ -61,56 +61,18 @@ function findChildByLocalName(node: Node, localName: string): Element | null {
   return null;
 }
 
-function getOrCreateTcPr(tc: Element): Element {
-  let tcPr = findChildByLocalName(tc, 'tcPr');
-  if (!tcPr) {
-    tcPr = createWElement(tc.ownerDocument!, 'tcPr');
-    tc.insertBefore(tcPr, tc.firstChild);
+function getOrCreateChild(
+  parent: Element,
+  localName: string,
+  position: 'prepend' | 'append' = 'prepend'
+): Element {
+  let child = findChildByLocalName(parent, localName);
+  if (!child) {
+    child = createWElement(parent.ownerDocument!, localName);
+    if (position === 'prepend') parent.insertBefore(child, parent.firstChild);
+    else parent.appendChild(child);
   }
-
-  return tcPr;
-}
-
-function getOrCreateParagraph(tc: Element): Element {
-  const paragraphs = xpath.select("./*[local-name()='p']", tc) as Element[];
-  if (paragraphs.length > 0) {
-    return paragraphs[0];
-  }
-
-  const paragraph = createWElement(tc.ownerDocument!, 'p');
-  tc.appendChild(paragraph);
-  return paragraph;
-}
-
-function getOrCreateParagraphProperties(paragraph: Element): Element {
-  let paragraphProperties = findChildByLocalName(paragraph, 'pPr');
-  if (!paragraphProperties) {
-    paragraphProperties = createWElement(paragraph.ownerDocument!, 'pPr');
-    paragraph.insertBefore(paragraphProperties, paragraph.firstChild);
-  }
-
-  return paragraphProperties;
-}
-
-function getOrCreateRun(paragraph: Element): Element {
-  const runs = xpath.select("./*[local-name()='r']", paragraph) as Element[];
-  if (runs.length > 0) {
-    return runs[0];
-  }
-
-  const run = createWElement(paragraph.ownerDocument!, 'r');
-  paragraph.appendChild(run);
-  return run;
-}
-
-function getOrCreateText(run: Element): Element {
-  let text = findChildByLocalName(run, 't');
-  if (!text) {
-    text = createWElement(run.ownerDocument!, 't');
-    run.appendChild(text);
-  }
-
-  return text;
+  return child;
 }
 
 function removeChildByLocalName(parent: Element, localName: string): void {
@@ -122,25 +84,6 @@ function removeChildByLocalName(parent: Element, localName: string): void {
   }
 }
 
-function getOrCreateRunProperties(run: Element): Element {
-  let runProperties = findChildByLocalName(run, 'rPr');
-  if (!runProperties) {
-    runProperties = createWElement(run.ownerDocument!, 'rPr');
-    run.insertBefore(runProperties, run.firstChild);
-  }
-
-  return runProperties;
-}
-
-function ensureRFonts(runProperties: Element): Element {
-  let rFonts = findChildByLocalName(runProperties, 'rFonts');
-  if (!rFonts) {
-    rFonts = createWElement(runProperties.ownerDocument!, 'rFonts');
-    runProperties.insertBefore(rFonts, runProperties.firstChild);
-  }
-  return rFonts;
-}
-
 function setRFontsToTarget(rFonts: Element): void {
   rFonts.setAttributeNS(W_NS, w('ascii'), TARGET_FONT);
   rFonts.setAttributeNS(W_NS, w('hAnsi'), TARGET_FONT);
@@ -149,13 +92,8 @@ function setRFontsToTarget(rFonts: Element): void {
 }
 
 function setParagraphCenter(paragraph: Element): void {
-  const paragraphProperties = getOrCreateParagraphProperties(paragraph);
-  let justification = findChildByLocalName(paragraphProperties, 'jc');
-  if (!justification) {
-    justification = createWElement(paragraph.ownerDocument!, 'jc');
-    paragraphProperties.appendChild(justification);
-  }
-
+  const paragraphProperties = getOrCreateChild(paragraph, 'pPr');
+  const justification = getOrCreateChild(paragraphProperties, 'jc', 'append');
   justification.setAttributeNS(W_NS, w('val'), 'center');
 }
 
@@ -166,22 +104,12 @@ function setRunValueStyle(
     sizeHalfPoints?: string;
   }
 ): void {
-  const runProperties = getOrCreateRunProperties(run);
-  setRFontsToTarget(ensureRFonts(runProperties));
+  const runProperties = getOrCreateChild(run, 'rPr');
+  setRFontsToTarget(getOrCreateChild(runProperties, 'rFonts'));
 
-  let size = findChildByLocalName(runProperties, 'sz');
-  if (!size) {
-    size = createWElement(run.ownerDocument!, 'sz');
-    runProperties.appendChild(size);
-  }
-  size.setAttributeNS(W_NS, w('val'), options.sizeHalfPoints ?? VALUE_FONT_SIZE_HALF_POINTS);
-
-  let sizeCs = findChildByLocalName(runProperties, 'szCs');
-  if (!sizeCs) {
-    sizeCs = createWElement(run.ownerDocument!, 'szCs');
-    runProperties.appendChild(sizeCs);
-  }
-  sizeCs.setAttributeNS(W_NS, w('val'), options.sizeHalfPoints ?? VALUE_FONT_SIZE_HALF_POINTS);
+  const sizeVal = options.sizeHalfPoints ?? VALUE_FONT_SIZE_HALF_POINTS;
+  getOrCreateChild(runProperties, 'sz', 'append').setAttributeNS(W_NS, w('val'), sizeVal);
+  getOrCreateChild(runProperties, 'szCs', 'append').setAttributeNS(W_NS, w('val'), sizeVal);
 
   removeChildByLocalName(runProperties, 'b');
   removeChildByLocalName(runProperties, 'bCs');
@@ -207,13 +135,13 @@ function setStyledCellText(
     return;
   }
 
-  const paragraph = getOrCreateParagraph(tc);
+  const paragraph = getOrCreateChild(tc, 'p', 'append');
   if (options.centered ?? false) {
     setParagraphCenter(paragraph);
   }
 
-  const run = getOrCreateRun(paragraph);
-  const text = getOrCreateText(run);
+  const run = getOrCreateChild(paragraph, 'r', 'append');
+  const text = getOrCreateChild(run, 't', 'append');
   if (value.startsWith(' ') || value.endsWith(' ')) {
     text.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
   } else {
@@ -235,7 +163,7 @@ function setStyledCellText(
 function enforceSylfaenOnAllRuns(document: Document): void {
   const runs = xpath.select("//*[local-name()='r']", document) as Element[];
   for (const run of runs) {
-    setRFontsToTarget(ensureRFonts(getOrCreateRunProperties(run)));
+    setRFontsToTarget(getOrCreateChild(getOrCreateChild(run, 'rPr'), 'rFonts'));
   }
 }
 
@@ -255,25 +183,9 @@ function ensureStylesDefaultFont(stylesDocument: Document): void {
     stylesRoot[0].insertBefore(docDefaultsNode, stylesRoot[0].firstChild);
   }
 
-  let rPrDefault = findChildByLocalName(docDefaultsNode, 'rPrDefault');
-  if (!rPrDefault) {
-    rPrDefault = createWElement(stylesDocument, 'rPrDefault');
-    docDefaultsNode.appendChild(rPrDefault);
-  }
-
-  let rPr = findChildByLocalName(rPrDefault, 'rPr');
-  if (!rPr) {
-    rPr = createWElement(stylesDocument, 'rPr');
-    rPrDefault.appendChild(rPr);
-  }
-
-  let rFonts = findChildByLocalName(rPr, 'rFonts');
-  if (!rFonts) {
-    rFonts = createWElement(stylesDocument, 'rFonts');
-    rPr.insertBefore(rFonts, rPr.firstChild);
-  }
-
-  setRFontsToTarget(rFonts);
+  const rPrDefault = getOrCreateChild(docDefaultsNode, 'rPrDefault', 'append');
+  const rPr = getOrCreateChild(rPrDefault, 'rPr', 'append');
+  setRFontsToTarget(getOrCreateChild(rPr, 'rFonts'));
 }
 
 function enforceSylfaenInStyles(stylesXml: string): string {
@@ -338,7 +250,7 @@ function clearCellText(tc: Element): void {
 }
 
 function setDayCellShading(tc: Element, enabled: boolean): void {
-  const tcPr = getOrCreateTcPr(tc);
+  const tcPr = getOrCreateChild(tc, 'tcPr');
   const existingShading = findChildByLocalName(tcPr, 'shd');
 
   if (!enabled) {

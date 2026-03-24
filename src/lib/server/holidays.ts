@@ -10,6 +10,7 @@ const NAGER_HOLIDAY_URL = 'https://date.nager.at/api/v3/PublicHolidays';
 const HOLIDAY_CACHE_TTL_MS = 1000 * 60 * 60 * 6;
 const MAX_HTML_RESPONSE_BYTES = 5 * 1024 * 1024;
 const MAX_JSON_RESPONSE_BYTES = 1 * 1024 * 1024;
+const MIN_EXPECTED_HOLIDAYS = 5;
 
 const monthStems: Array<[string, number]> = [
   ['იანვ', 1],
@@ -40,6 +41,37 @@ type CachedHolidays = {
 };
 
 const holidayCache = new Map<number, CachedHolidays>();
+
+async function readResponseBytes(response: Response, maxBytes: number): Promise<ArrayBuffer> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const buf = await response.arrayBuffer();
+    if (buf.byteLength > maxBytes) throw new Error('Holiday provider response exceeds size limit.');
+    return buf;
+  }
+
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBytes) {
+      await reader.cancel();
+      throw new Error('Holiday provider response exceeds size limit.');
+    }
+    chunks.push(value);
+  }
+
+  const result = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return result.buffer;
+}
 
 function detectCharset(contentType: string | null, htmlHead: string): string {
   if (contentType) {
@@ -393,10 +425,7 @@ async function fetchYellHolidayPage(): Promise<string> {
     throw new Error(`Failed to fetch yell.ge holiday source (${response.status}).`);
   }
 
-  const arrayBuffer = await response.arrayBuffer();
-  if (arrayBuffer.byteLength > MAX_HTML_RESPONSE_BYTES) {
-    throw new Error('Holiday provider response exceeds size limit.');
-  }
+  const arrayBuffer = await readResponseBytes(response, MAX_HTML_RESPONSE_BYTES);
   const buffer = Buffer.from(arrayBuffer);
   return decodeHtmlBody(buffer, response.headers.get('content-type'));
 }
@@ -419,10 +448,7 @@ async function fetchNagerHolidays(year: number): Promise<HolidayEntry[]> {
     throw new Error(`Failed to fetch date.nager.at holidays (${response.status}).`);
   }
 
-  const arrayBuffer = await response.arrayBuffer();
-  if (arrayBuffer.byteLength > MAX_JSON_RESPONSE_BYTES) {
-    throw new Error('Holiday provider response exceeds size limit.');
-  }
+  const arrayBuffer = await readResponseBytes(response, MAX_JSON_RESPONSE_BYTES);
   const payload = JSON.parse(new TextDecoder().decode(arrayBuffer)) as unknown;
   return parseNagerHolidays(payload, year);
 }
@@ -447,7 +473,14 @@ async function fetchMergedHolidays(year: number): Promise<HolidayEntry[]> {
   const yellEntries = results[1].status === 'fulfilled' ? results[1].value : [];
 
   const merged = mergeHolidayEntries(nagerEntries, yellEntries);
+  const anyProviderFailed = results.some((r) => r.status === 'rejected');
+
   if (merged.length > 0) {
+    if (anyProviderFailed && merged.length < MIN_EXPECTED_HOLIDAYS) {
+      console.warn(
+        `Holiday result (${merged.length} entries) may be incomplete — a provider failed and count is below expected (${MIN_EXPECTED_HOLIDAYS}).`
+      );
+    }
     return merged;
   }
 

@@ -11,7 +11,6 @@
   --text-tertiary: #60779f;
   --accent: #2f6fdd;
   --accent-strong: #1d57bf;
-  --danger-subtle: #b95d72;
   --color-error: #8a2f45;
   --color-error-bg: rgba(252, 238, 242, 0.9);
   --color-error-border: rgba(188, 96, 118, 0.35);
@@ -94,6 +93,14 @@ body.tauri-app {
   margin: var(--space-1) 0 0;
   color: var(--text-secondary);
   font-size: 0.85rem;
+}
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(6px);
 }
 
 /* ── Status messages ────────────────────────────── */

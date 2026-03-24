@@ -1,4 +1,5 @@
 import { endOfMonth, format, getDate, getDaysInMonth, getISODay, parseISO } from 'date-fns';
+import { HOURS_PER_WORKDAY } from '../constants';
 import type { ComputedTimesheet, DayCode, TimesheetComputationInput } from './types';
 
 export class TimesheetValidationError extends Error {
@@ -90,14 +91,14 @@ export function computeTimesheet(input: TimesheetComputationInput): ComputedTime
 
     if (vacationSet.has(key)) {
       dayCodesByDay.set(day, 'შ');
-      paidVacationHours += 8;
+      paidVacationHours += HOURS_PER_WORKDAY;
       continue;
     }
 
     dayCodesByDay.set(day, '8');
     workedDays++;
-    if (day <= 15) firstHalfHours += 8;
-    else secondHalfHours += 8;
+    if (day <= 15) firstHalfHours += HOURS_PER_WORKDAY;
+    else secondHalfHours += HOURS_PER_WORKDAY;
   }
 
   let lastWorkday = monthEnd;

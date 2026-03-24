@@ -1,5 +1,6 @@
 <script lang="ts">
   import StatusMessage from './StatusMessage.svelte';
+  import { NO_FIELD_ERRORS, type FieldErrors } from '$lib/profile';
 
   export let draftCompanyCode: string;
   export let draftEmployeeName: string;
@@ -9,11 +10,7 @@
   export let error: string;
   export let errorDetails: string[] = [];
   export let message: string;
-  export let fieldErrors: { companyCode: boolean; employeeName: boolean; employeeId: boolean } = {
-    companyCode: false,
-    employeeName: false,
-    employeeId: false
-  };
+  export let fieldErrors: FieldErrors = { ...NO_FIELD_ERRORS };
 
   export let docExportAvailable: boolean;
 

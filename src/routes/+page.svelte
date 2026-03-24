@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { format, getDaysInMonth, isWeekend } from 'date-fns';
   import { MONTHS } from '$lib/constants';
   import type { DayItem, CalendarCell } from '$lib/calendar-types';
+  import { computeSummary } from '$lib/calendar-types';
   import MonthPicker from '$lib/components/MonthPicker.svelte';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import VacationCalendar from '$lib/components/VacationCalendar.svelte';
@@ -16,8 +18,7 @@
     repairProfileSnapshot,
     persistProfile,
     loadSavedProfile,
-    validateProfileFields,
-    identifyInvalidFields,
+    validateProfile,
     NO_FIELD_ERRORS
   } from '$lib/profile';
   import type { FieldErrors } from '$lib/profile';
@@ -69,27 +70,14 @@
 
   // ── Helpers ──────────────────────────────────────────────
 
-  function pad2(value: number): string {
-    return String(value).padStart(2, '0');
-  }
-
-  function isoDate(year: number, month: number, day: number): string {
-    return `${year}-${pad2(month)}-${pad2(day)}`;
-  }
-
-  function daysInMonth(year: number, month: number): number {
-    return new Date(year, month, 0).getDate();
-  }
-
-  function isWeekend(year: number, month: number, day: number): boolean {
-    const weekday = new Date(year, month - 1, day).getDay();
-    return weekday === 0 || weekday === 6;
+  function monthPrefix(year: number, month: number): string {
+    return format(new Date(year, month - 1, 1), 'yyyy-MM-');
   }
 
   // ── Period navigation ────────────────────────────────────
 
   function purgeVacationOutOfMonth(): void {
-    const prefix = `${selectedYear}-${pad2(selectedMonth)}-`;
+    const prefix = monthPrefix(selectedYear, selectedMonth);
     const filtered = [...vacationDates].filter((date) => date.startsWith(prefix));
     if (filtered.length !== vacationDates.size) {
       vacationDates = new Set(filtered);
@@ -159,7 +147,7 @@
   }
 
   function clearAllVacation(): void {
-    const prefix = `${selectedYear}-${pad2(selectedMonth)}-`;
+    const prefix = monthPrefix(selectedYear, selectedMonth);
     const filtered = [...vacationDates].filter((d) => !d.startsWith(prefix));
     vacationDates = new Set(filtered);
   }
@@ -247,21 +235,17 @@
   }
 
   function saveProfile(): boolean {
-    const errors = validateProfileFields({
+    const result = validateProfile({
       companyCode: draftCompanyCode,
       employeeName: draftEmployeeName,
       employeeId: draftEmployeeId
     });
 
-    if (errors.length > 0) {
+    if (result.messages.length > 0) {
       profileError = 'Please fix the following:';
-      profileDetails = errors;
+      profileDetails = result.messages;
       profileMessage = '';
-      fieldErrors = identifyInvalidFields({
-        companyCode: draftCompanyCode,
-        employeeName: draftEmployeeName,
-        employeeId: draftEmployeeId
-      });
+      fieldErrors = result.fieldErrors;
       return false;
     }
 
@@ -319,14 +303,15 @@
     vacations: ReadonlySet<string>
   ): DayItem[] {
     const items: DayItem[] = [];
-    const total = daysInMonth(year, month);
+    const total = getDaysInMonth(new Date(year, month - 1));
 
     for (let day = 1; day <= total; day += 1) {
-      const dateIso = isoDate(year, month, day);
+      const date = new Date(year, month - 1, day);
+      const dateIso = format(date, 'yyyy-MM-dd');
       items.push({
         day,
         dateIso,
-        isWeekend: isWeekend(year, month, day),
+        isWeekend: isWeekend(date),
         isHoliday: holidays.has(dateIso),
         isVacation: vacations.has(dateIso)
       });
@@ -403,36 +388,7 @@
   $: calendarCells = buildCalendarCells(selectedYear, selectedMonth, dayItems);
   $: hasVacation = dayItems.some((item) => item.isVacation);
 
-  $: summary = (() => {
-    let worked = 0,
-      vacation = 0,
-      blocked = 0,
-      weekdayHoliday = 0,
-      h1 = 0,
-      h2 = 0;
-    for (const item of dayItems) {
-      if (item.isWeekend || item.isHoliday) {
-        blocked++;
-        if (item.isHoliday && !item.isWeekend) weekdayHoliday++;
-      } else if (item.isVacation) {
-        vacation++;
-      } else {
-        worked++;
-        if (item.day <= 15) h1 += 8;
-        else h2 += 8;
-      }
-    }
-    return {
-      workedDayCount: worked,
-      vacationDayCount: vacation,
-      blockedDayCount: blocked,
-      weekdayHolidayCount: weekdayHoliday,
-      firstHalfHours: h1,
-      secondHalfHours: h2,
-      totalHours: h1 + h2,
-      vacationHours: vacation * 8
-    };
-  })();
+  $: summary = computeSummary(dayItems);
 </script>
 
 <svelte:head>
@@ -554,14 +510,6 @@
     margin: var(--space-7) auto var(--space-8);
     display: grid;
     gap: var(--space-4);
-  }
-
-  .card {
-    background: var(--surface-1);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(6px);
   }
 
   .hero {

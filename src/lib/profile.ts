@@ -16,22 +16,19 @@ export function looksLikeName(value: string): boolean {
 
 export function normalizeCompanyCode(value: string): string {
   const trimmed = value.trim();
-  if (trimmed.length === 0) return '';
-  if (trimmed.length < 6 || trimmed.length > 12 || !isNumeric(trimmed)) return '';
+  if (!trimmed || !isValidCompanyCode(trimmed)) return '';
   return trimmed;
 }
 
 export function normalizeEmployeeId(value: string): string {
   const trimmed = value.trim();
-  if (trimmed.length === 0) return '';
-  if (!/^\d{11}$/.test(trimmed)) return '';
+  if (!trimmed || !isValidEmployeeId(trimmed)) return '';
   return trimmed;
 }
 
 export function normalizeEmployeeName(value: string): string {
   const trimmed = value.trim();
-  if (trimmed.length === 0) return '';
-  if (!looksLikeName(trimmed)) return '';
+  if (!trimmed || !isValidEmployeeName(trimmed)) return '';
   return trimmed;
 }
 
@@ -59,33 +56,51 @@ function isValidEmployeeId(value: string): boolean {
   return /^\d{11}$/.test(value);
 }
 
-export function identifyInvalidFields(snapshot: ProfileSnapshot): FieldErrors {
+export interface ProfileValidationResult {
+  messages: string[];
+  fieldErrors: FieldErrors;
+}
+
+export function validateProfile(snapshot: ProfileSnapshot): ProfileValidationResult {
+  const messages: string[] = [];
+  const fieldErrors: FieldErrors = { ...NO_FIELD_ERRORS };
   const cc = snapshot.companyCode.trim();
   const name = snapshot.employeeName.trim();
   const id = snapshot.employeeId.trim();
-  return {
-    companyCode: !cc || !isValidCompanyCode(cc),
-    employeeName: !name || !isValidEmployeeName(name),
-    employeeId: !id || !isValidEmployeeId(id)
-  };
+
+  if (!cc) {
+    messages.push('Company code is required.');
+    fieldErrors.companyCode = true;
+  } else if (!isValidCompanyCode(cc)) {
+    messages.push('Company code must be numeric (6\u201312 digits).');
+    fieldErrors.companyCode = true;
+  }
+
+  if (!name) {
+    messages.push('Employee name is required.');
+    fieldErrors.employeeName = true;
+  } else if (!isValidEmployeeName(name)) {
+    messages.push('Employee name must contain text.');
+    fieldErrors.employeeName = true;
+  }
+
+  if (!id) {
+    messages.push('Employee ID is required.');
+    fieldErrors.employeeId = true;
+  } else if (!isValidEmployeeId(id)) {
+    messages.push('Employee ID must be exactly 11 digits.');
+    fieldErrors.employeeId = true;
+  }
+
+  return { messages, fieldErrors };
+}
+
+export function identifyInvalidFields(snapshot: ProfileSnapshot): FieldErrors {
+  return validateProfile(snapshot).fieldErrors;
 }
 
 export function validateProfileFields(snapshot: ProfileSnapshot): string[] {
-  const errors: string[] = [];
-  const cc = snapshot.companyCode.trim();
-  const name = snapshot.employeeName.trim();
-  const id = snapshot.employeeId.trim();
-
-  if (!cc) errors.push('Company code is required.');
-  else if (!isValidCompanyCode(cc)) errors.push('Company code must be numeric (6\u201312 digits).');
-
-  if (!name) errors.push('Employee name is required.');
-  else if (!isValidEmployeeName(name)) errors.push('Employee name must contain text.');
-
-  if (!id) errors.push('Employee ID is required.');
-  else if (!isValidEmployeeId(id)) errors.push('Employee ID must be exactly 11 digits.');
-
-  return errors;
+  return validateProfile(snapshot).messages;
 }
 
 export function repairProfileSnapshot(snapshot: ProfileSnapshot): ProfileSnapshot {

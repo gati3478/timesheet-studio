@@ -8,6 +8,7 @@ import {
   repairProfileSnapshot,
   persistProfile,
   loadSavedProfile,
+  validateProfile,
   validateProfileFields,
   identifyInvalidFields,
   NO_FIELD_ERRORS
@@ -230,6 +231,41 @@ describe('validateProfileFields', () => {
       employeeId: ''
     });
     expect(errors).toHaveLength(3);
+  });
+});
+
+describe('validateProfile', () => {
+  const valid = {
+    companyCode: '405627530',
+    employeeName: 'John Doe',
+    employeeId: '01005031116'
+  };
+
+  it('returns empty messages and no field errors for valid snapshot', () => {
+    const result = validateProfile(valid);
+    expect(result.messages).toHaveLength(0);
+    expect(result.fieldErrors).toEqual(NO_FIELD_ERRORS);
+  });
+
+  it('returns both messages and field errors together', () => {
+    const result = validateProfile({
+      companyCode: '',
+      employeeName: '',
+      employeeId: ''
+    });
+    expect(result.messages).toHaveLength(3);
+    expect(result.fieldErrors).toEqual({
+      companyCode: true,
+      employeeName: true,
+      employeeId: true
+    });
+  });
+
+  it('is consistent with validateProfileFields and identifyInvalidFields', () => {
+    const snapshot = { companyCode: 'bad', employeeName: '12345', employeeId: 'short' };
+    const result = validateProfile(snapshot);
+    expect(result.messages).toEqual(validateProfileFields(snapshot));
+    expect(result.fieldErrors).toEqual(identifyInvalidFields(snapshot));
   });
 });
 

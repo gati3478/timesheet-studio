@@ -39,14 +39,6 @@
     gap: var(--space-3);
   }
 
-  .card {
-    background: var(--surface-1);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(6px);
-  }
-
   .metric {
     padding: var(--space-4);
   }

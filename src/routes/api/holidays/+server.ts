@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { MIN_YEAR, MAX_YEAR } from '$lib/constants';
 import { getHolidaysForYear } from '$lib/server/holidays';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -14,8 +15,11 @@ export const GET: RequestHandler = async ({ url }) => {
     );
   }
 
-  if (year < 2000 || year > 2100) {
-    return json({ message: 'Year must be between 2000 and 2100.', details: [] }, { status: 400 });
+  if (year < MIN_YEAR || year > MAX_YEAR) {
+    return json(
+      { message: `Year must be between ${MIN_YEAR} and ${MAX_YEAR}.`, details: [] },
+      { status: 400 }
+    );
   }
 
   try {

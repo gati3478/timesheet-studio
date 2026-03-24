@@ -410,8 +410,8 @@
   }
 
   .day-cell.selected {
-    background: linear-gradient(145deg, #2f6fdd, #1f5fc8);
-    border-color: rgba(20, 74, 161, 0.95);
+    background: linear-gradient(145deg, var(--accent), var(--accent-strong));
+    border-color: rgba(31, 95, 200, 0.95);
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.24),
       0 10px 16px rgba(24, 67, 141, 0.24);
@@ -509,13 +509,13 @@
 
   .vacation-pill {
     background: #e9f1ff;
-    color: #225fbe;
+    color: var(--accent-strong);
     border: 1px solid rgba(34, 95, 190, 0.46);
   }
 
   .day-cell.selected .vacation-pill {
     background: #fff;
-    color: #1f60c3;
+    color: var(--accent-strong);
     border-color: transparent;
   }
 

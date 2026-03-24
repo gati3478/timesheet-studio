@@ -1,19 +1,5 @@
 import { slugify } from '../slugify';
-
-const SHORT_MONTHS = [
-  'jan',
-  'feb',
-  'mar',
-  'apr',
-  'may',
-  'jun',
-  'jul',
-  'aug',
-  'sep',
-  'oct',
-  'nov',
-  'dec'
-] as const;
+import { MONTHS } from '../constants';
 
 export function buildOutputFilename(
   employeeName: string,
@@ -27,5 +13,5 @@ export function buildOutputFilename(
   }
 
   const slug = slugify(employeeName) || 'timesheet';
-  return `${slug}-${SHORT_MONTHS[monthIndex]}-${year}-timesheet.${extension}`;
+  return `${slug}-${MONTHS[monthIndex].short.toLowerCase()}-${year}-timesheet.${extension}`;
 }

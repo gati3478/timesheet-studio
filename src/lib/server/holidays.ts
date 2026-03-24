@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import iconv from 'iconv-lite';
 import { format } from 'date-fns';
+import { MIN_YEAR, MAX_YEAR } from '../constants';
 import type { HolidayEntry } from './types';
 import staticHolidays from './georgian-holidays.json';
 
@@ -483,8 +484,8 @@ export async function getHolidaysForYear(
   year: number,
   options: { includeStateOnly?: boolean } = {}
 ): Promise<HolidayEntry[]> {
-  if (!Number.isInteger(year) || year < 2000 || year > 2100) {
-    throw new Error('Year must be between 2000 and 2100.');
+  if (!Number.isInteger(year) || year < MIN_YEAR || year > MAX_YEAR) {
+    throw new Error(`Year must be between ${MIN_YEAR} and ${MAX_YEAR}.`);
   }
 
   let entries = getCachedEntries(year);

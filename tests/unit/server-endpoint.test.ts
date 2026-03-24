@@ -8,19 +8,10 @@ vi.mock('$lib/server/timesheet', async () => {
   const actual = await vi.importActual<typeof import('../../src/lib/server/timesheet')>(
     '../../src/lib/server/timesheet'
   );
+  const { makeComputedTimesheet } = await import('../helpers/fixtures');
   return {
     ...actual,
-    computeTimesheet: vi.fn().mockReturnValue({
-      dayCodes: [],
-      workedDayCount: 0,
-      vacationDayCount: 0,
-      blockedDayCount: 0,
-      weekdayHolidayCount: 0,
-      firstHalfHours: 0,
-      secondHalfHours: 0,
-      totalHours: 0,
-      vacationHours: 0
-    })
+    computeTimesheet: vi.fn().mockReturnValue(makeComputedTimesheet())
   };
 });
 

@@ -10,6 +10,23 @@ function isValidOutputFormat(value: unknown): value is 'docx' | 'doc' {
   return value === 'docx' || value === 'doc';
 }
 
+function requireTrimmedString(value: unknown, fieldName: string, maxLength: number): string {
+  if (value === undefined || value === null) {
+    throw new TimesheetValidationError(`${fieldName} is required.`, []);
+  }
+  if (typeof value !== 'string') {
+    throw new TimesheetValidationError(`${fieldName} must be a string.`, []);
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    throw new TimesheetValidationError(`${fieldName} is required.`, []);
+  }
+  if (trimmed.length > maxLength) {
+    throw new TimesheetValidationError(`${fieldName} cannot exceed ${maxLength} characters.`, []);
+  }
+  return trimmed;
+}
+
 export function parsePayload(payload: unknown): TimesheetGenerateRequest {
   if (!payload || typeof payload !== 'object') {
     throw new TimesheetValidationError('Request payload must be a JSON object.', []);
@@ -17,17 +34,17 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
 
   const body = payload as Partial<TimesheetGenerateRequest>;
 
-  if (!body.employeeName || typeof body.employeeName !== 'string') {
-    throw new TimesheetValidationError('Employee name is required.', []);
-  }
-
-  if (!body.employeeId || typeof body.employeeId !== 'string') {
-    throw new TimesheetValidationError('Employee id is required.', []);
-  }
-
-  if (!body.companyCode || typeof body.companyCode !== 'string') {
-    throw new TimesheetValidationError('Company code is required.', []);
-  }
+  const employeeName = requireTrimmedString(
+    body.employeeName,
+    'Employee name',
+    MAX_EMPLOYEE_NAME_LENGTH
+  );
+  const employeeId = requireTrimmedString(body.employeeId, 'Employee id', MAX_EMPLOYEE_ID_LENGTH);
+  const companyCode = requireTrimmedString(
+    body.companyCode,
+    'Company code',
+    MAX_COMPANY_CODE_LENGTH
+  );
 
   if (!Array.isArray(body.vacationDates)) {
     throw new TimesheetValidationError('Vacation dates must be an array.', []);
@@ -53,43 +70,6 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
 
   if (!isValidOutputFormat(body.outputFormat)) {
     throw new TimesheetValidationError('Output format must be either docx or doc.', []);
-  }
-
-  const companyCode = body.companyCode.trim();
-  const employeeName = body.employeeName.trim();
-  const employeeId = body.employeeId.trim();
-
-  if (companyCode.length === 0) {
-    throw new TimesheetValidationError('Company code is required.', []);
-  }
-
-  if (employeeName.length === 0) {
-    throw new TimesheetValidationError('Employee name is required.', []);
-  }
-
-  if (employeeName.length > MAX_EMPLOYEE_NAME_LENGTH) {
-    throw new TimesheetValidationError(
-      `Employee name cannot exceed ${MAX_EMPLOYEE_NAME_LENGTH} characters.`,
-      []
-    );
-  }
-
-  if (companyCode.length > MAX_COMPANY_CODE_LENGTH) {
-    throw new TimesheetValidationError(
-      `Company code cannot exceed ${MAX_COMPANY_CODE_LENGTH} characters.`,
-      []
-    );
-  }
-
-  if (employeeId.length === 0) {
-    throw new TimesheetValidationError('Employee id is required.', []);
-  }
-
-  if (employeeId.length > MAX_EMPLOYEE_ID_LENGTH) {
-    throw new TimesheetValidationError(
-      `Employee id cannot exceed ${MAX_EMPLOYEE_ID_LENGTH} characters.`,
-      []
-    );
   }
 
   const year = Number(body.year);

@@ -7,6 +7,8 @@ import staticHolidays from './georgian-holidays.json';
 const YELL_HOLIDAY_URL = 'https://www.yell.ge/info/holiday.php?ht=1';
 const NAGER_HOLIDAY_URL = 'https://date.nager.at/api/v3/PublicHolidays';
 const HOLIDAY_CACHE_TTL_MS = 1000 * 60 * 60 * 6;
+const MAX_HTML_RESPONSE_BYTES = 5 * 1024 * 1024;
+const MAX_JSON_RESPONSE_BYTES = 1 * 1024 * 1024;
 
 const monthStems: Array<[string, number]> = [
   ['იანვ', 1],
@@ -414,6 +416,9 @@ async function fetchYellHolidayPage(): Promise<string> {
   }
 
   const arrayBuffer = await response.arrayBuffer();
+  if (arrayBuffer.byteLength > MAX_HTML_RESPONSE_BYTES) {
+    throw new Error('Holiday provider response exceeds size limit.');
+  }
   const buffer = Buffer.from(arrayBuffer);
   return decodeHtmlBody(buffer, response.headers.get('content-type'));
 }
@@ -436,7 +441,11 @@ async function fetchNagerHolidays(year: number): Promise<HolidayEntry[]> {
     throw new Error(`Failed to fetch date.nager.at holidays (${response.status}).`);
   }
 
-  const payload = (await response.json()) as unknown;
+  const arrayBuffer = await response.arrayBuffer();
+  if (arrayBuffer.byteLength > MAX_JSON_RESPONSE_BYTES) {
+    throw new Error('Holiday provider response exceeds size limit.');
+  }
+  const payload = JSON.parse(new TextDecoder().decode(arrayBuffer)) as unknown;
   return parseNagerHolidays(payload, year);
 }
 

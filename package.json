@@ -48,7 +48,12 @@
     "bundle:sidecar": "node scripts/bundle-sidecar.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "npm run build && npm run bundle:sidecar && tauri build"
+    "tauri:build": "npm run build && npm run bundle:sidecar && tauri build",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,js,mjs,cjs,svelte,json,css,html,md,yml,yaml}": "prettier --write",
+    "*.{ts,js,mjs,cjs,svelte}": "eslint --fix"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
@@ -66,6 +71,8 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.15.2",
     "globals": "^17.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
     "prettier-plugin-svelte": "^3.5.1",
     "svelte": "^5.0.0",

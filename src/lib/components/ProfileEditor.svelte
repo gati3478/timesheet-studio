@@ -1,4 +1,6 @@
 <script lang="ts">
+  import StatusMessage from './StatusMessage.svelte';
+
   export let draftCompanyCode: string;
   export let draftEmployeeName: string;
   export let draftEmployeeId: string;
@@ -31,20 +33,10 @@
   {/if}
 </div>
 
-{#if error}
-  <p class="status status-error">{error}</p>
-  {#if errorDetails.length > 0}
-    <ul class="status-list status-error-list">
-      {#each errorDetails as detail, i (i)}
-        <li>{detail}</li>
-      {/each}
-    </ul>
-  {/if}
-{/if}
-
-{#if message}
-  <p class="status status-success">{message}</p>
-{/if}
+<div class="profile-status">
+  <StatusMessage text={error} details={errorDetails} variant="error" />
+  <StatusMessage text={message} variant="success" />
+</div>
 
 <div class="input-grid" class:editing={isEditing} class:has-error={!!error}>
   <label>
@@ -166,10 +158,6 @@
     box-shadow: 0 0 0 1px rgba(188, 96, 118, 0.12);
   }
 
-  .status-error-list {
-    color: var(--color-error);
-  }
-
   label {
     display: grid;
     gap: var(--space-2);
@@ -196,15 +184,15 @@
       color 180ms ease;
   }
 
+  .profile-status:has(:global(.status)) {
+    margin-top: var(--space-3);
+  }
+
   input:disabled,
   select:disabled {
     color: var(--text-tertiary);
     background: rgba(235, 240, 248, 0.92);
     border-color: rgba(150, 170, 200, 0.3);
     cursor: not-allowed;
-  }
-
-  .status {
-    margin-top: var(--space-3);
   }
 </style>

@@ -1,6 +1,6 @@
 [package]
 name = "timesheet-studio"
-version = "0.1.0"
+version = "1.0.0"
 description = "Georgian-format monthly timesheet generator — desktop app"
 authors = ["Giorgi Petriashvili"]
 license = "MIT"

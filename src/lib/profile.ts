@@ -35,6 +35,25 @@ export function normalizeEmployeeName(value: string): string {
   return trimmed;
 }
 
+export function validateProfileFields(snapshot: ProfileSnapshot): string[] {
+  const errors: string[] = [];
+  const cc = snapshot.companyCode.trim();
+  const name = snapshot.employeeName.trim();
+  const id = snapshot.employeeId.trim();
+
+  if (!cc) errors.push('Company code is required.');
+  else if (cc.length < 6 || cc.length > 12 || !isNumeric(cc))
+    errors.push('Company code must be numeric (6\u201312 digits).');
+
+  if (!name) errors.push('Employee name is required.');
+  else if (!looksLikeName(name)) errors.push('Employee name must contain text.');
+
+  if (!id) errors.push('Employee ID is required.');
+  else if (!/^\d{11}$/.test(id)) errors.push('Employee ID must be exactly 11 digits.');
+
+  return errors;
+}
+
 export function repairProfileSnapshot(snapshot: ProfileSnapshot): ProfileSnapshot {
   let nextCompanyCode = snapshot.companyCode.trim();
   let nextEmployeeName = snapshot.employeeName.trim();

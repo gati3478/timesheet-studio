@@ -1,5 +1,7 @@
 import type { Handle } from '@sveltejs/kit';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 export const handle: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
 
@@ -15,6 +17,9 @@ export const handle: Handle = async ({ event, resolve }) => {
     "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' blob:; frame-ancestors 'none'"
   );
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (isProduction) {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
 
   return response;
 };

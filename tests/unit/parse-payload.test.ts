@@ -45,7 +45,7 @@ describe('parsePayload', () => {
 
   it('rejects numeric employeeName', () => {
     const payload = { ...VALID_PAYLOAD, employeeName: 123 };
-    expect(() => parsePayload(payload as unknown)).toThrow('Employee name is required.');
+    expect(() => parsePayload(payload as unknown)).toThrow('Employee name must be a string.');
   });
 
   it('rejects missing employeeId', () => {

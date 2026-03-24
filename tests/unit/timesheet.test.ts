@@ -71,61 +71,6 @@ describe('computeTimesheet', () => {
     }
   });
 
-  it('throws for year below 2000', () => {
-    expect(() =>
-      computeTimesheet({
-        year: 1999,
-        month: 1,
-        vacationDates: [],
-        holidayDates: new Set()
-      })
-    ).toThrowError(TimesheetValidationError);
-  });
-
-  it('throws for year above 2100', () => {
-    expect(() =>
-      computeTimesheet({
-        year: 2101,
-        month: 1,
-        vacationDates: [],
-        holidayDates: new Set()
-      })
-    ).toThrowError(TimesheetValidationError);
-  });
-
-  it('throws for non-integer year', () => {
-    expect(() =>
-      computeTimesheet({
-        year: 2026.5,
-        month: 1,
-        vacationDates: [],
-        holidayDates: new Set()
-      })
-    ).toThrowError(TimesheetValidationError);
-  });
-
-  it('throws for month below 1', () => {
-    expect(() =>
-      computeTimesheet({
-        year: 2026,
-        month: 0,
-        vacationDates: [],
-        holidayDates: new Set()
-      })
-    ).toThrowError(TimesheetValidationError);
-  });
-
-  it('throws for month above 12', () => {
-    expect(() =>
-      computeTimesheet({
-        year: 2026,
-        month: 13,
-        vacationDates: [],
-        holidayDates: new Set()
-      })
-    ).toThrowError(TimesheetValidationError);
-  });
-
   it('throws for invalid vacation date format', () => {
     try {
       computeTimesheet({

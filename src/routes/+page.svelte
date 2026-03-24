@@ -6,6 +6,7 @@
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import VacationCalendar from '$lib/components/VacationCalendar.svelte';
   import SummaryMetrics from '$lib/components/SummaryMetrics.svelte';
+  import StatusMessage from '$lib/components/StatusMessage.svelte';
   import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
   import { isTauriApp } from '$lib/tauri';
@@ -14,7 +15,7 @@
     repairProfileSnapshot,
     persistProfile,
     loadSavedProfile,
-    looksLikeName
+    validateProfileFields
   } from '$lib/profile';
   import type { PageData } from './$types';
 
@@ -230,42 +231,32 @@
 
   // ── Profile ──────────────────────────────────────────────
 
-  function openProfileEditor(): void {
+  function syncDraftsFromProfile(): void {
     draftCompanyCode = companyCode;
     draftEmployeeName = employeeName;
     draftEmployeeId = employeeId;
     profileError = '';
     profileDetails = [];
+  }
+
+  function openProfileEditor(): void {
+    syncDraftsFromProfile();
     profileMessage = '';
     isEditingProfile = true;
   }
 
   function cancelProfileEdit(): void {
-    draftCompanyCode = companyCode;
-    draftEmployeeName = employeeName;
-    draftEmployeeId = employeeId;
-    profileError = '';
-    profileDetails = [];
+    syncDraftsFromProfile();
     profileMessage = '';
     isEditingProfile = false;
   }
 
   function saveProfile(): boolean {
-    const nextCompanyCode = draftCompanyCode.trim();
-    const nextEmployeeName = draftEmployeeName.trim();
-    const nextEmployeeId = draftEmployeeId.trim();
-
-    const errors: string[] = [];
-    if (!nextCompanyCode) errors.push('Company code is required.');
-    else if (!/^\d{6,12}$/.test(nextCompanyCode))
-      errors.push('Company code must be numeric (6–12 digits).');
-
-    if (!nextEmployeeName) errors.push('Employee name is required.');
-    else if (!looksLikeName(nextEmployeeName)) errors.push('Employee name must contain text.');
-
-    if (!nextEmployeeId) errors.push('Employee ID is required.');
-    else if (!/^\d{11}$/.test(nextEmployeeId))
-      errors.push('Employee ID must be exactly 11 digits.');
+    const errors = validateProfileFields({
+      companyCode: draftCompanyCode,
+      employeeName: draftEmployeeName,
+      employeeId: draftEmployeeId
+    });
 
     if (errors.length > 0) {
       profileError = 'Please fix the following:';
@@ -274,17 +265,13 @@
       return false;
     }
 
-    companyCode = nextCompanyCode;
-    employeeName = nextEmployeeName;
-    employeeId = nextEmployeeId;
-    draftCompanyCode = companyCode;
-    draftEmployeeName = employeeName;
-    draftEmployeeId = employeeId;
+    companyCode = draftCompanyCode.trim();
+    employeeName = draftEmployeeName.trim();
+    employeeId = draftEmployeeId.trim();
+    syncDraftsFromProfile();
 
     persistProfile({ companyCode, employeeName, employeeId });
     isEditingProfile = false;
-    profileError = '';
-    profileDetails = [];
     profileMessage = 'Profile saved.';
     return true;
   }
@@ -293,12 +280,8 @@
     companyCode = DEFAULT_COMPANY_CODE;
     employeeName = DEFAULT_EMPLOYEE_NAME;
     employeeId = DEFAULT_EMPLOYEE_ID;
-    draftCompanyCode = companyCode;
-    draftEmployeeName = employeeName;
-    draftEmployeeId = employeeId;
+    syncDraftsFromProfile();
     isEditingProfile = false;
-    profileError = '';
-    profileDetails = [];
     profileMessage = 'Profile reset to defaults.';
     persistProfile({ companyCode, employeeName, employeeId });
   }
@@ -506,27 +489,12 @@
       </div>
 
       <div class="status-stack" aria-live="polite">
-        {#if generationError}
-          <p class="status status-error">{generationError}</p>
-          {#if generationDetails.length > 0}
-            <ul class="status-list">
-              {#each generationDetails as detail, i (i)}
-                <li>{detail}</li>
-              {/each}
-            </ul>
-          {/if}
-        {/if}
-
-        {#if shutdownError}
-          <p class="status status-error">{shutdownError}</p>
-        {/if}
-
-        {#if shutdownMessage}
-          <p class="status status-info">{shutdownMessage}</p>
-        {/if}
+        <StatusMessage text={generationError} details={generationDetails} variant="error" />
+        <StatusMessage text={shutdownError} variant="error" />
+        <StatusMessage text={shutdownMessage} variant="info" />
 
         {#if holidayError}
-          <p class="status status-error">{holidayError}</p>
+          <StatusMessage text={holidayError} variant="error" />
         {:else if loadingHolidays}
           <p class="status status-info">
             Refreshing holiday calendar<span class="loading-dots"

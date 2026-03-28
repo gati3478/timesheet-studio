@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildOutputFilename } from '../../src/lib/server/filename';
+import { buildOutputFilename } from '../../src/lib/filename';
 
 describe('buildOutputFilename', () => {
   it('builds filename from employee name', () => {

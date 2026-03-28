@@ -298,18 +298,11 @@ function applyDayColumnShading(tables: Node[], dayCodesByDay: Map<number, DayCod
     return;
   }
 
-  for (let day = FIRST_DAY_NUMBER; day <= LAST_DAY_NUMBER; day += 1) {
-    const columnIndex = dayToCellIndex(day);
-    const shouldShade = dayCodesByDay.get(day) === 'X';
-
-    for (let rowIndex = EMPLOYEE_ROW_INDEX; rowIndex < rows.length; rowIndex += 1) {
-      const cells = xpath.select("./*[local-name()='tc']", rows[rowIndex]) as Element[];
-      const cell = cells[columnIndex];
-      if (!cell) {
-        continue;
-      }
-
-      setDayCellShading(cell, shouldShade);
+  for (let rowIndex = EMPLOYEE_ROW_INDEX; rowIndex < rows.length; rowIndex += 1) {
+    const cells = xpath.select("./*[local-name()='tc']", rows[rowIndex]) as Element[];
+    for (let day = FIRST_DAY_NUMBER; day <= LAST_DAY_NUMBER; day += 1) {
+      const cell = cells[dayToCellIndex(day)];
+      if (cell) setDayCellShading(cell, dayCodesByDay.get(day) === 'X');
     }
   }
 }

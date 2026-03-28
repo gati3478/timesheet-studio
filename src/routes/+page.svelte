@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { format, getDaysInMonth, isWeekend } from 'date-fns';
-  import { MONTHS } from '$lib/constants';
+  import { MONTHS, MIN_YEAR, MAX_YEAR } from '$lib/constants';
   import type { DayItem, CalendarCell } from '$lib/calendar-types';
   import { computeSummary } from '$lib/calendar-types';
   import MonthPicker from '$lib/components/MonthPicker.svelte';
@@ -12,15 +12,9 @@
   import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
   import { isTauriApp } from '$lib/tauri';
-  import { slugify } from '$lib/slugify';
   import { parseFilename } from '$lib/content-disposition';
-  import {
-    repairProfileSnapshot,
-    persistProfile,
-    loadSavedProfile,
-    validateProfile,
-    NO_FIELD_ERRORS
-  } from '$lib/profile';
+  import { buildOutputFilename } from '$lib/filename';
+  import { persistProfile, loadSavedProfile, validateProfile, NO_FIELD_ERRORS } from '$lib/profile';
   import type { FieldErrors } from '$lib/profile';
   import type { PageData } from './$types';
 
@@ -48,8 +42,6 @@
   let fieldErrors: FieldErrors = { ...NO_FIELD_ERRORS };
 
   let outputFormat: 'docx' | 'doc' = data.docExportAvailable ? 'doc' : 'docx';
-  let docExportAvailable = data.docExportAvailable;
-  let devMode = data.devMode;
 
   let holidayDates = new Set<string>();
   let holidayError = '';
@@ -90,13 +82,17 @@
   }
 
   function changeYear(delta: number): void {
-    selectedYear += delta;
+    const next = selectedYear + delta;
+    if (next < MIN_YEAR || next > MAX_YEAR) return;
+    selectedYear = next;
     purgeVacationOutOfMonth();
   }
 
   function shiftMonth(delta: number): void {
     const shifted = new Date(selectedYear, selectedMonth - 1 + delta, 1);
-    selectedYear = shifted.getFullYear();
+    const nextYear = shifted.getFullYear();
+    if (nextYear < MIN_YEAR || nextYear > MAX_YEAR) return;
+    selectedYear = nextYear;
     selectedMonth = shifted.getMonth() + 1;
     purgeVacationOutOfMonth();
   }
@@ -187,22 +183,26 @@
       });
 
       if (!response.ok) {
-        const body = await response.json();
+        let body: { message?: string; details?: string[] };
+        try {
+          body = await response.json();
+        } catch {
+          generationError = `Server error (${response.status}).`;
+          return;
+        }
         generationError = body.message ?? 'Failed to generate timesheet.';
         generationDetails = Array.isArray(body.details) ? body.details : [];
 
         // Auto-open profile editor for validation errors so user can fix fields
-        if (response.status === 400 && generationDetails.length > 0 && !isEditingProfile) {
+        if (response.status === 400 && !isEditingProfile) {
           openProfileEditor();
         }
         return;
       }
 
       const blob = await response.blob();
-      const nameSlug = slugify(employeeName) || 'timesheet';
-      const fallbackFilename = `${nameSlug}-${MONTHS[selectedMonth - 1].short.toLowerCase()}-${selectedYear}.${outputFormat}`;
-      const filename =
-        parseFilename(response.headers.get('content-disposition')) ?? fallbackFilename;
+      const fallback = buildOutputFilename(employeeName, selectedYear, selectedMonth, outputFormat);
+      const filename = parseFilename(response.headers.get('content-disposition')) ?? fallback;
       const href = URL.createObjectURL(blob);
 
       const anchor = document.createElement('a');
@@ -289,7 +289,14 @@
     isShuttingDown = true;
     try {
       const response = await fetch('/api/system/shutdown', { method: 'POST' });
-      const body = await response.json();
+      let body: { message?: string };
+      try {
+        body = await response.json();
+      } catch {
+        shutdownError = `Server error (${response.status}).`;
+        isShuttingDown = false;
+        return;
+      }
       if (!response.ok) {
         shutdownError = body.message ?? 'Failed to shut down server.';
         isShuttingDown = false;
@@ -348,22 +355,6 @@
       companyCode = saved.companyCode;
       employeeName = saved.employeeName;
       employeeId = saved.employeeId;
-
-      // Repair stale/swapped fields from localStorage on first load
-      const fixed = repairProfileSnapshot({ companyCode, employeeName, employeeId });
-      const changed =
-        fixed.companyCode !== companyCode ||
-        fixed.employeeName !== employeeName ||
-        fixed.employeeId !== employeeId;
-
-      if (changed) {
-        companyCode = fixed.companyCode;
-        employeeName = fixed.employeeName;
-        employeeId = fixed.employeeId;
-        persistProfile({ companyCode, employeeName, employeeId });
-        profileMessage = 'Profile was auto-repaired.';
-      }
-
       draftCompanyCode = companyCode;
       draftEmployeeName = employeeName;
       draftEmployeeId = employeeId;
@@ -379,9 +370,11 @@
     void draftCompanyCode;
     void draftEmployeeName;
     void draftEmployeeId;
-    profileError = '';
-    profileDetails = [];
-    fieldErrors = { ...NO_FIELD_ERRORS };
+    if (profileError) profileError = '';
+    if (profileDetails.length > 0) profileDetails = [];
+    if (fieldErrors.companyCode || fieldErrors.employeeName || fieldErrors.employeeId) {
+      fieldErrors = { ...NO_FIELD_ERRORS };
+    }
   }
 
   $: monthLabel = `${MONTHS[selectedMonth - 1].label} ${selectedYear}`;
@@ -389,8 +382,6 @@
 
   $: dayItems = buildDayItems(selectedYear, selectedMonth, holidayDates, vacationDates);
   $: calendarCells = buildCalendarCells(selectedYear, selectedMonth, dayItems);
-  $: hasVacation = dayItems.some((item) => item.isVacation);
-
   $: summary = computeSummary(dayItems);
 </script>
 
@@ -426,7 +417,7 @@
         bind:draftEmployeeName
         bind:draftEmployeeId
         bind:outputFormat
-        {docExportAvailable}
+        docExportAvailable={data.docExportAvailable}
         isEditing={isEditingProfile}
         error={profileError}
         errorDetails={profileDetails}
@@ -466,7 +457,7 @@
         {/if}
       </div>
 
-      {#if !isTauri && devMode}
+      {#if !isTauri && data.devMode}
         <div class="utility-row">
           <button
             type="button"
@@ -487,7 +478,7 @@
         {selectedMonth}
         {calendarCells}
         {loadingHolidays}
-        {hasVacation}
+        hasVacation={summary.vacationDayCount > 0}
         onBatchSetVacation={batchSetVacation}
         onSelectAll={selectAllWorkdays}
         onClearAll={clearAllVacation}

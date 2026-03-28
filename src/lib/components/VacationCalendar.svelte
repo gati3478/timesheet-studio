@@ -43,6 +43,13 @@
     return Number.isFinite(val) ? val : null;
   }
 
+  function dayStatus(item: DayItem): { pill?: string; pillClass?: string; label: string } {
+    if (item.isHoliday) return { pill: 'X', pillClass: 'holiday-pill', label: 'X Holiday' };
+    if (item.isWeekend) return { pill: 'X', pillClass: 'weekend-pill', label: 'X Weekend' };
+    if (item.isVacation) return { pill: 'შ', pillClass: 'vacation-pill', label: 'შ Vacation' };
+    return { label: '8 Work' };
+  }
+
   function findDayItem(day: number): DayItem | null {
     for (const cell of calendarCells) {
       if (cell.kind === 'day' && cell.item.day === day) return cell.item;
@@ -185,6 +192,7 @@
       {:else}
         {@const item = cell.item}
         {@const blocked = item.isWeekend || item.isHoliday}
+        {@const status = dayStatus(item)}
         <button
           type="button"
           class="day-cell"
@@ -202,24 +210,10 @@
           title={item.dateIso}
         >
           <strong>{item.day}</strong>
-          {#if item.isHoliday}
-            <em class="status-pill holiday-pill">X</em>
-          {:else if item.isWeekend}
-            <em class="status-pill weekend-pill">X</em>
-          {:else if item.isVacation}
-            <em class="status-pill vacation-pill">შ</em>
+          {#if status.pill}
+            <em class="status-pill {status.pillClass}">{status.pill}</em>
           {/if}
-          <span>
-            {#if item.isHoliday}
-              X Holiday
-            {:else if item.isWeekend}
-              X Weekend
-            {:else if item.isVacation}
-              შ Vacation
-            {:else}
-              8 Work
-            {/if}
-          </span>
+          <span>{status.label}</span>
         </button>
       {/if}
     {/each}

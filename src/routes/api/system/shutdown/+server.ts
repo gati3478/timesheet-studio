@@ -4,7 +4,7 @@ import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async () => {
   if (!dev) {
-    return new Response(null, { status: 404 });
+    return json({ message: 'Not available.' }, { status: 404 });
   }
 
   const pid = process.pid;

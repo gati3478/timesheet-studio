@@ -19,7 +19,7 @@ vi.mock('$lib/server/docx', () => ({
   fillTimesheetTemplate: vi.fn().mockResolvedValue(Buffer.from('fake-docx'))
 }));
 
-vi.mock('$lib/server/filename', () => ({
+vi.mock('$lib/filename', () => ({
   buildOutputFilename: vi.fn().mockReturnValue('test-user-mar-2026.docx')
 }));
 
@@ -131,7 +131,7 @@ describe('POST /api/timesheet/generate', () => {
 
   it('returns 200 with DOC format and correct MIME type', async () => {
     const { convertDocxBufferToDoc } = await import('$lib/server/doc-conversion');
-    const { buildOutputFilename } = await import('$lib/server/filename');
+    const { buildOutputFilename } = await import('$lib/filename');
     vi.mocked(buildOutputFilename).mockReturnValue('test-mar-2026.doc');
 
     const request = new Request('http://localhost/api/timesheet/generate', {
@@ -181,7 +181,7 @@ describe('POST /api/timesheet/generate', () => {
   });
 
   it('Content-Disposition uses RFC 5987 for non-ASCII filenames', async () => {
-    const { buildOutputFilename } = await import('$lib/server/filename');
+    const { buildOutputFilename } = await import('$lib/filename');
     vi.mocked(buildOutputFilename).mockReturnValue('გიორგი-mar-2026.docx');
 
     const request = new Request('http://localhost/api/timesheet/generate', {
@@ -207,7 +207,7 @@ describe('POST /api/timesheet/generate', () => {
   });
 
   it('Content-Disposition uses simple format for ASCII filenames', async () => {
-    const { buildOutputFilename } = await import('$lib/server/filename');
+    const { buildOutputFilename } = await import('$lib/filename');
     vi.mocked(buildOutputFilename).mockReturnValue('test-user-mar-2026.docx');
 
     const request = new Request('http://localhost/api/timesheet/generate', {

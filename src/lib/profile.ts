@@ -14,22 +14,21 @@ export function looksLikeName(value: string): boolean {
   return /[^\d\s]/.test(value.trim());
 }
 
-export function normalizeCompanyCode(value: string): string {
+function normalizeField(value: string, isValid: (v: string) => boolean): string {
   const trimmed = value.trim();
-  if (!trimmed || !isValidCompanyCode(trimmed)) return '';
-  return trimmed;
+  return trimmed && isValid(trimmed) ? trimmed : '';
+}
+
+export function normalizeCompanyCode(value: string): string {
+  return normalizeField(value, isValidCompanyCode);
 }
 
 export function normalizeEmployeeId(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed || !isValidEmployeeId(trimmed)) return '';
-  return trimmed;
+  return normalizeField(value, isValidEmployeeId);
 }
 
 export function normalizeEmployeeName(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed || !isValidEmployeeName(trimmed)) return '';
-  return trimmed;
+  return normalizeField(value, isValidEmployeeName);
 }
 
 export interface FieldErrors {

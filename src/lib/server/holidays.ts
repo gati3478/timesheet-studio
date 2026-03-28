@@ -318,23 +318,16 @@ function parseHolidayEntries(html: string, year: number): HolidayEntry[] {
   let contextYear = year;
 
   for (const line of lines) {
-    if (!/\d/.test(line)) {
-      const monthContext = extractMonthContext(line, contextYear);
-      if (monthContext) {
-        contextMonth = monthContext.month;
-        contextYear = monthContext.year;
-      }
-      continue;
-    }
-
     const monthContext = extractMonthContext(line, contextYear);
     if (monthContext) {
       contextMonth = monthContext.month;
       contextYear = monthContext.year;
     }
 
+    if (!/\d/.test(line)) continue;
+
     const stateOnly = isStateOnlyHoliday(line);
-    const lineYear = contextYear || year;
+    const lineYear = contextYear ?? year;
     const dates = [
       ...extractDatesFromText(line, lineYear),
       ...extractDayOnlyDatesFromText(line, lineYear, contextMonth)
@@ -418,7 +411,8 @@ async function fetchYellHolidayPage(): Promise<string> {
     headers: {
       'User-Agent': 'timesheet-generator/1.0'
     },
-    signal: AbortSignal.timeout(10_000)
+    signal: AbortSignal.timeout(10_000),
+    redirect: 'error'
   });
 
   if (!response.ok) {
@@ -441,7 +435,8 @@ async function fetchNagerHolidays(year: number): Promise<HolidayEntry[]> {
       'User-Agent': 'timesheet-generator/1.0',
       Accept: 'application/json'
     },
-    signal: AbortSignal.timeout(10_000)
+    signal: AbortSignal.timeout(10_000),
+    redirect: 'error'
   });
 
   if (!response.ok) {

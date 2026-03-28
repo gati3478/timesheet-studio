@@ -132,6 +132,7 @@ test.describe('Generation', () => {
     await companyInput.fill('405627530');
     await nameInput.fill('Test User');
     await idInput.fill('01005031116');
+    await page.getByLabel('Output Format').selectOption('docx');
 
     await page.getByRole('button', { name: 'Save Profile' }).click();
     await expect(page.getByRole('button', { name: 'Edit Profile' })).toBeVisible();

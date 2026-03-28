@@ -1,5 +1,5 @@
-import { slugify } from '../slugify';
-import { MONTHS } from '../constants';
+import { slugify } from './slugify';
+import { MONTHS } from './constants';
 
 export function buildOutputFilename(
   employeeName: string,

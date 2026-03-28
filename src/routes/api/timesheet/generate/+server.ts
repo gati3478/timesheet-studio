@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { getHolidaysForYear } from '$lib/server/holidays';
 import { computeTimesheet, TimesheetValidationError } from '$lib/server/timesheet';
 import { fillTimesheetTemplate } from '$lib/server/docx';
-import { buildOutputFilename } from '$lib/server/filename';
+import { buildOutputFilename } from '$lib/filename';
 import { convertDocxBufferToDoc, DocConversionError } from '$lib/server/doc-conversion';
 import { loadTemplateBuffer } from '$lib/server/template';
 import { parsePayload } from '$lib/server/parse-payload';
@@ -45,7 +45,10 @@ export const POST: RequestHandler = async ({ request }) => {
       }
     }
 
-    const holidays = await getHolidaysForYear(input.year);
+    const [holidays, templateBuffer] = await Promise.all([
+      getHolidaysForYear(input.year),
+      loadTemplateBuffer()
+    ]);
     const holidayDates = new Set(holidays.map((holiday) => holiday.date));
 
     const computed = computeTimesheet({
@@ -54,8 +57,6 @@ export const POST: RequestHandler = async ({ request }) => {
       vacationDates: input.vacationDates,
       holidayDates
     });
-
-    const templateBuffer = await loadTemplateBuffer();
     const docxBuffer = await fillTimesheetTemplate({
       templateBuffer,
       companyCode: input.companyCode,

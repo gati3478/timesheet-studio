@@ -8,7 +8,7 @@
   <p class="status status-{variant}">{text}</p>
   {#if details.length > 0}
     <ul class="status-list variant-{variant}">
-      {#each details as detail, i (i)}
+      {#each details as detail (detail)}
         <li>{detail}</li>
       {/each}
     </ul>

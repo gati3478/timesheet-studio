@@ -39,6 +39,10 @@ screenshots/
 example-*.doc
 example-*.docx
 
+# Claude Code local settings
+.claude/*
+!.claude/skills/
+
 # Tauri
 src-tauri/target/
 src-tauri/binaries/node-server-*

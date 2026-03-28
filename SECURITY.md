@@ -20,5 +20,5 @@ This application is designed as a **local-use utility** with a narrow attack sur
 
 - **No user data storage** — The app does not persist any user data on the server. Profile information is stored in the browser's `localStorage` only.
 - **No authentication** — There is no login system or user accounts.
-- **`/api/system/shutdown` is intentionally unauthenticated** — This endpoint sends `SIGTERM` to the local Node process and is intended exclusively for local/trusted environments (desktop launcher mode). It should never be exposed to the public internet.
+- **`/api/system/shutdown` returns 404 in production** — This endpoint is only active during local development (`npm run dev`). In production builds, it returns `404 Not Available`. When active, it sends `SIGTERM` to the local Node process and is restricted to localhost clients.
 - **Template processing** — The DOCX template filling operates on a trusted, bundled template file. User input is limited to text values (names, dates, codes) inserted into XML cells.

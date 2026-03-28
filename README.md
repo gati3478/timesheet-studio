@@ -14,6 +14,20 @@ Built for organizations operating under Georgian labor regulations that require 
 
 ![Timesheet Studio](docs/screenshot.png)
 
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Development](#development)
+- [Deployment](#deployment)
+- [Desktop App](#desktop-app)
+- [How It Works](#how-it-works)
+- [API Reference](#api-reference)
+- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
+- [Post-Release Setup](#post-release-setup)
+- [License](#license)
+
 ## Features
 
 - **Interactive Calendar UI** — Visual month calendar with click-to-toggle vacation selection. Weekends and public holidays are automatically locked.
@@ -105,6 +119,7 @@ npm run doctor
 | `npm run dev`              | Start Vite dev server on port 5173                   |
 | `npm run dev:open`         | Start dev server and open browser automatically      |
 | `npm run build`            | Production build                                     |
+| `npm run start:prod`       | Run production build (`node build`)                  |
 | `npm run preview`          | Preview production build                             |
 | `npm run check`            | Type-check with svelte-check                         |
 | `npm run lint`             | Run Prettier + ESLint                                |
@@ -154,7 +169,7 @@ The build output goes to `build/`. SvelteKit uses [`adapter-node`](https://kit.s
 | **Netlify**    | `adapter-netlify`    | Swap adapter in `svelte.config.js`      |
 | **Cloudflare** | `adapter-cloudflare` | Swap adapter in `svelte.config.js`      |
 
-> **Note:** The `.doc` export format requires LibreOffice on the server. DOCX export works everywhere.
+> **Note:** The `.doc` export requires LibreOffice on the server. DOCX export works everywhere. Serverless/edge adapters (Vercel, Netlify, Cloudflare Workers) need compatibility review — DOC export uses `child_process` and holiday fetching uses Node.js-specific streaming APIs not available in edge runtimes.
 
 ### Docker
 
@@ -451,13 +466,19 @@ tests/
 
 ## Post-Release Setup
 
-> **For maintainers:** These steps require the GitHub UI or CLI and must be completed after making the repository public.
+> **For maintainers:** These steps require the GitHub UI and should be completed after making the repository public.
 
 - [ ] **Create v1.0.0 tag and GitHub Release**:
   ```bash
   git tag v1.0.0
   git push origin v1.0.0
   gh release create v1.0.0 --title "v1.0.0" --notes "Initial public release. See [CHANGELOG.md](CHANGELOG.md) for details."
+  ```
+- [ ] **Bootstrap labels** — Create labels referenced by issue templates, Dependabot, and release notes:
+  ```bash
+  gh label create "skip-changelog" --description "Exclude from auto-generated release notes" --color "ededed"
+  gh label create "rust" --description "Rust / Tauri changes" --color "dea584"
+  gh label create "ci" --description "CI/CD changes" --color "0e8a16"
   ```
 - [ ] **Enable private vulnerability reporting** — Settings → Code security → Private vulnerability reporting → Enable
 - [ ] **Configure branch protection for `main`** — Settings → Branches → Add rule for `main`:

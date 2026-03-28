@@ -9,4 +9,5 @@
 *.ico  binary
 
 # Linguist overrides
-package-lock.json linguist-generated
+package-lock.json    linguist-generated
+src-tauri/Cargo.lock linguist-generated

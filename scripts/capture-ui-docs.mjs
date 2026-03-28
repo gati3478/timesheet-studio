@@ -115,9 +115,9 @@ async function captureProfileEditing(page, stateDir, viewportName) {
     // Fill in some draft values so the form looks populated.
     // Inputs are inside <label> elements with <span> text labels.
     // Use placeholder attributes as reliable selectors.
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]').first();
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]').first();
     const nameInput = page.locator('input[placeholder="e.g. First Last"]').first();
-    const idInput = page.locator('input[placeholder="e.g. 01005031116"]').first();
+    const idInput = page.locator('input[placeholder="e.g. 12345678901"]').first();
 
     if ((await companyInput.count()) > 0) await companyInput.fill('123456');
     if ((await nameInput.count()) > 0) await nameInput.fill('Test Employee');

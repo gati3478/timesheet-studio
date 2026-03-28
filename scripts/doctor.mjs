@@ -60,10 +60,10 @@ console.log();
 const nodeVer = getVersion('node', ['-v']);
 if (nodeVer) {
   const major = Number(nodeVer.replace('v', '').split('.')[0]);
-  if (major >= 18) {
+  if (major >= 20) {
     checkPass(`Node.js ${nodeVer.replace('v', '')}`);
   } else {
-    checkFail(`Node.js ${nodeVer.replace('v', '')} (need \u226518)`);
+    checkFail(`Node.js ${nodeVer.replace('v', '')} (need \u226520)`);
   }
 } else {
   checkFail('Node.js not found');

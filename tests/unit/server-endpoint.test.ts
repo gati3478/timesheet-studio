@@ -47,9 +47,9 @@ describe('POST /api/timesheet/generate', () => {
   const VALID_PAYLOAD = {
     year: 2026,
     month: 3,
-    companyCode: '405627530',
+    companyCode: '123456789',
     employeeName: 'Test User',
-    employeeId: '01005031116',
+    employeeId: '12345678901',
     vacationDates: [] as string[],
     outputFormat: 'docx'
   };
@@ -154,12 +154,12 @@ describe('POST /api/timesheet/generate', () => {
 
   it('Content-Disposition uses RFC 5987 for non-ASCII filenames', async () => {
     const { buildOutputFilename } = await import('$lib/filename');
-    vi.mocked(buildOutputFilename).mockReturnValue('გიორგი-mar-2026.docx');
+    vi.mocked(buildOutputFilename).mockReturnValue('ნინო-mar-2026.docx');
 
     const request = new Request('http://localhost/api/timesheet/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...VALID_PAYLOAD, employeeName: 'გიორგი' })
+      body: JSON.stringify({ ...VALID_PAYLOAD, employeeName: 'ნინო' })
     });
 
     const response = await POST({ request });
@@ -167,7 +167,7 @@ describe('POST /api/timesheet/generate', () => {
     const cd = response.headers.get('Content-Disposition')!;
     expect(cd).toContain('filename="timesheet.docx"');
     expect(cd).toContain("filename*=UTF-8''");
-    expect(cd).toContain(encodeURIComponent('გიორგი-mar-2026.docx'));
+    expect(cd).toContain(encodeURIComponent('ნინო-mar-2026.docx'));
   });
 
   it('Content-Disposition uses simple format for ASCII filenames', async () => {

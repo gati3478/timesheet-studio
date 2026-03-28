@@ -82,11 +82,11 @@ describe('normalizeCompanyCode', () => {
 
 describe('normalizeEmployeeId', () => {
   it('returns a valid 11-digit ID as-is', () => {
-    expect(normalizeEmployeeId('01005031116')).toBe('01005031116');
+    expect(normalizeEmployeeId('12345678901')).toBe('12345678901');
   });
 
   it('trims whitespace', () => {
-    expect(normalizeEmployeeId('  01005031116  ')).toBe('01005031116');
+    expect(normalizeEmployeeId('  12345678901  ')).toBe('12345678901');
   });
 
   it('returns empty for wrong-length IDs', () => {
@@ -126,35 +126,35 @@ describe('normalizeEmployeeName', () => {
 describe('repairProfileSnapshot', () => {
   it('returns normalized values for a correct snapshot', () => {
     const result = repairProfileSnapshot({
-      companyCode: '405627530',
+      companyCode: '123456789',
       employeeName: 'John Doe',
-      employeeId: '01005031116'
+      employeeId: '12345678901'
     });
-    expect(result.companyCode).toBe('405627530');
+    expect(result.companyCode).toBe('123456789');
     expect(result.employeeName).toBe('John Doe');
-    expect(result.employeeId).toBe('01005031116');
+    expect(result.employeeId).toBe('12345678901');
   });
 
   it('swaps company code and employee name when misplaced', () => {
     const result = repairProfileSnapshot({
       companyCode: 'John Doe',
-      employeeName: '405627530',
-      employeeId: '01005031116'
+      employeeName: '123456789',
+      employeeId: '12345678901'
     });
-    expect(result.companyCode).toBe('405627530');
+    expect(result.companyCode).toBe('123456789');
     expect(result.employeeName).toBe('John Doe');
-    expect(result.employeeId).toBe('01005031116');
+    expect(result.employeeId).toBe('12345678901');
   });
 
   it('trims all values', () => {
     const result = repairProfileSnapshot({
-      companyCode: '  405627530  ',
+      companyCode: '  123456789  ',
       employeeName: '  John Doe  ',
-      employeeId: '  01005031116  '
+      employeeId: '  12345678901  '
     });
-    expect(result.companyCode).toBe('405627530');
+    expect(result.companyCode).toBe('123456789');
     expect(result.employeeName).toBe('John Doe');
-    expect(result.employeeId).toBe('01005031116');
+    expect(result.employeeId).toBe('12345678901');
   });
 
   it('normalizes invalid values to empty strings', () => {
@@ -171,9 +171,9 @@ describe('repairProfileSnapshot', () => {
 
 describe('validateProfile', () => {
   const valid = {
-    companyCode: '405627530',
+    companyCode: '123456789',
     employeeName: 'John Doe',
-    employeeId: '01005031116'
+    employeeId: '12345678901'
   };
 
   it('returns empty messages and no field errors for valid snapshot', () => {
@@ -204,16 +204,16 @@ describe('persistProfile', () => {
 
   it('saves the profile to localStorage', () => {
     persistProfile({
-      companyCode: '405627530',
+      companyCode: '123456789',
       employeeName: 'Test',
-      employeeId: '01005031116'
+      employeeId: '12345678901'
     });
     const saved = localStorage.getItem('timesheet.profile.v1');
     expect(saved).not.toBeNull();
     const parsed = JSON.parse(saved!);
-    expect(parsed.companyCode).toBe('405627530');
+    expect(parsed.companyCode).toBe('123456789');
     expect(parsed.employeeName).toBe('Test');
-    expect(parsed.employeeId).toBe('01005031116');
+    expect(parsed.employeeId).toBe('12345678901');
   });
 });
 
@@ -230,16 +230,16 @@ describe('loadSavedProfile', () => {
     localStorage.setItem(
       'timesheet.profile.v1',
       JSON.stringify({
-        companyCode: '405627530',
+        companyCode: '123456789',
         employeeName: 'John Doe',
-        employeeId: '01005031116'
+        employeeId: '12345678901'
       })
     );
     const result = loadSavedProfile();
     expect(result).toEqual({
-      companyCode: '405627530',
+      companyCode: '123456789',
       employeeName: 'John Doe',
-      employeeId: '01005031116'
+      employeeId: '12345678901'
     });
   });
 
@@ -251,10 +251,10 @@ describe('loadSavedProfile', () => {
   });
 
   it('handles missing fields with empty-string defaults', () => {
-    localStorage.setItem('timesheet.profile.v1', JSON.stringify({ companyCode: '405627530' }));
+    localStorage.setItem('timesheet.profile.v1', JSON.stringify({ companyCode: '123456789' }));
     const result = loadSavedProfile();
     expect(result).not.toBeNull();
-    expect(result!.companyCode).toBe('405627530');
+    expect(result!.companyCode).toBe('123456789');
     expect(result!.employeeName).toBe('');
     expect(result!.employeeId).toBe('');
   });
@@ -263,14 +263,14 @@ describe('loadSavedProfile', () => {
     localStorage.setItem(
       'timesheet.profile.v1',
       JSON.stringify({
-        companyCode: '  405627530  ',
+        companyCode: '  123456789  ',
         employeeName: '  John  ',
-        employeeId: '01005031116'
+        employeeId: '12345678901'
       })
     );
     loadSavedProfile();
     const repersisted = JSON.parse(localStorage.getItem('timesheet.profile.v1')!);
-    expect(repersisted.companyCode).toBe('405627530');
+    expect(repersisted.companyCode).toBe('123456789');
     expect(repersisted.employeeName).toBe('John');
   });
 });

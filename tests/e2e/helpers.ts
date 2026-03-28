@@ -19,9 +19,9 @@ export function detectLibreOffice(): boolean {
 export const GENERATE_PAYLOAD = {
   year: 2026,
   month: 3,
-  companyCode: '405627530',
+  companyCode: '123456789',
   employeeName: 'Test User',
-  employeeId: '01005031116',
+  employeeId: '12345678901',
   vacationDates: [] as string[],
   outputFormat: 'docx' as const
 };

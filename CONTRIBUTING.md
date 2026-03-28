@@ -4,7 +4,7 @@ Thanks for your interest in contributing to Timesheet Studio! This is a small ut
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) v18+ (v24 LTS recommended, pinned in `.nvmrc`)
+- [Node.js](https://nodejs.org/) v20+ (v24 LTS recommended, pinned in `.nvmrc`)
 - [LibreOffice](https://www.libreoffice.org/) — required for template preparation and `.doc` export
 - [Rust](https://rustup.rs/) — only needed if working on the desktop app (Tauri)
 

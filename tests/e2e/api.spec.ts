@@ -32,9 +32,9 @@ test.describe('API endpoints', () => {
       data: {
         year: 2026,
         month: 1,
-        companyCode: '405627530',
+        companyCode: '123456789',
         employeeName: 'Test User',
-        employeeId: '01005031116',
+        employeeId: '12345678901',
         vacationDates: [],
         outputFormat: 'docx'
       }

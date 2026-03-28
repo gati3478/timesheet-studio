@@ -93,9 +93,9 @@ async function fillAndParse(computed: ComputedTimesheet): Promise<Document> {
   const templateBuffer = await buildTemplateBuffer();
   const output = await fillTimesheetTemplate({
     templateBuffer,
-    companyCode: '405627530',
-    employeeName: 'გიორგი პეტრიაშვილი, უფროსი დეველოპერი',
-    employeeId: '01005031116',
+    companyCode: '123456789',
+    employeeName: 'ნინო ბერიძე, პროგრამისტი',
+    employeeId: '12345678901',
     computed
   });
   const zip = await JSZip.loadAsync(output);
@@ -112,10 +112,8 @@ describe('fillTimesheetTemplate', () => {
     expect(getCellText(getCell(documentNode, 0, 5, 4))).toBe('01.01.2026');
     expect(getCellText(getCell(documentNode, 0, 5, 5))).toBe('31.01.2026');
 
-    expect(getCellText(getCell(documentNode, 1, 5, 1))).toBe(
-      'გიორგი პეტრიაშვილი, უფროსი დეველოპერი'
-    );
-    expect(getCellText(getCell(documentNode, 1, 5, 2))).toBe('01005031116');
+    expect(getCellText(getCell(documentNode, 1, 5, 1))).toBe('ნინო ბერიძე, პროგრამისტი');
+    expect(getCellText(getCell(documentNode, 1, 5, 2))).toBe('12345678901');
 
     expect(getCellText(getCell(documentNode, 1, 5, 3))).toBe('X');
     expect(getCellText(getCell(documentNode, 1, 5, 4))).toBe('8');

@@ -5,9 +5,9 @@ import { TimesheetValidationError } from '../../src/lib/server/timesheet';
 const VALID_PAYLOAD = {
   year: 2026,
   month: 3,
-  companyCode: '405627530',
+  companyCode: '123456789',
   employeeName: 'Test User',
-  employeeId: '01005031116',
+  employeeId: '12345678901',
   vacationDates: [],
   outputFormat: 'docx' as const
 };
@@ -17,9 +17,9 @@ describe('parsePayload', () => {
     const result = parsePayload(VALID_PAYLOAD);
     expect(result.year).toBe(2026);
     expect(result.month).toBe(3);
-    expect(result.companyCode).toBe('405627530');
+    expect(result.companyCode).toBe('123456789');
     expect(result.employeeName).toBe('Test User');
-    expect(result.employeeId).toBe('01005031116');
+    expect(result.employeeId).toBe('12345678901');
     expect(result.outputFormat).toBe('docx');
   });
 
@@ -113,14 +113,14 @@ describe('parsePayload', () => {
   it('trims whitespace from string fields', () => {
     const payload = {
       ...VALID_PAYLOAD,
-      companyCode: '  405627530  ',
+      companyCode: '  123456789  ',
       employeeName: '  Test User  ',
-      employeeId: '  01005031116  '
+      employeeId: '  12345678901  '
     };
     const result = parsePayload(payload);
-    expect(result.companyCode).toBe('405627530');
+    expect(result.companyCode).toBe('123456789');
     expect(result.employeeName).toBe('Test User');
-    expect(result.employeeId).toBe('01005031116');
+    expect(result.employeeId).toBe('12345678901');
   });
 
   it('passes through vacationDates array', () => {

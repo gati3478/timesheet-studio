@@ -46,7 +46,7 @@
     <input
       type="text"
       bind:value={draftCompanyCode}
-      placeholder="e.g. 405627530"
+      placeholder="e.g. 123456789"
       disabled={!isEditing}
       class:field-error={fieldErrors.companyCode}
     />
@@ -68,7 +68,7 @@
     <input
       type="text"
       bind:value={draftEmployeeId}
-      placeholder="e.g. 01005031116"
+      placeholder="e.g. 12345678901"
       disabled={!isEditing}
       class:field-error={fieldErrors.employeeId}
     />

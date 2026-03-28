@@ -8,9 +8,9 @@ test.describe('API validation edge cases', () => {
       data: {
         year: 2026,
         month: 1,
-        companyCode: '405627530',
+        companyCode: '123456789',
         employeeName: '   ',
-        employeeId: '01005031116',
+        employeeId: '12345678901',
         vacationDates: [],
         outputFormat: 'docx'
       }
@@ -27,9 +27,9 @@ test.describe('API validation edge cases', () => {
       data: {
         year: 2026,
         month: 1,
-        companyCode: '405627530',
+        companyCode: '123456789',
         employeeName: 'Test User',
-        employeeId: '01005031116',
+        employeeId: '12345678901',
         vacationDates: [],
         outputFormat: 'pdf'
       }
@@ -44,9 +44,9 @@ test.describe('API validation edge cases', () => {
       data: {
         year: 2026,
         month: 13,
-        companyCode: '405627530',
+        companyCode: '123456789',
         employeeName: 'Test User',
-        employeeId: '01005031116',
+        employeeId: '12345678901',
         vacationDates: [],
         outputFormat: 'docx'
       }
@@ -61,9 +61,9 @@ test.describe('API validation edge cases', () => {
       data: {
         year: 2026,
         month: 3,
-        companyCode: '405627530',
+        companyCode: '123456789',
         employeeName: 'Test Vacation User',
-        employeeId: '01005031116',
+        employeeId: '12345678901',
         vacationDates: ['2026-03-18', '2026-03-19', '2026-03-20'],
         outputFormat: 'docx'
       }
@@ -83,9 +83,9 @@ test.describe('API validation edge cases', () => {
       data: {
         year: 2026,
         month: 1,
-        companyCode: '405627530',
+        companyCode: '123456789',
         employeeName: 'Test User',
-        employeeId: '01005031116',
+        employeeId: '12345678901',
         vacationDates: 'not-an-array',
         outputFormat: 'docx'
       }

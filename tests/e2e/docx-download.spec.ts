@@ -4,9 +4,9 @@ import JSZip from 'jszip';
 const basePayload = {
   year: 2026,
   month: 1,
-  companyCode: '405627530',
+  companyCode: '123456789',
   employeeName: 'Test User',
-  employeeId: '01005031116',
+  employeeId: '12345678901',
   vacationDates: [],
   outputFormat: 'docx'
 };
@@ -24,7 +24,7 @@ test.describe('DOCX download', () => {
 
   test('Georgian name produces RFC 5987 encoded filename', async ({ request }) => {
     const response = await request.post('/api/timesheet/generate', {
-      data: { ...basePayload, employeeName: 'გიორგი პეტრიაშვილი', month: 3, year: 2026 }
+      data: { ...basePayload, employeeName: 'ნინო ბერიძე', month: 3, year: 2026 }
     });
 
     expect(response.status()).toBe(200);

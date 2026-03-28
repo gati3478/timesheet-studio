@@ -7,21 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Desktop app via Tauri v2 — native macOS, Windows, and Linux binaries
-- Sidecar bundler script (`scripts/bundle-sidecar.mjs`) — esbuild bundles the SvelteKit server + Node.js binary into a Tauri-managed sidecar
-- Cross-platform CI workflow for desktop builds (`.github/workflows/tauri-build.yml`)
-- `TEMPLATE_DIR` env var support in `template.ts` for sidecar resource path resolution
-- `npm run tauri:build` — single command to build the desktop app
-- `npm run tauri:dev` — Tauri development mode with hot-reload
-- Cross-browser e2e testing — Firefox and WebKit alongside Chromium
-- Accessibility testing via `@axe-core/playwright` — WCAG 2.1 AA checks, form labels, heading hierarchy, color contrast
-- `npm audit` security audit job in CI pipeline
-- CI job dependency graph — e2e and build gate on lint, type-check, and unit tests passing
-- Unit tests for `TEMPLATE_DIR` env var, holiday partial-failure fallback, and `TimesheetValidationError` details propagation
-
-## [1.0.0] - 2026-03-19
+## [1.0.0] - 2026-03-28
 
 ### Added
 
@@ -35,9 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input validation with detailed error messages
 - Responsive design with breakpoints at 1140px, 1024px, 760px, 640px, and 430px
 - Full ARIA labels, semantic HTML, and keyboard navigation
+- Desktop app via Tauri v2 — native macOS, Windows, and Linux binaries
+- Sidecar bundler script (`scripts/bundle-sidecar.mjs`) — esbuild bundles the SvelteKit server + Node.js binary into a Tauri-managed sidecar
+- `TEMPLATE_DIR` env var support in `template.ts` for sidecar resource path resolution
+- `npm run tauri:build` — single command to build the desktop app
+- `npm run tauri:dev` — Tauri development mode with hot-reload
 - `npm start` launcher: auto-installs deps, prepares template, opens browser
 - `npm run doctor` environment health check
+- Cross-browser e2e testing — Firefox and WebKit alongside Chromium
+- Accessibility testing via `@axe-core/playwright` — WCAG 2.1 AA checks, form labels, heading hierarchy, color contrast
 - CI pipeline: lint, type check, unit tests, e2e tests, build
+- Cross-platform CI workflow for desktop builds (`.github/workflows/tauri-build.yml`)
+- CI job dependency graph — e2e and build gate on lint, type-check, and unit tests passing
+- `npm audit` security audit job in CI pipeline
 - Dependabot for npm and GitHub Actions dependency updates
 
+[Unreleased]: https://github.com/gati3478/timesheet-generator/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/gati3478/timesheet-generator/releases/tag/v1.0.0

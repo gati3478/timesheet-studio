@@ -12,13 +12,13 @@ test.describe('Profile persistence', () => {
     await expect(page.getByRole('button', { name: 'Save Profile' })).toBeVisible();
 
     // Fill profile fields
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]');
     const nameInput = page.locator('input[placeholder="e.g. First Last"]');
-    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
+    const idInput = page.locator('input[placeholder="e.g. 12345678901"]');
 
-    await companyInput.fill('405627530');
+    await companyInput.fill('123456789');
     await nameInput.fill('Persist Test');
-    await idInput.fill('01005031116');
+    await idInput.fill('12345678901');
 
     // Save profile
     await page.getByRole('button', { name: 'Save Profile' }).click();
@@ -29,23 +29,23 @@ test.describe('Profile persistence', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify values persisted (inputs are disabled in view mode but still hold values)
-    await expect(companyInput).toHaveValue('405627530');
+    await expect(companyInput).toHaveValue('123456789');
     await expect(nameInput).toHaveValue('Persist Test');
-    await expect(idInput).toHaveValue('01005031116');
+    await expect(idInput).toHaveValue('12345678901');
   });
 
   test('updating a saved profile replaces the old values', async ({ page }) => {
     await waitForHydration(page);
 
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]');
     const nameInput = page.locator('input[placeholder="e.g. First Last"]');
-    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
+    const idInput = page.locator('input[placeholder="e.g. 12345678901"]');
 
     // Save initial profile
     await page.getByRole('button', { name: 'Edit Profile' }).click();
-    await companyInput.fill('405627530');
+    await companyInput.fill('123456789');
     await nameInput.fill('Original Name');
-    await idInput.fill('01005031116');
+    await idInput.fill('12345678901');
     await page.getByRole('button', { name: 'Save Profile' }).click();
     await expect(page.getByRole('button', { name: 'Edit Profile' })).toBeVisible();
 
@@ -90,9 +90,9 @@ test.describe('Profile persistence', () => {
   test('profile reset clears fields', async ({ page }) => {
     await waitForHydration(page);
 
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]');
     const nameInput = page.locator('input[placeholder="e.g. First Last"]');
-    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
+    const idInput = page.locator('input[placeholder="e.g. 12345678901"]');
 
     // Capture the default values (from env vars) shown on initial load
     const defaultCompany = await companyInput.inputValue();

@@ -364,9 +364,9 @@ test.describe('Profile validation', () => {
 
     await page.getByRole('button', { name: 'Edit Profile' }).click();
 
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]');
     const nameInput = page.locator('input[placeholder="e.g. First Last"]');
-    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
+    const idInput = page.locator('input[placeholder="e.g. 12345678901"]');
 
     // Clear all fields
     await companyInput.fill('');
@@ -384,14 +384,14 @@ test.describe('Profile validation', () => {
 
     await page.getByRole('button', { name: 'Edit Profile' }).click();
 
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]');
     await companyInput.fill('abc');
 
     const nameInput = page.locator('input[placeholder="e.g. First Last"]');
     await nameInput.fill('Test User');
 
-    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
-    await idInput.fill('01005031116');
+    const idInput = page.locator('input[placeholder="e.g. 12345678901"]');
+    await idInput.fill('12345678901');
 
     await page.getByRole('button', { name: 'Save Profile' }).click();
 
@@ -404,13 +404,13 @@ test.describe('Profile validation', () => {
 
     await page.getByRole('button', { name: 'Edit Profile' }).click();
 
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
-    await companyInput.fill('405627530');
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]');
+    await companyInput.fill('123456789');
 
     const nameInput = page.locator('input[placeholder="e.g. First Last"]');
     await nameInput.fill('Test User');
 
-    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
+    const idInput = page.locator('input[placeholder="e.g. 12345678901"]');
     await idInput.fill('123'); // Too short
 
     await page.getByRole('button', { name: 'Save Profile' }).click();

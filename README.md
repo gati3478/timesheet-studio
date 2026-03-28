@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/gati3478/timesheet-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/gati3478/timesheet-generator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2-ff3e00.svg)](https://kit.svelte.dev/)
 [![Tauri](https://img.shields.io/badge/Tauri-2-ffc131.svg)](https://v2.tauri.app/)
 
@@ -12,9 +12,7 @@ Available as a **web app** (browser-based) and a **desktop app** (macOS, Windows
 
 Built for organizations operating under Georgian labor regulations that require standardized monthly timesheet forms.
 
-<!-- TODO: Add screenshot
 ![Timesheet Studio](docs/screenshot.png)
--->
 
 ## Features
 
@@ -33,7 +31,7 @@ Built for organizations operating under Georgian labor regulations that require 
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v18+ (v22 recommended, pinned in `.nvmrc`)
+- [Node.js](https://nodejs.org/) v20+ (v24 LTS recommended, pinned in `.nvmrc`)
 - [LibreOffice](https://www.libreoffice.org/) (required for template preparation and `.doc` export)
 
 ### One-Command Launch
@@ -85,8 +83,8 @@ npm run doctor
   Timesheet Studio — Environment Check
   ─────────────────────────────────────
 
-  ✓ Node.js 22.14.0
-  ✓ npm 10.9.2
+  ✓ Node.js 24.x.x
+  ✓ npm 11.x.x
   ✓ Dependencies installed
   ✓ DOCX template ready
   ✓ Source template (.doc) present
@@ -183,7 +181,7 @@ Timesheet Studio is also available as a standalone desktop application powered b
 
 ### Build from Source
 
-Prerequisites: [Node.js](https://nodejs.org/) v18+, [Rust](https://rustup.rs/) toolchain, platform-specific dependencies ([Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)).
+Prerequisites: [Node.js](https://nodejs.org/) v20+, [Rust](https://rustup.rs/) toolchain, platform-specific dependencies ([Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)).
 
 ```bash
 # One command builds everything: SvelteKit → sidecar bundle → Tauri app
@@ -311,9 +309,9 @@ Generates a filled timesheet document from the template.
 {
   "year": 2026,
   "month": 1,
-  "companyCode": "405627530",
-  "employeeName": "გიორგი პეტრიაშვილი, უფროსი დეველოპერი",
-  "employeeId": "01005031116",
+  "companyCode": "123456789",
+  "employeeName": "ნინო ბერიძე, პროგრამისტი",
+  "employeeId": "12345678901",
   "vacationDates": ["2026-01-15"],
   "outputFormat": "docx"
 }
@@ -443,18 +441,9 @@ tests/
 - [x] Accessibility testing via axe-core
 - [x] Issue templates, PR template, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
 - [x] Dependabot for npm and GitHub Actions
-
-### Before going public (manual)
-
-- [ ] **Add screenshot** — capture the app UI, save as `docs/screenshot.png`, then uncomment the image tag near line 15 of this README
-- [ ] **Set repository description** `(manual)` — go to repo Settings → General, or run:
-  ```bash
-  gh repo edit --description "Georgian-format monthly timesheet generator with interactive calendar and DOCX template filling"
-  ```
-- [ ] **Set repository topics** `(manual)` — go to repo main page → gear icon near About, or run:
-  ```bash
-  gh repo edit --add-topic timesheet,sveltekit,svelte,tauri,docx,georgia,document-generation,typescript,desktop-app
-  ```
+- [x] Add screenshot to README
+- [x] Sanitize test fixtures and docs (replace personal identifiers with generic values)
+- [x] Set repository description and topics
 
 ### After going public (manual)
 

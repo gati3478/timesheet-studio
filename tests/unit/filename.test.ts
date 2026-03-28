@@ -8,9 +8,7 @@ describe('buildOutputFilename', () => {
   });
 
   it('handles Georgian characters in name', () => {
-    expect(buildOutputFilename('გიორგი პეტრიაშვილი', 2026, 3, 'docx')).toBe(
-      'გიორგი-პეტრიაშვილი-mar-2026.docx'
-    );
+    expect(buildOutputFilename('ნინო ბერიძე', 2026, 3, 'docx')).toBe('ნინო-ბერიძე-mar-2026.docx');
   });
 
   it('falls back to "timesheet" slug for empty name', () => {
@@ -49,7 +47,7 @@ describe('buildOutputFilename', () => {
   });
 
   it('preserves mixed Georgian and ASCII characters', () => {
-    expect(buildOutputFilename('გიორგი Dev', 2026, 9, 'docx')).toBe('გიორგი-dev-sep-2026.docx');
+    expect(buildOutputFilename('ნინო Dev', 2026, 9, 'docx')).toBe('ნინო-dev-sep-2026.docx');
   });
 
   it('produces correct month abbreviation for all 12 months', () => {
@@ -75,7 +73,7 @@ describe('buildOutputFilename', () => {
 
   it('uses doc extension for all slug variants', () => {
     expect(buildOutputFilename('', 2026, 1, 'doc')).toBe('timesheet-jan-2026.doc');
-    expect(buildOutputFilename('გიორგი', 2026, 6, 'doc')).toBe('გიორგი-jun-2026.doc');
+    expect(buildOutputFilename('ნინო', 2026, 6, 'doc')).toBe('ნინო-jun-2026.doc');
   });
 
   it('preserves very long names without truncation', () => {

@@ -92,7 +92,7 @@ test.describe('Profile editing', () => {
   test('edit and cancel profile', async ({ page }) => {
     await waitForHydration(page);
 
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]');
     await expect(companyInput).toBeDisabled();
 
     // Click Edit Profile and wait for Save to appear
@@ -115,15 +115,15 @@ test.describe('Generation', () => {
     await page.getByRole('button', { name: 'Edit Profile' }).click();
     await expect(page.getByRole('button', { name: 'Save Profile' })).toBeVisible();
 
-    const companyInput = page.locator('input[placeholder="e.g. 405627530"]');
+    const companyInput = page.locator('input[placeholder="e.g. 123456789"]');
     const nameInput = page.locator('input[placeholder="e.g. First Last"]');
-    const idInput = page.locator('input[placeholder="e.g. 01005031116"]');
+    const idInput = page.locator('input[placeholder="e.g. 12345678901"]');
 
     await expect(companyInput).toBeEnabled();
 
-    await companyInput.fill('405627530');
+    await companyInput.fill('123456789');
     await nameInput.fill('Test User');
-    await idInput.fill('01005031116');
+    await idInput.fill('12345678901');
     await page.getByLabel('Output Format').selectOption('docx');
 
     await page.getByRole('button', { name: 'Save Profile' }).click();

@@ -40,9 +40,9 @@ describe('fillTimesheetTemplate with real converted template', () => {
 
     const output = await fillTimesheetTemplate({
       templateBuffer,
-      companyCode: '405627530',
-      employeeName: 'გიორგი პეტრიაშვილი, უფროსი დეველოპერი',
-      employeeId: '01005031116',
+      companyCode: '123456789',
+      employeeName: 'ნინო ბერიძე, პროგრამისტი',
+      employeeId: '12345678901',
       computed
     });
 
@@ -53,10 +53,10 @@ describe('fillTimesheetTemplate with real converted template', () => {
     expect(getCellTextAt(documentNode, 0, 5, 2)).toContain('30.01');
     expect(getCellTextAt(documentNode, 0, 5, 4)).toContain('01.01.2026');
     expect(getCellTextAt(documentNode, 0, 5, 5)).toContain('31.01.2026');
-    expect(getCellTextAt(documentNode, 0, 3, 1)).toContain('405627530');
+    expect(getCellTextAt(documentNode, 0, 3, 1)).toContain('123456789');
 
-    expect(getCellTextAt(documentNode, 1, 5, 1)).toContain('გიორგი პეტრიაშვილი');
-    expect(getCellTextAt(documentNode, 1, 5, 2)).toContain('01005031116');
+    expect(getCellTextAt(documentNode, 1, 5, 1)).toContain('ნინო ბერიძე');
+    expect(getCellTextAt(documentNode, 1, 5, 2)).toContain('12345678901');
 
     expect(getCellTextAt(documentNode, 1, 5, 3)).toContain('X');
     expect(getCellTextAt(documentNode, 1, 5, 4)).toContain('X');

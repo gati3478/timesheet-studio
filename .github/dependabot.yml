@@ -9,6 +9,27 @@ updates:
       prefix: 'deps'
     labels:
       - 'dependencies'
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: cargo
+    directory: /src-tauri
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'deps'
+    labels:
+      - 'dependencies'
+      - 'rust'
+    groups:
+      cargo-minor-patch:
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: github-actions
     directory: /
@@ -20,3 +41,8 @@ updates:
     labels:
       - 'dependencies'
       - 'ci'
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch

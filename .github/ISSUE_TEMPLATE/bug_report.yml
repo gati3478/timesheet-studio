@@ -11,6 +11,18 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Type
+      description: How are you running the application?
+      options:
+        - Web app (browser)
+        - Desktop app (Tauri)
+        - Docker
+    validations:
+      required: false
+
   - type: textarea
     id: steps
     attributes:

@@ -327,10 +327,23 @@ Returns Georgian public holidays for a given year. Results are cached for 6 hour
 
 ```json
 {
+  "year": 2026,
   "entries": [
     { "date": "2026-01-01", "title": "New Year's Day", "isStateOnly": false },
     { "date": "2026-01-07", "title": "Christmas Day", "isStateOnly": false }
   ]
+}
+```
+
+### `GET /api/capabilities`
+
+Returns runtime capabilities of the server (e.g., whether LibreOffice is installed for `.doc` export). The frontend uses this to show or hide format options.
+
+**Response:**
+
+```json
+{
+  "docExportAvailable": true
 }
 ```
 
@@ -366,7 +379,7 @@ Generates a filled timesheet document from the template.
 
 ### `POST /api/system/shutdown`
 
-Gracefully shuts down the local server via `SIGTERM` (for desktop/launcher mode). No authentication — intended only for local/trusted environments.
+Gracefully shuts down the local server via `SIGTERM` (used by the `npm start` launcher). Only available in development mode — returns `404` in production builds. Restricted to localhost clients (`127.0.0.1` / `::1`).
 
 ## Project Structure
 
@@ -378,27 +391,37 @@ src/
 ├── hooks.server.ts                       # Security headers hook
 ├── routes/
 │   ├── +page.svelte                      # Page orchestration & state management
+│   ├── +page.server.ts                   # Server-side load (capabilities detection)
 │   ├── +layout.svelte                    # Root layout
 │   └── api/
+│       ├── capabilities/+server.ts       # Runtime capability detection
 │       ├── holidays/+server.ts           # Holiday fetching endpoint
 │       ├── timesheet/generate/+server.ts # Document generation endpoint
-│       └── system/shutdown/+server.ts    # Local server shutdown
+│       └── system/shutdown/+server.ts    # Local server shutdown (dev only)
 └── lib/
     ├── constants.ts                      # Shared constants (months, weekdays)
     ├── calendar-types.ts                 # DayItem & CalendarCell types
+    ├── content-disposition.ts            # Content-Disposition header parsing
+    ├── filename.ts                       # Output filename generation
+    ├── profile.ts                        # Profile persistence (localStorage)
+    ├── slugify.ts                        # Unicode-safe string slugification
+    ├── tauri.ts                          # Tauri webview detection
     ├── components/
     │   ├── MonthPicker.svelte            # Year/month navigation controls
     │   ├── ProfileEditor.svelte          # Employee profile form
-    │   ├── VacationCalendar.svelte       # Interactive vacation day picker
-    │   └── SummaryMetrics.svelte         # Worked/vacation/holiday counters
+    │   ├── StatusMessage.svelte          # Error/success/info banners
+    │   ├── SummaryMetrics.svelte         # Worked/vacation/holiday counters
+    │   ├── TitleBar.svelte               # Custom window title bar (Tauri)
+    │   └── VacationCalendar.svelte       # Interactive vacation day picker
     └── server/
         ├── types.ts                      # Server-side TypeScript types
+        ├── capabilities.ts               # LibreOffice / DOC export detection
         ├── parse-payload.ts              # Request validation & length limits
         ├── timesheet.ts                  # Day-code computation logic
         ├── docx.ts                       # DOCX XML template filling
         ├── doc-conversion.ts             # DOCX → DOC via LibreOffice
         ├── holidays.ts                   # Holiday fetching & caching
-        ├── filename.ts                   # Output filename generation
+        ├── georgian-holidays.json        # Static holiday fallback data
         └── template.ts                   # Template buffer loader
 
 scripts/
@@ -406,12 +429,14 @@ scripts/
 ├── prepare-template.mjs                 # .doc → .docx template conversion
 ├── bundle-sidecar.mjs                   # Tauri sidecar bundler (esbuild + Node download)
 ├── doctor.mjs                           # Environment health check
-└── clean.mjs                            # Build artifact cleanup
+├── clean.mjs                            # Build artifact cleanup
+└── capture-ui-docs.mjs                  # Screenshot capture for documentation
 
 src-tauri/                               # Tauri desktop app (Rust)
 ├── src/
 │   ├── main.rs                          # Entry point
 │   └── lib.rs                           # Sidecar lifecycle (port, spawn, health, cleanup)
+├── build.rs                             # Tauri build script
 ├── tauri.conf.json                      # App config (CSP, resources, sidecar)
 ├── capabilities/default.json            # Permission scope (shell:allow-spawn only)
 ├── Cargo.toml                           # Rust dependencies
@@ -420,32 +445,50 @@ src-tauri/                               # Tauri desktop app (Rust)
 └── resources/                           # Bundled server + assets (gitignored)
 
 static/
+├── favicon.svg                           # App icon
 └── templates/
     └── timesheet_template.docx           # Compiled DOCX template
 
 tests/
 ├── helpers/
 │   ├── docx-assertions.ts               # DOCX content assertion utilities
-│   └── fixtures.ts                       # Shared test fixtures
-├── unit/
-│   ├── timesheet.test.ts                 # Day code computation tests
-│   ├── holidays.test.ts                  # Holiday parsing tests
-│   ├── filename.test.ts                  # Filename generation tests
-│   ├── parse-payload.test.ts             # Input validation tests
-│   ├── doc-conversion.test.ts            # DOC conversion tests
-│   ├── template.test.ts                  # Template loader tests
-│   ├── hooks.test.ts                     # Security headers tests
-│   ├── server-endpoint.test.ts           # Endpoint handler tests
-│   └── shutdown.test.ts                  # Shutdown endpoint tests
+│   ├── fixtures.ts                       # Shared test fixtures
+│   └── mock-kit-json.ts                  # SvelteKit json() mock for unit tests
+├── unit/                                 # Unit tests (one per module)
+│   ├── timesheet.test.ts                 # Day code computation
+│   ├── holidays.test.ts                  # Holiday parsing & caching
+│   ├── holidays-endpoint.test.ts         # Holiday API endpoint
+│   ├── filename.test.ts                  # Filename generation
+│   ├── parse-payload.test.ts             # Input validation
+│   ├── doc-conversion.test.ts            # DOC conversion
+│   ├── template.test.ts                  # Template loader
+│   ├── template-env.test.ts              # TEMPLATE_DIR env var
+│   ├── capabilities.test.ts              # LibreOffice detection
+│   ├── capabilities-endpoint.test.ts     # Capabilities API endpoint
+│   ├── hooks.test.ts                     # Security headers
+│   ├── server-endpoint.test.ts           # Generate endpoint handler
+│   ├── shutdown.test.ts                  # Shutdown endpoint
+│   ├── page-server-load.test.ts          # Page server load function
+│   ├── calendar-types.test.ts            # Calendar type helpers
+│   ├── content-disposition.test.ts       # Content-Disposition parsing
+│   ├── profile.test.ts                   # Profile persistence
+│   └── docx-errors.test.ts               # DOCX error handling
 ├── integration/
-│   ├── docx-fill.test.ts                 # Template filling tests
+│   ├── docx-fill.test.ts                 # Template filling
 │   └── real-template.test.ts             # Full template scenarios
 └── e2e/
+    ├── helpers.ts                        # Shared e2e test utilities
     ├── app.spec.ts                       # App UI smoke tests
-    ├── calendar.spec.ts                  # Calendar interaction tests
+    ├── calendar.spec.ts                  # Calendar interaction
     ├── api.spec.ts                       # API endpoint tests
-    ├── api-validation.spec.ts            # API validation tests
-    └── security.spec.ts                  # Security header tests
+    ├── api-validation.spec.ts            # API validation
+    ├── security.spec.ts                  # Security headers
+    ├── accessibility.spec.ts             # WCAG 2.1 AA compliance
+    ├── docx-download.spec.ts             # DOCX download flow
+    ├── doc-export-ui.spec.ts             # DOC export UI behavior
+    ├── doc-format.spec.ts                # DOC format conversion
+    ├── profile-persistence.spec.ts       # Profile localStorage
+    └── vacation-validation.spec.ts       # Vacation date validation
 ```
 
 ## Tech Stack

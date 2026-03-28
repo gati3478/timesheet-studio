@@ -107,5 +107,5 @@ jobs:
             sleep 1
           done
           [ "$(curl -sf -o /dev/null -w '%{http_code}' http://localhost:3000)" = "200" ]
-          [ "$(curl -sf -o /dev/null -w '%{http_code}' 'http://localhost:3000/api/holidays?year=2026')" = "200" ]
+          [ "$(curl -sf -o /dev/null -w '%{http_code}' "http://localhost:3000/api/holidays?year=$(date +%Y)")" = "200" ]
           kill $SERVER_PID

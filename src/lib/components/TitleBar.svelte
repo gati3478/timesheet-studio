@@ -53,11 +53,17 @@
 
 {#if isTauri}
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <header class="titlebar" data-tauri-drag-region on:mousedown={handleDragStart}>
+  <header
+    class="titlebar"
+    style="app-region: drag; -webkit-app-region: drag;"
+    data-tauri-drag-region
+    on:mousedown={handleDragStart}
+  >
     <span class="titlebar-label" data-tauri-drag-region>Timesheet Studio</span>
     <button
       type="button"
       class="titlebar-close"
+      style="app-region: no-drag; -webkit-app-region: no-drag;"
       on:click={handleClose}
       disabled={!appWindow}
       aria-label="Close application"
@@ -89,8 +95,6 @@
     z-index: 9999;
     user-select: none;
     -webkit-user-select: none;
-    app-region: drag;
-    -webkit-app-region: drag;
   }
 
   .titlebar-label {
@@ -102,8 +106,6 @@
   }
 
   .titlebar-close {
-    app-region: no-drag;
-    -webkit-app-region: no-drag;
     display: flex;
     align-items: center;
     justify-content: center;

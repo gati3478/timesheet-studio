@@ -392,7 +392,6 @@
 <main class="shell">
   <section class="hero card">
     <div>
-      <p class="eyebrow">Twino</p>
       <h1>Timesheet Studio</h1>
       <p class="subtitle">
         Precisely fill your monthly form with holiday-aware accounting and instant export.
@@ -506,15 +505,6 @@
     background:
       radial-gradient(circle at 20% 8%, rgba(85, 146, 255, 0.1), transparent 43%),
       linear-gradient(160deg, rgba(255, 255, 255, 0.94), rgba(241, 247, 255, 0.94));
-  }
-
-  .eyebrow {
-    margin: 0;
-    font-size: 0.73rem;
-    text-transform: uppercase;
-    letter-spacing: 0.11em;
-    color: var(--text-tertiary);
-    font-weight: 700;
   }
 
   h1 {

@@ -144,16 +144,16 @@ CI runs lint, type checking, and tests on every push and pull request.
 npm run build
 ```
 
-The build output goes to `build/`. SvelteKit uses [`adapter-auto`](https://kit.svelte.dev/docs/adapter-auto) which auto-detects deployment platforms.
+The build output goes to `build/`. SvelteKit uses [`adapter-node`](https://kit.svelte.dev/docs/adapter-node) for server-side deployment.
 
 ### Supported Platforms
 
-| Platform       | Adapter                        | Notes                              |
-| -------------- | ------------------------------ | ---------------------------------- |
-| **Node.js**    | `adapter-auto` (auto-detected) | Self-hosted, run `node build`      |
-| **Vercel**     | `adapter-auto` (auto-detected) | Zero-config deployment             |
-| **Netlify**    | `adapter-auto` (auto-detected) | Zero-config deployment             |
-| **Cloudflare** | `adapter-cloudflare`           | Swap adapter in `svelte.config.js` |
+| Platform       | Adapter              | Notes                                   |
+| -------------- | -------------------- | --------------------------------------- |
+| **Node.js**    | `adapter-node`       | Default — self-hosted, run `node build` |
+| **Vercel**     | `adapter-vercel`     | Swap adapter in `svelte.config.js`      |
+| **Netlify**    | `adapter-netlify`    | Swap adapter in `svelte.config.js`      |
+| **Cloudflare** | `adapter-cloudflare` | Swap adapter in `svelte.config.js`      |
 
 > **Note:** The `.doc` export format requires LibreOffice on the server. DOCX export works everywhere.
 

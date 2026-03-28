@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Timesheet Studio",
   "version": "1.0.0",
-  "identifier": "com.twino.timesheet-studio",
+  "identifier": "io.github.gati3478.timesheet-studio",
   "build": {
     "frontendDist": "../build/client",
     "devUrl": "http://localhost:5173",

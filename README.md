@@ -103,6 +103,7 @@ npm run doctor
 | -------------------------- | ---------------------------------------------------- |
 | `npm start`                | Full launcher: install, prepare, start, open browser |
 | `npm run dev`              | Start Vite dev server on port 5173                   |
+| `npm run dev:open`         | Start dev server and open browser automatically      |
 | `npm run build`            | Production build                                     |
 | `npm run preview`          | Preview production build                             |
 | `npm run check`            | Type-check with svelte-check                         |
@@ -154,6 +155,25 @@ The build output goes to `build/`. SvelteKit uses [`adapter-node`](https://kit.s
 | **Cloudflare** | `adapter-cloudflare` | Swap adapter in `svelte.config.js`      |
 
 > **Note:** The `.doc` export format requires LibreOffice on the server. DOCX export works everywhere.
+
+### Docker
+
+```bash
+# DOCX-only (lightweight)
+docker compose up app
+
+# With .doc export support (includes LibreOffice)
+docker compose --profile full up app-full
+```
+
+The app is available at [http://localhost:3000](http://localhost:3000). To use a different host port: `PORT=8080 docker compose up app` (app then at `http://localhost:8080`).
+
+For custom builds:
+
+```bash
+docker build -t timesheet-studio .
+docker run -p 3000:3000 timesheet-studio
+```
 
 ### Preview Locally
 
@@ -429,36 +449,22 @@ tests/
 | Sidecar Bundling    | [esbuild](https://esbuild.github.io/) (server → single-file ESM bundle)                                                                 |
 | CI                  | [GitHub Actions](https://github.com/features/actions)                                                                                   |
 
-## Pre-Release Checklist
+## Post-Release Setup
 
-> **For maintainers:** Complete these steps before or shortly after making the repository public. Items marked with `(manual)` require GitHub UI or CLI actions that cannot be automated in code.
+> **For maintainers:** These steps require the GitHub UI or CLI and must be completed after making the repository public.
 
-### Done
-
-- [x] Remove `"private": true` from `package.json`
-- [x] Update project structure in README
-- [x] CI pipeline: lint, type-check, security audit, unit tests, e2e (cross-browser), build + smoke test
-- [x] Accessibility testing via axe-core
-- [x] Issue templates, PR template, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
-- [x] Dependabot for npm and GitHub Actions
-- [x] Add screenshot to README
-- [x] Sanitize test fixtures and docs (replace personal identifiers with generic values)
-- [x] Set repository description and topics
-
-### After going public (manual)
-
-- [ ] **Create v1.0.0 tag and GitHub Release** `(manual)`:
+- [ ] **Create v1.0.0 tag and GitHub Release**:
   ```bash
   git tag v1.0.0
   git push origin v1.0.0
   gh release create v1.0.0 --title "v1.0.0" --notes "Initial public release. See [CHANGELOG.md](CHANGELOG.md) for details."
   ```
-- [ ] **Enable private vulnerability reporting** `(manual)` — go to repo Settings → Code security → Private vulnerability reporting → Enable
-- [ ] **Configure branch protection for `main`** `(manual)` — go to repo Settings → Branches → Add rule for `main`:
+- [ ] **Enable private vulnerability reporting** — Settings → Code security → Private vulnerability reporting → Enable
+- [ ] **Configure branch protection for `main`** — Settings → Branches → Add rule for `main`:
   - Require status checks to pass (select: `Lint`, `Type Check`, `Unit Tests`, `E2E Tests`, `Build`)
   - Require branches to be up to date before merging
   - Optionally require PR reviews before merging
-- [ ] **Enable Discussions** `(manual, optional)` — go to repo Settings → General → Features → check Discussions
+- [ ] **Enable Discussions** _(optional)_ — Settings → General → Features → check Discussions
 
 ## License
 

@@ -43,6 +43,9 @@ npm run check
 
 # Unit & integration tests
 npm run test:unit
+
+# End-to-end tests (Playwright auto-starts dev server on port 5173)
+npm run test:e2e
 ```
 
 CI runs all of the above on every push and pull request, so catching issues locally saves time.

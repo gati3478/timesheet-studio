@@ -63,7 +63,7 @@
   // ── Helpers ──────────────────────────────────────────────
 
   function monthPrefix(year: number, month: number): string {
-    return format(new Date(year, month - 1, 1), 'yyyy-MM-');
+    return `${year}-${String(month).padStart(2, '0')}-`;
   }
 
   // ── Period navigation ────────────────────────────────────
@@ -355,27 +355,13 @@
       companyCode = saved.companyCode;
       employeeName = saved.employeeName;
       employeeId = saved.employeeId;
-      draftCompanyCode = companyCode;
-      draftEmployeeName = employeeName;
-      draftEmployeeId = employeeId;
+      syncDraftsFromProfile();
     }
 
     isTauri = isTauriApp();
   });
 
   // ── Reactive statements ──────────────────────────────────
-
-  // Clear stale profile errors when the user edits any field
-  $: if (isEditingProfile) {
-    void draftCompanyCode;
-    void draftEmployeeName;
-    void draftEmployeeId;
-    if (profileError) profileError = '';
-    if (profileDetails.length > 0) profileDetails = [];
-    if (fieldErrors.companyCode || fieldErrors.employeeName || fieldErrors.employeeId) {
-      fieldErrors = { ...NO_FIELD_ERRORS };
-    }
-  }
 
   $: monthLabel = `${MONTHS[selectedMonth - 1].label} ${selectedYear}`;
   $: if (browser && selectedYear) void loadHolidays(selectedYear);

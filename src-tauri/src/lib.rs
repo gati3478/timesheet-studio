@@ -7,6 +7,9 @@ use tauri_plugin_shell::ShellExt;
 struct SidecarChild(Mutex<Option<CommandChild>>);
 
 /// Find an available port by binding to port 0 and reading the assigned port.
+// TODO: Consider passing port 0 to the sidecar and reading the actual port from stdout
+// to eliminate the TOCTOU race between dropping the listener and the sidecar binding.
+// Also narrow the Tauri CSP to the actual port once known (currently allows 127.0.0.1:*).
 fn get_free_port() -> Result<u16, Box<dyn std::error::Error>> {
     let listener = TcpListener::bind("127.0.0.1:0")?;
     Ok(listener.local_addr()?.port())
@@ -46,6 +49,7 @@ fn augment_path_for_libreoffice() -> String {
 
 /// Poll the sidecar server until it responds or timeout is reached.
 /// Uses a raw TCP connect check — no HTTP library needed for localhost.
+// TODO: Show a splash/loading window before polling so the user isn't staring at nothing for up to 15s.
 fn wait_for_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     let addr = format!("127.0.0.1:{}", port);
     for _ in 0..150 {
@@ -160,7 +164,10 @@ pub fn run() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("error while building tauri application")
+        .unwrap_or_else(|e| {
+            eprintln!("Fatal: failed to build Tauri application: {}", e);
+            std::process::exit(1);
+        })
         .run(|app_handle, event| {
             if let RunEvent::Exit = event {
                 if let Some(child) = app_handle

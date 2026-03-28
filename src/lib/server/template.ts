@@ -7,7 +7,11 @@ const TEMPLATE_FILENAME = 'timesheet_template.docx';
 function resolveTemplatePath(): string {
   const envDir = process.env.TEMPLATE_DIR;
   if (envDir) {
-    return path.resolve(envDir, TEMPLATE_FILENAME);
+    const resolved = path.resolve(envDir, TEMPLATE_FILENAME);
+    if (!resolved.endsWith(path.sep + TEMPLATE_FILENAME) && !resolved.endsWith(TEMPLATE_FILENAME)) {
+      throw new Error('TEMPLATE_DIR resolved to an unexpected path.');
+    }
+    return resolved;
   }
   if (dev) {
     return path.resolve('static', 'templates', TEMPLATE_FILENAME);

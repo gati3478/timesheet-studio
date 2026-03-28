@@ -1,13 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-
-/** Wait for full page hydration by ensuring JS-driven content is loaded */
-async function waitForHydration(page: Page): Promise<void> {
-  await page.goto('/');
-  // Wait for the holiday-driven calendar to render (proves JS is running)
-  await page.waitForLoadState('networkidle');
-  // Verify month buttons are interactive (hydration complete)
-  await expect(page.locator('.month-grid button').first()).toBeAttached();
-}
+import { test, expect } from '@playwright/test';
+import { waitForHydration } from './helpers';
 
 test.describe('Page load', () => {
   test('has correct title', async ({ page }) => {

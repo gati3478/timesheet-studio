@@ -11,6 +11,8 @@ export function parseFilename(contentDisposition: string | null): string | null 
     }
   }
 
-  const match = /filename="?([a-zA-Z0-9\u10D0-\u10FF._-]+)"?/.exec(contentDisposition);
+  const match =
+    /filename="([^"]+)"/.exec(contentDisposition) ??
+    /filename=([a-zA-Z0-9\u10D0-\u10FF._-]+)/.exec(contentDisposition);
   return match?.[1] ?? null;
 }

@@ -43,14 +43,14 @@ function makeTable(rows: string[]): string {
 }
 
 describe('fillTimesheetTemplate error paths', () => {
-  it('throws when word/document.xml is missing from the ZIP (lines 416-418)', async () => {
+  it('throws when word/document.xml is missing from the ZIP', async () => {
     const buffer = await buildDocxZip(); // no document.xml
     await expect(fillTimesheetTemplate(makeInput(buffer))).rejects.toThrow(
       'word/document.xml not found in template.'
     );
   });
 
-  it('throws when table[0] is missing — no <w:tbl> elements (lines 299-301)', async () => {
+  it('throws when table[0] is missing — no <w:tbl> elements', async () => {
     const xml = wrapBody(''); // body with no tables
     const buffer = await buildDocxZip(xml);
     await expect(fillTimesheetTemplate(makeInput(buffer))).rejects.toThrow(
@@ -58,7 +58,7 @@ describe('fillTimesheetTemplate error paths', () => {
     );
   });
 
-  it('throws when table[1] is missing — only 1 table (lines 321-323)', async () => {
+  it('throws when table[1] is missing — only 1 table', async () => {
     // Table 0 needs enough rows/cells for getTableCell calls:
     // LEFT_DATE_CELL: row 5, cell 4; START_DATE_CELL: row 5, cell 5;
     // COMPANY_CODE_CELL: row 3, cell 1
@@ -80,7 +80,7 @@ describe('fillTimesheetTemplate error paths', () => {
     );
   });
 
-  it('throws when employee row has <47 cells (lines 332-334)', async () => {
+  it('throws when employee row has <47 cells', async () => {
     // Table 0: as above
     const table0Rows = [];
     for (let r = 0; r < 6; r++) {
@@ -110,7 +110,7 @@ describe('fillTimesheetTemplate error paths', () => {
     );
   });
 
-  it('skips missing cells in applyDayColumnShading columns (lines 403-405)', async () => {
+  it('skips missing cells in applyDayColumnShading columns', async () => {
     // Build a valid-enough template that passes getTableCell and getEmployeeRowCells,
     // but has rows after row 5 with fewer cells so applyDayColumnShading hits the
     // `if (!cell) continue` path.
@@ -144,5 +144,42 @@ describe('fillTimesheetTemplate error paths', () => {
     const result = await fillTimesheetTemplate(makeInput(buffer));
     expect(Buffer.isBuffer(result)).toBe(true);
     expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('succeeds when word/styles.xml is missing from the ZIP', async () => {
+    // Table 0: needs row 3 (cell 1), row 5 (cells 2, 4, 5)
+    const table0Rows = [];
+    for (let r = 0; r < 6; r++) {
+      if (r === 3) {
+        table0Rows.push(makeRow(2));
+      } else if (r === 5) {
+        table0Rows.push(makeRow(6));
+      } else {
+        table0Rows.push(makeRow(1));
+      }
+    }
+
+    // Table 1: row 5 needs at least 47 cells for getEmployeeRowCells
+    const table1Rows = [];
+    for (let r = 0; r < 6; r++) {
+      if (r === 5) {
+        table1Rows.push(makeRow(47));
+      } else {
+        table1Rows.push(makeRow(1));
+      }
+    }
+
+    const xml = wrapBody(makeTable(table0Rows) + makeTable(table1Rows));
+    // buildDocxZip only adds word/document.xml — no word/styles.xml
+    const buffer = await buildDocxZip(xml);
+
+    // Should succeed without error when styles.xml is absent
+    const result = await fillTimesheetTemplate(makeInput(buffer));
+    expect(Buffer.isBuffer(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+
+    // Verify the output ZIP does not contain word/styles.xml
+    const outputZip = await JSZip.loadAsync(result);
+    expect(outputZip.file('word/styles.xml')).toBeNull();
   });
 });

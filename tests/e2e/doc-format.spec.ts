@@ -1,29 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { execSync } from 'node:child_process';
+import { detectLibreOffice, GENERATE_PAYLOAD } from './helpers';
 
-let hasLibreOffice = false;
-try {
-  execSync('soffice --version', { stdio: 'ignore' });
-  hasLibreOffice = true;
-} catch {
-  // LibreOffice not available
-}
-
+const hasLibreOffice = detectLibreOffice();
 const describeOrSkip = hasLibreOffice ? test.describe : test.describe.skip;
 
 // LibreOffice uses a single-user profile lock — only run in one browser project
 // to avoid concurrent soffice invocations causing lock contention failures.
 test.skip(({ browserName }) => browserName !== 'chromium', 'DOC tests run in Chromium only');
 
-const docPayload = {
-  year: 2026,
-  month: 3,
-  companyCode: '405627530',
-  employeeName: 'Test User',
-  employeeId: '01005031116',
-  vacationDates: [],
-  outputFormat: 'doc'
-};
+const docPayload = { ...GENERATE_PAYLOAD, outputFormat: 'doc' as const };
 
 describeOrSkip('DOC format output', () => {
   test('POST with outputFormat=doc returns correct MIME type', async ({ request }) => {

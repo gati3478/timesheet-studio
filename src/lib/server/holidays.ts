@@ -1,6 +1,5 @@
 import * as cheerio from 'cheerio';
 import iconv from 'iconv-lite';
-import { format } from 'date-fns';
 import { MIN_YEAR, MAX_YEAR } from '../constants';
 import type { HolidayEntry } from './types';
 import staticHolidays from './georgian-holidays.json';
@@ -8,9 +7,11 @@ import staticHolidays from './georgian-holidays.json';
 const YELL_HOLIDAY_URL = 'https://www.yell.ge/info/holiday.php?ht=1';
 const NAGER_HOLIDAY_URL = 'https://date.nager.at/api/v3/PublicHolidays';
 const HOLIDAY_CACHE_TTL_MS = 1000 * 60 * 60 * 6;
+const FALLBACK_CACHE_TTL_MS = 1000 * 60 * 5;
 const MAX_HTML_RESPONSE_BYTES = 5 * 1024 * 1024;
 const MAX_JSON_RESPONSE_BYTES = 1 * 1024 * 1024;
 const MIN_EXPECTED_HOLIDAYS = 5;
+const MAX_CACHE_ENTRIES = 10;
 
 const monthStems: Array<[string, number]> = [
   ['იანვ', 1],
@@ -38,6 +39,7 @@ const stateOnlyKeywords = [
 type CachedHolidays = {
   fetchedAt: number;
   entries: HolidayEntry[];
+  fromFallback: boolean;
 };
 
 const holidayCache = new Map<number, CachedHolidays>();
@@ -70,7 +72,7 @@ async function readResponseBytes(response: Response, maxBytes: number): Promise<
     result.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return result.buffer;
+  return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength);
 }
 
 function detectCharset(contentType: string | null, htmlHead: string): string {
@@ -110,7 +112,7 @@ function toIsoDate(year: number, month: number, day: number): string | null {
     return null;
   }
 
-  return format(candidate, 'yyyy-MM-dd');
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 function findMonthNumber(monthWord: string): number | null {
@@ -132,6 +134,7 @@ function extractDatesFromText(text: string, fallbackYear: number): string[] {
     const start = Number(match[1]);
     const end = Number(match[2]);
     const month = Number(match[3]);
+    if (month < 1 || month > 12) continue;
     const year = Number(match[4] ?? fallbackYear);
 
     for (let day = start; day <= end; day += 1) {
@@ -146,6 +149,7 @@ function extractDatesFromText(text: string, fallbackYear: number): string[] {
   for (const match of text.matchAll(numericSingleRegex)) {
     const day = Number(match[1]);
     const month = Number(match[2]);
+    if (month < 1 || month > 12 || day < 1 || day > 31) continue;
     const year = Number(match[3] ?? fallbackYear);
     const iso = toIsoDate(year, month, day);
     if (iso) {
@@ -461,7 +465,9 @@ function getStaticHolidaysForYear(year: number): HolidayEntry[] {
   return entries.sort((a, b) => a.date.localeCompare(b.date));
 }
 
-async function fetchMergedHolidays(year: number): Promise<HolidayEntry[]> {
+type FetchResult = { entries: HolidayEntry[]; fromFallback: boolean };
+
+async function fetchMergedHolidays(year: number): Promise<FetchResult> {
   const results = await Promise.allSettled([fetchNagerHolidays(year), fetchYellHolidays(year)]);
 
   const nagerEntries = results[0].status === 'fulfilled' ? results[0].value : [];
@@ -476,7 +482,7 @@ async function fetchMergedHolidays(year: number): Promise<HolidayEntry[]> {
         `Holiday result (${merged.length} entries) may be incomplete — a provider failed and count is below expected (${MIN_EXPECTED_HOLIDAYS}).`
       );
     }
-    return merged;
+    return { entries: merged, fromFallback: false };
   }
 
   if (results[0].status === 'rejected' && results[1].status === 'rejected') {
@@ -489,7 +495,7 @@ async function fetchMergedHolidays(year: number): Promise<HolidayEntry[]> {
     console.warn('Holiday providers returned no entries; using static fallback.');
   }
 
-  return getStaticHolidaysForYear(year);
+  return { entries: getStaticHolidaysForYear(year), fromFallback: true };
 }
 
 function getCachedEntries(year: number): HolidayEntry[] | null {
@@ -498,7 +504,8 @@ function getCachedEntries(year: number): HolidayEntry[] | null {
     return null;
   }
 
-  if (Date.now() - cached.fetchedAt > HOLIDAY_CACHE_TTL_MS) {
+  const ttl = cached.fromFallback ? FALLBACK_CACHE_TTL_MS : HOLIDAY_CACHE_TTL_MS;
+  if (Date.now() - cached.fetchedAt > ttl) {
     holidayCache.delete(year);
     return null;
   }
@@ -522,8 +529,16 @@ export async function getHolidaysForYear(
     if (!promise) {
       promise = fetchMergedHolidays(year)
         .then((result) => {
-          holidayCache.set(year, { fetchedAt: Date.now(), entries: result });
-          return result;
+          if (holidayCache.size >= MAX_CACHE_ENTRIES) {
+            const oldestKey = holidayCache.keys().next().value;
+            if (oldestKey !== undefined) holidayCache.delete(oldestKey);
+          }
+          holidayCache.set(year, {
+            fetchedAt: Date.now(),
+            entries: result.entries,
+            fromFallback: result.fromFallback
+          });
+          return result.entries;
         })
         .finally(() => inFlightFetches.delete(year));
       inFlightFetches.set(year, promise);

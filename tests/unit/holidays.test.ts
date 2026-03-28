@@ -1,10 +1,22 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { __clearHolidayCacheForTests, getHolidaysForYear } from '../../src/lib/server/holidays';
 
 const EMPTY_YELL_HTML = '<html><body><table></table></body></html>';
 
-type NagerSpec = unknown[] | { status: number } | { throw: string };
-type YellSpec = string | { status: number };
+function makeNagerEntry(overrides: Record<string, unknown> = {}) {
+  return {
+    date: '2026-01-01',
+    localName: 'ახალი წელი',
+    name: "New Year's Day",
+    countryCode: 'GE',
+    counties: null,
+    types: ['Public'],
+    ...overrides
+  };
+}
+
+type NagerSpec = unknown[] | { status: number } | { throw: string } | { oversized: true };
+type YellSpec = string | { status: number } | { throw: string };
 
 function stubHolidayFetch(
   nager: NagerSpec = [],
@@ -20,6 +32,14 @@ function stubHolidayFetch(
       if (typeof nager === 'object' && !Array.isArray(nager) && 'status' in nager) {
         return new Response('nager error', { status: nager.status });
       }
+      if (typeof nager === 'object' && !Array.isArray(nager) && 'oversized' in nager) {
+        // Return a response body larger than 1MB (MAX_JSON_RESPONSE_BYTES)
+        const oversizedBody = 'x'.repeat(1024 * 1024 + 1);
+        return new Response(oversizedBody, {
+          status: 200,
+          headers: { 'content-type': 'application/json' }
+        });
+      }
       return new Response(JSON.stringify(nager), {
         status: 200,
         headers: { 'content-type': 'application/json' }
@@ -27,6 +47,9 @@ function stubHolidayFetch(
     }
     if (typeof yell === 'object' && 'status' in yell) {
       return new Response('yell error', { status: yell.status });
+    }
+    if (typeof yell === 'object' && 'throw' in yell) {
+      throw new Error(yell.throw);
     }
     return new Response(Buffer.from(yell, 'utf8'), {
       status: 200,
@@ -45,38 +68,24 @@ afterEach(() => {
 describe('getHolidaysForYear', () => {
   it('uses machine-readable Georgia holidays and ignores non-public/non-national entries', async () => {
     stubHolidayFetch([
-      {
-        date: '2026-03-03',
-        localName: 'დედის დღე',
-        name: "Mother's Day",
-        countryCode: 'GE',
-        counties: null,
-        types: ['Public']
-      },
-      {
+      makeNagerEntry({ date: '2026-03-03', localName: 'დედის დღე', name: "Mother's Day" }),
+      makeNagerEntry({
         date: '2026-03-08',
         localName: 'ქალთა საერთაშორისო დღე',
-        name: "International Women's Day",
-        countryCode: 'GE',
-        counties: null,
-        types: ['Public']
-      },
-      {
+        name: "International Women's Day"
+      }),
+      makeNagerEntry({
         date: '2026-03-12',
         localName: 'Regional only',
         name: 'Regional only',
-        countryCode: 'GE',
-        counties: ['GE-AB'],
-        types: ['Public']
-      },
-      {
+        counties: ['GE-AB']
+      }),
+      makeNagerEntry({
         date: '2026-03-13',
         localName: 'Observance',
         name: 'Observance',
-        countryCode: 'GE',
-        counties: null,
         types: ['Observance']
-      }
+      })
     ]);
 
     const entries = await getHolidaysForYear(2026, { includeStateOnly: false });
@@ -169,15 +178,7 @@ describe('getHolidaysForYear', () => {
   });
 
   it('caches results and only fetches once for the same year', async () => {
-    const nagerEntry = {
-      date: '2026-01-01',
-      localName: 'ახალი წელი',
-      name: "New Year's Day",
-      countryCode: 'GE',
-      counties: null,
-      types: ['Public']
-    };
-    const fetchMock = stubHolidayFetch([nagerEntry]);
+    const fetchMock = stubHolidayFetch([makeNagerEntry()]);
 
     const first = await getHolidaysForYear(2026);
     const second = await getHolidaysForYear(2026);
@@ -189,16 +190,7 @@ describe('getHolidaysForYear', () => {
 
   it('merges overlapping dates from both sources with isStateOnly resolved correctly', async () => {
     stubHolidayFetch(
-      [
-        {
-          date: '2026-01-01',
-          localName: 'ახალი წელი',
-          name: "New Year's Day",
-          countryCode: 'GE',
-          counties: null,
-          types: ['Public']
-        }
-      ],
+      [makeNagerEntry()],
       `<html><body><table>
         <tr><td>1 იანვარი - ახალი წელი მხოლოდ სახელმწიფო ორგანიზაციისთვის</td></tr>
       </table></body></html>`
@@ -214,15 +206,7 @@ describe('getHolidaysForYear', () => {
   it('cache TTL expiry triggers re-fetch', async () => {
     vi.useFakeTimers();
 
-    const nagerEntry = {
-      date: '2026-01-01',
-      localName: 'ახალი წელი',
-      name: "New Year's Day",
-      countryCode: 'GE',
-      counties: null,
-      types: ['Public']
-    };
-    const fetchMock = stubHolidayFetch([nagerEntry]);
+    const fetchMock = stubHolidayFetch([makeNagerEntry()]);
 
     // First call: should fetch from both providers
     await getHolidaysForYear(2026);
@@ -259,14 +243,11 @@ describe('getHolidaysForYear', () => {
       null,
       42,
       'string',
-      {
+      makeNagerEntry({
         date: '2026-05-26',
         localName: 'დამოუკიდებლობის დღე',
-        name: 'Independence Day',
-        countryCode: 'GE',
-        counties: null,
-        types: ['Public']
-      }
+        name: 'Independence Day'
+      })
     ]);
 
     const entries = await getHolidaysForYear(2026);
@@ -277,14 +258,11 @@ describe('getHolidaysForYear', () => {
   it('Nager entry with missing date field is skipped', async () => {
     stubHolidayFetch([
       { localName: 'test' },
-      {
+      makeNagerEntry({
         date: '2026-05-26',
         localName: 'დამოუკიდებლობის დღე',
-        name: 'Independence Day',
-        countryCode: 'GE',
-        counties: null,
-        types: ['Public']
-      }
+        name: 'Independence Day'
+      })
     ]);
 
     const entries = await getHolidaysForYear(2026);
@@ -294,22 +272,17 @@ describe('getHolidaysForYear', () => {
 
   it('Nager entry with non-GE countryCode is filtered', async () => {
     stubHolidayFetch([
-      {
+      makeNagerEntry({
         date: '2026-07-04',
         localName: 'Independence Day',
         name: 'Independence Day',
-        countryCode: 'US',
-        counties: null,
-        types: ['Public']
-      },
-      {
+        countryCode: 'US'
+      }),
+      makeNagerEntry({
         date: '2026-05-26',
         localName: 'დამოუკიდებლობის დღე',
-        name: 'Independence Day',
-        countryCode: 'GE',
-        counties: null,
-        types: ['Public']
-      }
+        name: 'Independence Day'
+      })
     ]);
 
     const entries = await getHolidaysForYear(2026);
@@ -319,22 +292,17 @@ describe('getHolidaysForYear', () => {
 
   it('Nager entry with counties array is filtered (regional)', async () => {
     stubHolidayFetch([
-      {
+      makeNagerEntry({
         date: '2026-06-15',
         localName: 'Regional Holiday',
         name: 'Regional Holiday',
-        countryCode: 'GE',
-        counties: ['Tbilisi'],
-        types: ['Public']
-      },
-      {
+        counties: ['Tbilisi']
+      }),
+      makeNagerEntry({
         date: '2026-05-26',
         localName: 'დამოუკიდებლობის დღე',
-        name: 'Independence Day',
-        countryCode: 'GE',
-        counties: null,
-        types: ['Public']
-      }
+        name: 'Independence Day'
+      })
     ]);
 
     const entries = await getHolidaysForYear(2026);
@@ -344,22 +312,8 @@ describe('getHolidaysForYear', () => {
 
   it('Nager duplicate dates within single response are merged', async () => {
     stubHolidayFetch([
-      {
-        date: '2026-01-01',
-        localName: 'ახალი წელი',
-        name: "New Year's Day",
-        countryCode: 'GE',
-        counties: null,
-        types: ['Public']
-      },
-      {
-        date: '2026-01-01',
-        localName: 'სხვა სახელი',
-        name: 'Other Name',
-        countryCode: 'GE',
-        counties: null,
-        types: ['Public']
-      }
+      makeNagerEntry(),
+      makeNagerEntry({ localName: 'სხვა სახელი', name: 'Other Name' })
     ]);
 
     const entries = await getHolidaysForYear(2026);
@@ -387,16 +341,8 @@ describe('getHolidaysForYear', () => {
   });
 
   it('charset detection from Content-Type header does not throw', async () => {
-    const nagerEntry = {
-      date: '2026-01-01',
-      localName: 'ახალი წელი',
-      name: "New Year's Day",
-      countryCode: 'GE',
-      counties: null,
-      types: ['Public']
-    };
     // yell.ge response with windows-1252 charset header but utf-8 content
-    stubHolidayFetch([nagerEntry], EMPTY_YELL_HTML, 'windows-1252');
+    stubHolidayFetch([makeNagerEntry()], EMPTY_YELL_HTML, 'windows-1252');
 
     const entries = await getHolidaysForYear(2026);
     expect(entries).toHaveLength(1);
@@ -404,20 +350,74 @@ describe('getHolidaysForYear', () => {
   });
 
   it('non-standard charset falls back to utf-8', async () => {
-    const nagerEntry = {
-      date: '2026-01-01',
-      localName: 'ახალი წელი',
-      name: "New Year's Day",
-      countryCode: 'GE',
-      counties: null,
-      types: ['Public']
-    };
     // yell.ge response with a completely unknown charset
-    stubHolidayFetch([nagerEntry], EMPTY_YELL_HTML, 'fake-encoding-xyz');
+    stubHolidayFetch([makeNagerEntry()], EMPTY_YELL_HTML, 'fake-encoding-xyz');
 
     // Should not throw even with unknown charset
     const entries = await getHolidaysForYear(2026);
     expect(entries).toHaveLength(1);
     expect(entries[0].date).toBe('2026-01-01');
+  });
+
+  it('falls back when provider returns oversized response body', async () => {
+    // Nager returns oversized response (>1MB), yell also fails
+    stubHolidayFetch({ oversized: true }, { status: 500 });
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const entries = await getHolidaysForYear(2026);
+    // Both providers fail so static fallback is used
+    expect(entries.length).toBe(13);
+    expect(entries[0].date).toBe('2026-01-01');
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('static fallback'));
+    warnSpy.mockRestore();
+  });
+
+  it('deduplicates concurrent requests for the same year', async () => {
+    __clearHolidayCacheForTests();
+    const fetchMock = stubHolidayFetch([makeNagerEntry()]);
+
+    // Call twice without awaiting the first — should deduplicate via inFlightFetches
+    const [first, second] = await Promise.all([getHolidaysForYear(2026), getHolidaysForYear(2026)]);
+
+    expect(first).toEqual(second);
+    // Only 2 fetch calls total (1 nager + 1 yell), not 4
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('getHolidaysForYear fallback cache TTL', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    __clearHolidayCacheForTests();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    __clearHolidayCacheForTests();
+  });
+
+  it('uses shorter 5-minute TTL when static fallback is cached', async () => {
+    // Both providers fail, forcing static fallback with fromFallback=true
+    const fetchMock = stubHolidayFetch({ status: 500 }, { status: 500 });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    // First call: fetches and caches with fromFallback=true
+    const first = await getHolidaysForYear(2026);
+    expect(first.length).toBe(13);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    // Within 5 minutes: should use cache (no additional fetches)
+    await getHolidaysForYear(2026);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    // Advance past 5-minute fallback TTL (5 * 60 * 1000 = 300_000) plus 1ms
+    vi.advanceTimersByTime(6 * 60 * 1000);
+
+    // Should re-fetch because fallback cache TTL (5 min) has expired
+    await getHolidaysForYear(2026);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+
+    warnSpy.mockRestore();
   });
 });

@@ -3,6 +3,17 @@ import type { Handle } from '@sveltejs/kit';
 const isProduction = process.env.NODE_ENV === 'production';
 
 export const handle: Handle = async ({ event, resolve }) => {
+  if (['POST', 'PUT', 'DELETE'].includes(event.request.method)) {
+    const origin = event.request.headers.get('origin');
+    const host = event.request.headers.get('host');
+    if (origin && host && new URL(origin).host !== host) {
+      return new Response(JSON.stringify({ message: 'Origin mismatch.' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  }
+
   const response = await resolve(event);
 
   response.headers.set('X-Content-Type-Options', 'nosniff');

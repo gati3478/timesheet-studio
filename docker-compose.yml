@@ -1,3 +1,12 @@
+x-shared-env: &shared-env
+  - NODE_ENV=production
+  - PORT=3000
+  - HOST=0.0.0.0
+  - ORIGIN=${ORIGIN:-http://localhost:3000}
+  - PUBLIC_DEFAULT_COMPANY_CODE=${PUBLIC_DEFAULT_COMPANY_CODE:-}
+  - PUBLIC_DEFAULT_EMPLOYEE_NAME=${PUBLIC_DEFAULT_EMPLOYEE_NAME:-}
+  - PUBLIC_DEFAULT_EMPLOYEE_ID=${PUBLIC_DEFAULT_EMPLOYEE_ID:-}
+
 services:
   app:
     build:
@@ -7,14 +16,7 @@ services:
         INSTALL_LIBREOFFICE: 'false'
     ports:
       - '${PORT:-3000}:3000'
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOST=0.0.0.0
-      - ORIGIN=${ORIGIN:-http://localhost:3000}
-      - PUBLIC_DEFAULT_COMPANY_CODE=${PUBLIC_DEFAULT_COMPANY_CODE:-}
-      - PUBLIC_DEFAULT_EMPLOYEE_NAME=${PUBLIC_DEFAULT_EMPLOYEE_NAME:-}
-      - PUBLIC_DEFAULT_EMPLOYEE_ID=${PUBLIC_DEFAULT_EMPLOYEE_ID:-}
+    environment: *shared-env
     restart: unless-stopped
 
   app-full:
@@ -25,14 +27,7 @@ services:
         INSTALL_LIBREOFFICE: 'true'
     ports:
       - '${PORT:-3000}:3000'
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOST=0.0.0.0
-      - ORIGIN=${ORIGIN:-http://localhost:3000}
-      - PUBLIC_DEFAULT_COMPANY_CODE=${PUBLIC_DEFAULT_COMPANY_CODE:-}
-      - PUBLIC_DEFAULT_EMPLOYEE_NAME=${PUBLIC_DEFAULT_EMPLOYEE_NAME:-}
-      - PUBLIC_DEFAULT_EMPLOYEE_ID=${PUBLIC_DEFAULT_EMPLOYEE_ID:-}
+    environment: *shared-env
     restart: unless-stopped
     profiles:
       - full

@@ -6,14 +6,7 @@ vi.mock('$lib/server/holidays', () => ({
     .mockResolvedValue([{ date: '2026-01-01', title: "New Year's Day", isStateOnly: false }])
 }));
 
-vi.mock('@sveltejs/kit', () => ({
-  json: (data: unknown, init?: ResponseInit) => {
-    return new Response(JSON.stringify(data), {
-      status: init?.status ?? 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-}));
+import '../helpers/mock-kit-json';
 
 describe('GET /api/holidays', () => {
   let GET: (args: { url: URL }) => Promise<Response>;

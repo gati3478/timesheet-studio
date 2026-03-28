@@ -8,17 +8,14 @@ vi.mock('$app/environment', () => ({
   }
 }));
 
-vi.mock('@sveltejs/kit', () => ({
-  json: (data: unknown, init?: ResponseInit) => {
-    return new Response(JSON.stringify(data), {
-      status: init?.status ?? 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-}));
+import '../helpers/mock-kit-json';
+
+function makeEvent(ip = '127.0.0.1') {
+  return { getClientAddress: () => ip } as unknown;
+}
 
 describe('POST /api/system/shutdown', () => {
-  let POST: () => Promise<Response>;
+  let POST: (event: unknown) => Promise<Response>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -30,11 +27,20 @@ describe('POST /api/system/shutdown', () => {
     const mod = await import('../../src/routes/api/system/shutdown/+server');
     POST = mod.POST as unknown as typeof POST;
 
-    const response = await POST();
+    const response = await POST(makeEvent());
     expect(response.status).toBe(404);
   });
 
-  it('returns shutdown message in dev mode', async () => {
+  it('returns 403 for non-localhost client in dev mode', async () => {
+    mockDev.value = true;
+    const mod = await import('../../src/routes/api/system/shutdown/+server');
+    POST = mod.POST as unknown as typeof POST;
+
+    const response = await POST(makeEvent('192.168.1.50'));
+    expect(response.status).toBe(403);
+  });
+
+  it('returns shutdown message in dev mode from localhost', async () => {
     mockDev.value = true;
     const mod = await import('../../src/routes/api/system/shutdown/+server');
     POST = mod.POST as unknown as typeof POST;
@@ -42,7 +48,7 @@ describe('POST /api/system/shutdown', () => {
     // Mock process.kill to prevent actual SIGTERM
     const killSpy = vi.spyOn(process, 'kill').mockImplementation(() => true);
 
-    const response = await POST();
+    const response = await POST(makeEvent());
     expect(response.status).toBe(200);
 
     const data = await response.json();

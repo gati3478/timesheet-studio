@@ -1,19 +1,7 @@
-import { test, expect, type Page } from '@playwright/test';
-import { execFileSync } from 'node:child_process';
+import { test, expect } from '@playwright/test';
+import { waitForHydration, detectLibreOffice } from './helpers';
 
-let hasLibreOffice = false;
-try {
-  execFileSync('soffice', ['--version'], { stdio: 'ignore' });
-  hasLibreOffice = true;
-} catch {
-  // LibreOffice not available
-}
-
-async function waitForHydration(page: Page): Promise<void> {
-  await page.goto('/');
-  await page.waitForLoadState('networkidle');
-  await expect(page.locator('.month-grid button').first()).toBeAttached();
-}
+const hasLibreOffice = detectLibreOffice();
 
 test.describe('DOC export UI visibility', () => {
   test('capabilities endpoint returns correct value', async ({ request }) => {

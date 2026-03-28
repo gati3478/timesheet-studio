@@ -1,10 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-
-async function waitForHydration(page: Page): Promise<void> {
-  await page.goto('/');
-  await page.waitForLoadState('networkidle');
-  await expect(page.locator('.month-grid button').first()).toBeAttached();
-}
+import { test, expect } from '@playwright/test';
+import { waitForHydration } from './helpers';
 
 test.describe('Calendar navigation', () => {
   test('navigating to previous month updates the calendar', async ({ page }) => {

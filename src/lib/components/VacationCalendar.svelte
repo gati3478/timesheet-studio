@@ -51,10 +51,8 @@
   }
 
   function findDayItem(day: number): DayItem | null {
-    for (const cell of calendarCells) {
-      if (cell.kind === 'day' && cell.item.day === day) return cell.item;
-    }
-    return null;
+    const cell = calendarCells.find((c) => c.kind === 'day' && c.item.day === day);
+    return cell?.kind === 'day' ? cell.item : null;
   }
 
   function resetDrag(): void {

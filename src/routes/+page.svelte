@@ -454,7 +454,12 @@
       </div>
 
       <div class="status-stack" aria-live="polite">
-        <StatusMessage text={generationError} details={generationDetails} variant="error" />
+        <StatusMessage
+          text={generationError}
+          details={generationDetails}
+          variant="error"
+          onRetry={generateTimesheet}
+        />
         <StatusMessage text={generationInfo} variant="info" />
         <StatusMessage text={shutdownError} variant="error" />
         <StatusMessage text={shutdownMessage} variant="info" />

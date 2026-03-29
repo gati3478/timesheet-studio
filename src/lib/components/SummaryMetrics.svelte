@@ -85,6 +85,7 @@
   @media (max-width: 640px) {
     .summary-grid {
       grid-template-columns: 1fr;
+      gap: var(--space-4);
     }
 
     .metric p {

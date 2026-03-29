@@ -233,6 +233,10 @@
     cursor: not-allowed;
   }
 
+  input:disabled::placeholder {
+    color: rgba(80, 106, 142, 0.55);
+  }
+
   @media (max-width: 640px) {
     .profile-status :global(.status-list) {
       max-height: 4.5rem;

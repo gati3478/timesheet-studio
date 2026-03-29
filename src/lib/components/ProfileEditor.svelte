@@ -50,6 +50,7 @@
       disabled={!isEditing}
       class:field-error={fieldErrors.companyCode}
     />
+    <small class="field-hint">6–12 digit numeric code</small>
   </label>
 
   <label>
@@ -72,6 +73,7 @@
       disabled={!isEditing}
       class:field-error={fieldErrors.employeeId}
     />
+    <small class="field-hint">Must be exactly 11 digits</small>
   </label>
 
   <label>
@@ -118,9 +120,14 @@
   }
 
   .ghost.save {
-    color: var(--color-success);
-    border-color: var(--color-success-border);
-    background: var(--color-success-bg);
+    color: #fff;
+    border-color: var(--color-success);
+    background: var(--color-success);
+  }
+
+  .ghost.save:hover {
+    background: #1a6148;
+    border-color: #1a6148;
   }
 
   .ghost.cancel {
@@ -149,6 +156,8 @@
   .input-grid.editing {
     border-left-color: var(--accent);
     padding-left: var(--space-3);
+    background: rgba(234, 243, 255, 0.45);
+    border-radius: var(--radius-sm);
   }
 
   .input-grid.editing input,
@@ -159,8 +168,9 @@
   }
 
   .input-grid.editing input.field-error {
-    border-color: var(--color-error-border);
-    box-shadow: 0 0 0 1px rgba(188, 96, 118, 0.12);
+    border-color: #c06878;
+    background: rgba(252, 235, 240, 0.55);
+    box-shadow: 0 0 0 1px rgba(192, 104, 120, 0.18);
   }
 
   label {
@@ -193,9 +203,16 @@
     margin-top: var(--space-3);
   }
 
+  .field-hint {
+    color: var(--text-tertiary);
+    font-size: 0.74rem;
+    font-weight: 400;
+    margin-top: calc(-1 * var(--space-1));
+  }
+
   input:disabled,
   select:disabled {
-    color: var(--text-tertiary);
+    color: #506a8e;
     background: rgba(235, 240, 248, 0.92);
     border-color: rgba(150, 170, 200, 0.3);
     cursor: not-allowed;

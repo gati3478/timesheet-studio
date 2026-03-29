@@ -218,7 +218,7 @@
   </div>
   {#if loadingHolidays}
     <div class="loading-overlay" aria-hidden="true">
-      <span>Loading holidays…</span>
+      <span>Refreshing holidays…</span>
     </div>
   {/if}
 </div>
@@ -280,6 +280,7 @@
   .bulk-btn.clear {
     color: var(--color-destructive);
     border-color: rgba(168, 106, 125, 0.32);
+    border-style: dashed;
     background: rgba(249, 241, 244, 0.92);
   }
 
@@ -412,7 +413,7 @@
 
   .day-cell.selected strong,
   .day-cell.selected span {
-    color: #f7fbff;
+    color: #fff;
   }
 
   .day-cell.drag-select {
@@ -553,6 +554,12 @@
     }
 
     .day-cell span {
+      display: none;
+    }
+
+    .status-pill {
+      width: 1.1rem;
+      height: 1.1rem;
       font-size: 0.68rem;
     }
   }

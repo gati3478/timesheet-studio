@@ -196,6 +196,18 @@
         // Auto-open profile editor for validation errors so user can fix fields
         if (response.status === 400 && !isEditingProfile) {
           openProfileEditor();
+          // Set AFTER openProfileEditor(): it calls syncDraftsFromProfile() which clears profileError
+          profileError = body.message ?? 'Validation failed.';
+          profileDetails = Array.isArray(body.details) ? body.details : [];
+          const result = validateProfile({
+            companyCode: draftCompanyCode,
+            employeeName: draftEmployeeName,
+            employeeId: draftEmployeeId
+          });
+          fieldErrors = result.fieldErrors;
+          // Clear generation error since it's now shown in profile section
+          generationError = '';
+          generationDetails = [];
         }
         return;
       }
@@ -427,7 +439,8 @@
           on:click={generateTimesheet}
           disabled={isGenerating || loadingHolidays || isShuttingDown}
         >
-          {#if isGenerating}Generating…{:else}Generate Timesheet{/if}
+          {#if isGenerating}Generating…{:else if loadingHolidays}Loading holidays…{:else}Generate
+            Timesheet{/if}
         </button>
       </div>
 
@@ -576,7 +589,7 @@
   }
 
   .utility-row {
-    margin-top: var(--space-2);
+    margin-top: var(--space-4);
     display: flex;
     justify-content: flex-start;
   }
@@ -661,6 +674,11 @@
     .hero {
       padding: var(--space-4);
       flex-direction: column;
+    }
+
+    .hero-pill {
+      margin-top: var(--space-1);
+      align-self: flex-start;
     }
 
     .control-panel,

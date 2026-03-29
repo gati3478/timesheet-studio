@@ -24,19 +24,19 @@ npm run tauri:build      # Full production desktop app build
 
 ## Conventions
 
-- **Svelte reactivity**: Components use Svelte 4 `$:` reactive syntax, not Svelte 5 runes. An ESLint override disables `svelte/prefer-svelte-reactivity`. Do NOT migrate to runes unless explicitly asked.
+- **Svelte reactivity**: Components use Svelte 4 `$:` reactive syntax, not Svelte 5 runes. Do NOT migrate to runes unless explicitly asked.
 - **Server/client boundary**: Server logic in `src/lib/server/`, UI components in `src/lib/components/`. The `$lib/server` alias enforces server-only imports.
 - **Georgian text**: Day code `შ` (Georgian "shin") = paid vacation. The DOCX template uses Sylfaen font for Georgian character rendering. Do not substitute Latin characters.
 - **Validation errors**: Use `TimesheetValidationError` (from `timesheet.ts`) for all user-facing validation. It carries `details: string[]` for field-level errors. Endpoint handlers return 400 with JSON `{ message, details }`.
 - **Dates**: ISO 8601 (`yyyy-MM-dd`) in API transit, `dd.MM.yyyy` for display labels. Use `date-fns` exclusively — no raw `Date` formatting.
-- **Code style**: Single quotes, no trailing commas, 100 char print width (see `.prettierrc`). TypeScript strict mode enabled.
+- **Code style**: Formatting enforced by Prettier (see `.prettierrc`). TypeScript strict mode enabled (`tsconfig.json`).
 
 ## Testing
 
-- **Unit/integration**: Vitest. Coverage scope: `src/lib/server/**/*.ts` + `src/hooks.server.ts` (excludes `types.ts`). Thresholds: 90% lines/statements, 100% functions, 85% branches.
-- **E2E**: Playwright, Chromium + Firefox + WebKit. Config auto-starts dev server on port 5173. Includes accessibility checks via `@axe-core/playwright`.
+- **Unit/integration**: Vitest. Coverage scope and thresholds configured in `vitest.config.ts`.
+- **E2E**: Playwright (browser targets in `playwright.config.ts`). Config auto-starts dev server on port 5173. Includes accessibility checks via `@axe-core/playwright`.
 - **Test helpers**: Use `makeComputedTimesheet()` and `makeTimesheetInput()` from `tests/helpers/fixtures.ts` for test data. Use `tests/helpers/docx-assertions.ts` for DOCX content assertions. Always prefer these over inline fixtures.
-- **CI**: Lint, type-check, and unit tests (with coverage) run in parallel; e2e tests and build gate on those passing. A security audit (`npm audit`) runs independently in parallel. All run on push/PR to main.
+- **CI**: Pipeline defined in `.github/workflows/ci.yml`. Runs on push/PR to main.
 
 ## Domain
 

@@ -83,7 +83,7 @@
     "typescript": "^5.4.2",
     "typescript-eslint": "^8.57.1",
     "vite": "^6.0.0",
-    "vitest": "^2.0.0"
+    "vitest": "^4.1.2"
   },
   "overrides": {
     "@sveltejs/vite-plugin-svelte": "^6.0.0"

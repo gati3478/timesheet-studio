@@ -203,15 +203,20 @@
       const blob = await response.blob();
       const fallback = buildOutputFilename(employeeName, selectedYear, selectedMonth, outputFormat);
       const filename = parseFilename(response.headers.get('content-disposition')) ?? fallback;
-      const href = URL.createObjectURL(blob);
 
-      const anchor = document.createElement('a');
-      anchor.href = href;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(href);
+      if (isTauri) {
+        const { saveFileWithDialog } = await import('$lib/tauri');
+        await saveFileWithDialog(blob, filename, outputFormat);
+      } else {
+        const href = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = href;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(href);
+      }
     } catch (error) {
       generationError = error instanceof Error ? error.message : 'Unexpected generation error.';
     } finally {

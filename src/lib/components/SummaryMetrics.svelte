@@ -2,6 +2,7 @@
   import type { SummaryResult } from '$lib/calendar-types';
 
   export let summary: SummaryResult;
+  export let loading: boolean = false;
 </script>
 
 <section class="summary-grid">
@@ -15,17 +16,21 @@
     <strong>{summary.vacationDayCount}</strong>
     <small>{summary.vacationHours} paid hours</small>
   </article>
-  <article class="card metric">
+  <article class="card metric" class:metric-loading={loading}>
     <p>Weekday Holidays</p>
-    <strong>{summary.weekdayHolidayCount}</strong>
-    <small>{summary.blockedDayCount} blocked days overall</small>
+    <strong>{loading ? '\u2026' : summary.weekdayHolidayCount}</strong>
+    <small>{loading ? 'Updating\u2026' : `${summary.blockedDayCount} blocked days overall`}</small>
   </article>
-  <article class="card metric">
+  <article class="card metric" class:metric-loading={loading}>
     <p>Month Split</p>
-    <strong
-      >{summary.firstHalfHours} <span class="split-sep">|</span> {summary.secondHalfHours}</strong
-    >
-    <small>1st half hours | 2nd half hours</small>
+    <strong>
+      {#if loading}
+        &hellip;
+      {:else}
+        {summary.firstHalfHours} <span class="split-sep">|</span> {summary.secondHalfHours}
+      {/if}
+    </strong>
+    <small>{loading ? 'Updating\u2026' : '1st half worked | 2nd half worked'}</small>
   </article>
 </section>
 
@@ -73,9 +78,17 @@
     }
   }
 
+  .metric-loading {
+    opacity: 0.55;
+  }
+
   @media (max-width: 640px) {
     .summary-grid {
       grid-template-columns: 1fr;
+    }
+
+    .metric p {
+      font-size: 0.82rem;
     }
   }
 </style>

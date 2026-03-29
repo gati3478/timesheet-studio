@@ -35,7 +35,7 @@
   {/if}
 </div>
 
-<div class="profile-status">
+<div class="profile-status" aria-live="assertive">
   <StatusMessage text={error} details={errorDetails} variant="error" />
   <StatusMessage text={message} variant="success" />
 </div>
@@ -121,13 +121,13 @@
 
   .ghost.save {
     color: #fff;
-    border-color: var(--color-success);
-    background: var(--color-success);
+    border-color: var(--accent);
+    background: var(--accent);
   }
 
   .ghost.save:hover {
-    background: #1a6148;
-    border-color: #1a6148;
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
   }
 
   .ghost.cancel {
@@ -155,7 +155,7 @@
 
   .input-grid.editing {
     border-left-color: var(--accent);
-    padding-left: var(--space-3);
+    padding: var(--space-3);
     background: rgba(234, 243, 255, 0.45);
     border-radius: var(--radius-sm);
   }
@@ -169,6 +169,7 @@
 
   .input-grid.editing input.field-error {
     border-color: #c06878;
+    border-width: 2px;
     background: rgba(252, 235, 240, 0.55);
     box-shadow: 0 0 0 1px rgba(192, 104, 120, 0.18);
   }
@@ -210,11 +211,33 @@
     margin-top: calc(-1 * var(--space-1));
   }
 
+  .input-grid:not(.editing) .field-hint {
+    opacity: 0.55;
+  }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23506a8e' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 0.65rem;
+    padding-right: 2rem;
+  }
+
   input:disabled,
   select:disabled {
     color: #506a8e;
     background: rgba(235, 240, 248, 0.92);
     border-color: rgba(150, 170, 200, 0.3);
     cursor: not-allowed;
+  }
+
+  @media (max-width: 640px) {
+    .profile-status :global(.status-list) {
+      max-height: 4.5rem;
+      overflow-y: auto;
+      font-size: 0.78rem;
+    }
   }
 </style>

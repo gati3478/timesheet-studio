@@ -8,6 +8,7 @@
   export let loadingHolidays: boolean = false;
   export let hasVacation: boolean = false;
   export let onBatchSetVacation: (dateIsos: string[], isVacation: boolean) => void;
+  export let vacationCount: number = 0;
   export let onSelectAll: () => void = () => {};
   export let onClearAll: () => void = () => {};
 
@@ -146,6 +147,9 @@
     <span><i class="dot blocked"></i>Weekend (X)</span>
   </div>
   <div class="bulk-actions">
+    {#if vacationCount > 0}
+      <span class="vacation-count">{vacationCount} day{vacationCount !== 1 ? 's' : ''}</span>
+    {/if}
     <button
       type="button"
       class="bulk-btn"
@@ -155,16 +159,16 @@
     >
       Select all
     </button>
-    {#if hasVacation}
-      <button
-        type="button"
-        class="bulk-btn clear"
-        on:click={onClearAll}
-        title="Remove all vacation selections"
-      >
-        Clear
-      </button>
-    {/if}
+    <button
+      type="button"
+      class="bulk-btn clear"
+      class:bulk-btn-hidden={!hasVacation}
+      on:click={onClearAll}
+      disabled={!hasVacation}
+      title="Remove all vacation selections"
+    >
+      Clear
+    </button>
   </div>
 </div>
 
@@ -218,7 +222,11 @@
   </div>
   {#if loadingHolidays}
     <div class="loading-overlay" aria-hidden="true">
-      <span>Refreshing holidays…</span>
+      <span
+        >Refreshing holidays<span class="loading-dots"
+          ><span>.</span><span>.</span><span>.</span></span
+        ></span
+      >
     </div>
   {/if}
 </div>
@@ -284,12 +292,37 @@
     background: rgba(249, 241, 244, 0.92);
   }
 
+  .bulk-btn.clear.bulk-btn-hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .vacation-count {
+    color: var(--accent-strong);
+    font-size: 0.78rem;
+    font-weight: 600;
+    align-self: center;
+    white-space: nowrap;
+  }
+
   .calendar-wrapper {
     position: relative;
   }
 
+  @keyframes shimmer {
+    0% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.55;
+    }
+    100% {
+      opacity: 0.4;
+    }
+  }
+
   .calendar-wrapper.loading .calendar-grid {
-    opacity: 0.4;
+    animation: shimmer 2s ease-in-out infinite;
     pointer-events: none;
   }
 
@@ -311,6 +344,31 @@
     box-shadow: var(--shadow-sm);
   }
 
+  @keyframes pulse-dots {
+    0%,
+    20% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .loading-overlay .loading-dots span {
+    animation: pulse-dots 1.4s infinite;
+  }
+
+  .loading-overlay .loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .loading-overlay .loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
   .dot {
     width: 0.72rem;
     height: 0.72rem;
@@ -328,8 +386,8 @@
   }
 
   .dot.blocked {
-    background: #9fa8b8;
-    border-color: #7a8496;
+    background: transparent;
+    border: 2px dashed #7a8496;
   }
 
   .dot.holiday {
@@ -408,7 +466,7 @@
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.24),
       0 10px 16px rgba(24, 67, 141, 0.24);
-    transform: translateY(-1px);
+    transform: none;
   }
 
   .day-cell.selected strong,
@@ -558,9 +616,9 @@
     }
 
     .status-pill {
-      width: 1.1rem;
-      height: 1.1rem;
-      font-size: 0.68rem;
+      width: 1.22rem;
+      height: 1.22rem;
+      font-size: 0.72rem;
     }
   }
 </style>

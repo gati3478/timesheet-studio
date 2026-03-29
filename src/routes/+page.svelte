@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { format, getDaysInMonth, isWeekend } from 'date-fns';
   import { MONTHS, MIN_YEAR, MAX_YEAR } from '$lib/constants';
   import type { DayItem, CalendarCell } from '$lib/calendar-types';
@@ -52,6 +52,7 @@
 
   let generationError = '';
   let generationDetails: string[] = [];
+  let generationInfo = '';
   let isGenerating = false;
 
   let shutdownError = '';
@@ -164,6 +165,7 @@
 
     generationError = '';
     generationDetails = [];
+    generationInfo = '';
     profileMessage = '';
     isGenerating = true;
 
@@ -197,7 +199,7 @@
         if (response.status === 400 && !isEditingProfile) {
           openProfileEditor();
           // Set AFTER openProfileEditor(): it calls syncDraftsFromProfile() which clears profileError
-          profileError = body.message ?? 'Validation failed.';
+          profileError = 'Please fix the following:';
           profileDetails = Array.isArray(body.details) ? body.details : [];
           const result = validateProfile({
             companyCode: draftCompanyCode,
@@ -208,6 +210,12 @@
           // Clear generation error since it's now shown in profile section
           generationError = '';
           generationDetails = [];
+          generationInfo = 'Profile errors found \u2014 check the fields highlighted above.';
+
+          await tick();
+          document
+            .querySelector('.profile-status')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
         return;
       }
@@ -438,6 +446,7 @@
           class:loading={isGenerating || loadingHolidays}
           on:click={generateTimesheet}
           disabled={isGenerating || loadingHolidays || isShuttingDown}
+          aria-busy={isGenerating || loadingHolidays}
         >
           {#if isGenerating}Generating…{:else if loadingHolidays}Loading holidays…{:else}Generate
             Timesheet{/if}
@@ -446,6 +455,7 @@
 
       <div class="status-stack" aria-live="polite">
         <StatusMessage text={generationError} details={generationDetails} variant="error" />
+        <StatusMessage text={generationInfo} variant="info" />
         <StatusMessage text={shutdownError} variant="error" />
         <StatusMessage text={shutdownMessage} variant="info" />
 
@@ -482,6 +492,7 @@
         {calendarCells}
         {loadingHolidays}
         hasVacation={summary.vacationDayCount > 0}
+        vacationCount={summary.vacationDayCount}
         onBatchSetVacation={batchSetVacation}
         onSelectAll={selectAllWorkdays}
         onClearAll={clearAllVacation}
@@ -489,7 +500,7 @@
     </article>
   </section>
 
-  <SummaryMetrics {summary} />
+  <SummaryMetrics {summary} loading={loadingHolidays} />
 </main>
 
 <style>
@@ -586,10 +597,14 @@
 
   .button-row button.loading:disabled {
     cursor: progress;
+    opacity: 0.72;
+    filter: none;
   }
 
   .utility-row {
-    margin-top: var(--space-4);
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-4);
     display: flex;
     justify-content: flex-start;
   }

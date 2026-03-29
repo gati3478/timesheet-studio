@@ -225,6 +225,51 @@ async function captureHolidayLoading(page, stateDir, viewportName) {
   await capture(page, stateDir, 'holiday-loading', viewportName);
 }
 
+/**
+ * G: Server Error — trigger a non-validation (500) generation error
+ * that appears in the status-stack rather than being routed to the profile section.
+ */
+async function captureServerError(page, stateDir, viewportName) {
+  await page.goto(baseUrl, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(500);
+
+  // Fill profile fields so the 400 validation path is avoided
+  const editBtn = page.locator('button', { hasText: 'Edit Profile' });
+  if ((await editBtn.count()) > 0) {
+    await editBtn.click();
+    await page.waitForTimeout(200);
+    await page.locator('input[placeholder="e.g. 123456789"]').first().fill('123456');
+    await page.locator('input[placeholder="e.g. First Last"]').first().fill('Test Employee');
+    await page.locator('input[placeholder="e.g. 12345678901"]').first().fill('12345678901');
+    const saveBtn = page.locator('button', { hasText: 'Save Profile' });
+    if ((await saveBtn.count()) > 0) await saveBtn.click();
+    await page.waitForTimeout(200);
+  }
+
+  // Intercept generate API with 500 server error
+  await page.route('**/api/timesheet/generate', (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        message: 'Internal server error: template engine failed.'
+      })
+    })
+  );
+
+  const generateBtn = page.locator('button', { hasText: 'Generate Timesheet' });
+  if ((await generateBtn.count()) > 0 && (await generateBtn.isEnabled())) {
+    await generateBtn.click();
+    try {
+      await page.waitForSelector('.status-error', { timeout: 5000 });
+    } catch {
+      await page.waitForTimeout(500);
+    }
+  }
+
+  await capture(page, stateDir, 'server-error', viewportName);
+}
+
 // ── State registry ───────────────────────────────────────
 
 const STATES = [
@@ -237,7 +282,8 @@ const STATES = [
     fn: captureProfileValidationError
   },
   { name: 'generation-error', dir: 'E-generation-error', fn: captureGenerationError },
-  { name: 'holiday-loading', dir: 'F-holiday-loading', fn: captureHolidayLoading }
+  { name: 'holiday-loading', dir: 'F-holiday-loading', fn: captureHolidayLoading },
+  { name: 'server-error', dir: 'G-server-error', fn: captureServerError }
 ];
 
 // ── Main ─────────────────────────────────────────────────

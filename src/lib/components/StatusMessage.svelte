@@ -19,4 +19,12 @@
   .variant-error {
     color: var(--color-error);
   }
+
+  .variant-success {
+    color: var(--color-success);
+  }
+
+  .variant-info {
+    color: var(--color-info);
+  }
 </style>

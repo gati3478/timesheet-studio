@@ -5,6 +5,7 @@ import {
   isValidEmployeeName,
   isValidEmployeeId
 } from './validation';
+import { getStorage } from './storage';
 
 const PROFILE_STORAGE_KEY = 'timesheet.profile.v1';
 
@@ -105,12 +106,12 @@ export function repairProfileSnapshot(snapshot: ProfileSnapshot): ProfileSnapsho
   };
 }
 
-export function persistProfile(profile: ProfileSnapshot): void {
-  localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+export async function persistProfile(profile: ProfileSnapshot): Promise<void> {
+  await getStorage().setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
 }
 
-export function loadSavedProfile(): ProfileSnapshot | null {
-  const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
+export async function loadSavedProfile(): Promise<ProfileSnapshot | null> {
+  const saved = await getStorage().getItem(PROFILE_STORAGE_KEY);
   if (!saved) return null;
 
   try {
@@ -122,7 +123,7 @@ export function loadSavedProfile(): ProfileSnapshot | null {
       employeeId: typeof parsed.employeeId === 'string' ? parsed.employeeId : ''
     });
   } catch {
-    localStorage.removeItem(PROFILE_STORAGE_KEY);
+    await getStorage().removeItem(PROFILE_STORAGE_KEY);
     return null;
   }
 }

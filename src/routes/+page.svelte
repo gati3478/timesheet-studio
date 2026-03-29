@@ -160,7 +160,7 @@
 
   async function generateTimesheet(): Promise<void> {
     if (isEditingProfile) {
-      if (!saveProfile()) return;
+      if (!(await saveProfile())) return;
     }
 
     generationError = '';
@@ -266,7 +266,7 @@
     isEditingProfile = false;
   }
 
-  function saveProfile(): boolean {
+  async function saveProfile(): Promise<boolean> {
     const result = validateProfile({
       companyCode: draftCompanyCode,
       employeeName: draftEmployeeName,
@@ -286,20 +286,20 @@
     employeeId = draftEmployeeId.trim();
     syncDraftsFromProfile();
 
-    persistProfile({ companyCode, employeeName, employeeId });
+    await persistProfile({ companyCode, employeeName, employeeId });
     isEditingProfile = false;
     profileMessage = 'Profile saved.';
     return true;
   }
 
-  function resetProfile(): void {
+  async function resetProfile(): Promise<void> {
     companyCode = DEFAULT_COMPANY_CODE;
     employeeName = DEFAULT_EMPLOYEE_NAME;
     employeeId = DEFAULT_EMPLOYEE_ID;
     syncDraftsFromProfile();
     isEditingProfile = false;
     profileMessage = 'Profile reset to defaults.';
-    persistProfile({ companyCode, employeeName, employeeId });
+    await persistProfile({ companyCode, employeeName, employeeId });
   }
 
   // ── Shutdown ─────────────────────────────────────────────
@@ -374,7 +374,7 @@
   // ── Lifecycle ────────────────────────────────────────────
 
   onMount(async () => {
-    const saved = loadSavedProfile();
+    const saved = await loadSavedProfile();
     if (saved) {
       companyCode = saved.companyCode;
       employeeName = saved.employeeName;

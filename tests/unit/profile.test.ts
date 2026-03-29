@@ -1,5 +1,19 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { isNumeric, looksLikeName } from '../../src/lib/validation';
+
+const store = new Map<string, string>();
+vi.mock('$lib/storage', () => ({
+  getStorage: () => ({
+    getItem: async (key: string) => store.get(key) ?? null,
+    setItem: async (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: async (key: string) => {
+      store.delete(key);
+    }
+  })
+}));
+
 import {
   normalizeCompanyCode,
   normalizeEmployeeId,
@@ -10,16 +24,6 @@ import {
   validateProfile,
   NO_FIELD_ERRORS
 } from '../../src/lib/profile';
-
-// Minimal localStorage mock for Node environment
-const store = new Map<string, string>();
-const localStorageMock = {
-  getItem: (key: string) => store.get(key) ?? null,
-  setItem: (key: string, value: string) => store.set(key, value),
-  removeItem: (key: string) => store.delete(key),
-  clear: () => store.clear()
-};
-Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 
 describe('isNumeric', () => {
   it('returns true for digit-only strings', () => {
@@ -198,17 +202,17 @@ describe('validateProfile', () => {
 
 describe('persistProfile', () => {
   beforeEach(() => {
-    localStorage.clear();
+    store.clear();
   });
 
-  it('saves the profile to localStorage', () => {
-    persistProfile({
+  it('saves the profile to storage', async () => {
+    await persistProfile({
       companyCode: '123456789',
       employeeName: 'Test',
       employeeId: '12345678901'
     });
-    const saved = localStorage.getItem('timesheet.profile.v1');
-    expect(saved).not.toBeNull();
+    const saved = store.get('timesheet.profile.v1');
+    expect(saved).toBeDefined();
     const parsed = JSON.parse(saved!);
     expect(parsed.companyCode).toBe('123456789');
     expect(parsed.employeeName).toBe('Test');
@@ -218,15 +222,15 @@ describe('persistProfile', () => {
 
 describe('loadSavedProfile', () => {
   beforeEach(() => {
-    localStorage.clear();
+    store.clear();
   });
 
-  it('returns null when no profile is saved', () => {
-    expect(loadSavedProfile()).toBeNull();
+  it('returns null when no profile is saved', async () => {
+    expect(await loadSavedProfile()).toBeNull();
   });
 
-  it('returns a repaired profile from valid localStorage data', () => {
-    localStorage.setItem(
+  it('returns a repaired profile from valid stored data', async () => {
+    store.set(
       'timesheet.profile.v1',
       JSON.stringify({
         companyCode: '123456789',
@@ -234,7 +238,7 @@ describe('loadSavedProfile', () => {
         employeeId: '12345678901'
       })
     );
-    const result = loadSavedProfile();
+    const result = await loadSavedProfile();
     expect(result).toEqual({
       companyCode: '123456789',
       employeeName: 'John Doe',
@@ -242,30 +246,30 @@ describe('loadSavedProfile', () => {
     });
   });
 
-  it('removes corrupted data and returns null', () => {
-    localStorage.setItem('timesheet.profile.v1', '{invalid json');
-    const result = loadSavedProfile();
+  it('removes corrupted data and returns null', async () => {
+    store.set('timesheet.profile.v1', '{invalid json');
+    const result = await loadSavedProfile();
     expect(result).toBeNull();
-    expect(localStorage.getItem('timesheet.profile.v1')).toBeNull();
+    expect(store.has('timesheet.profile.v1')).toBe(false);
   });
 
-  it('handles missing fields with empty-string defaults', () => {
-    localStorage.setItem('timesheet.profile.v1', JSON.stringify({ companyCode: '123456789' }));
-    const result = loadSavedProfile();
+  it('handles missing fields with empty-string defaults', async () => {
+    store.set('timesheet.profile.v1', JSON.stringify({ companyCode: '123456789' }));
+    const result = await loadSavedProfile();
     expect(result).not.toBeNull();
     expect(result!.companyCode).toBe('123456789');
     expect(result!.employeeName).toBe('');
     expect(result!.employeeId).toBe('');
   });
 
-  it('does not overwrite localStorage on load', () => {
+  it('does not overwrite stored data on load', async () => {
     const original = JSON.stringify({
       companyCode: '  123456789  ',
       employeeName: '  John  ',
       employeeId: '12345678901'
     });
-    localStorage.setItem('timesheet.profile.v1', original);
-    loadSavedProfile();
-    expect(localStorage.getItem('timesheet.profile.v1')).toBe(original);
+    store.set('timesheet.profile.v1', original);
+    await loadSavedProfile();
+    expect(store.get('timesheet.profile.v1')).toBe(original);
   });
 });

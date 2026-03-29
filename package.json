@@ -89,6 +89,7 @@
     "@sveltejs/vite-plugin-svelte": "^6.0.0"
   },
   "dependencies": {
+    "@tauri-apps/plugin-store": "^2.4.2",
     "@xmldom/xmldom": "^0.8.10",
     "cheerio": "^1.0.0",
     "date-fns": "^3.6.0",

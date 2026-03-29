@@ -1,4 +1,5 @@
 import type { OutputFormat } from './constants';
+import { getStorage } from './storage';
 
 /** Detect whether the app is running inside a Tauri webview. */
 export function isTauriApp(): boolean {
@@ -9,7 +10,7 @@ const LAST_SAVE_DIR_KEY = 'timesheet.lastSaveDir';
 
 /**
  * Show a native Save As dialog and write the file to the chosen path.
- * Remembers the last-used directory in localStorage for subsequent saves.
+ * Remembers the last-used directory for subsequent saves.
  * Resolves silently if the user cancels the dialog.
  */
 export async function saveFileWithDialog(
@@ -20,7 +21,7 @@ export async function saveFileWithDialog(
   const { save } = await import('@tauri-apps/plugin-dialog');
   const { writeFile } = await import('@tauri-apps/plugin-fs');
 
-  const lastDir = localStorage.getItem(LAST_SAVE_DIR_KEY);
+  const lastDir = await getStorage().getItem(LAST_SAVE_DIR_KEY);
   const defaultPath = lastDir ? `${lastDir}/${suggestedFilename}` : suggestedFilename;
 
   const filters = [
@@ -42,6 +43,6 @@ export async function saveFileWithDialog(
 
   const lastSlash = Math.max(chosenPath.lastIndexOf('/'), chosenPath.lastIndexOf('\\'));
   if (lastSlash > 0) {
-    localStorage.setItem(LAST_SAVE_DIR_KEY, chosenPath.substring(0, lastSlash));
+    await getStorage().setItem(LAST_SAVE_DIR_KEY, chosenPath.substring(0, lastSlash));
   }
 }

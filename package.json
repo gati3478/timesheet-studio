@@ -92,7 +92,7 @@
     "@tauri-apps/plugin-store": "^2.4.2",
     "@xmldom/xmldom": "^0.8.10",
     "cheerio": "^1.0.0",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.1.0",
     "iconv-lite": "^0.6.3",
     "jszip": "^3.10.1",
     "xpath": "^0.0.34"

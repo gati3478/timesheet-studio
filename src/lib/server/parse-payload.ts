@@ -1,13 +1,15 @@
 import { TimesheetValidationError } from './timesheet';
 import { MIN_YEAR, MAX_YEAR } from '../constants';
-import type { TimesheetGenerateRequest } from './types';
+import { isValidCompanyCode, isValidEmployeeId } from '../validation';
+import type { OutputFormat, TimesheetGenerateRequest } from './types';
 
 const MAX_EMPLOYEE_NAME_LENGTH = 500;
 const MAX_COMPANY_CODE_LENGTH = 20;
 const MAX_EMPLOYEE_ID_LENGTH = 20;
 const MAX_VACATION_DATES = 31;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-function isValidOutputFormat(value: unknown): value is 'docx' | 'doc' {
+function isValidOutputFormat(value: unknown): value is OutputFormat {
   return value === 'docx' || value === 'doc';
 }
 
@@ -47,11 +49,11 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
     MAX_COMPANY_CODE_LENGTH
   );
 
-  if (!/^\d{6,12}$/.test(companyCode)) {
+  if (!isValidCompanyCode(companyCode)) {
     throw new TimesheetValidationError('Company code must be numeric (6\u201312 digits).', []);
   }
 
-  if (!/^\d{11}$/.test(employeeId)) {
+  if (!isValidEmployeeId(employeeId)) {
     throw new TimesheetValidationError('Employee ID must be exactly 11 digits.', []);
   }
 
@@ -71,7 +73,6 @@ export function parsePayload(payload: unknown): TimesheetGenerateRequest {
     throw new TimesheetValidationError('All vacation dates must be strings.', []);
   }
 
-  const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   const malformedDates = body.vacationDates.filter((d: string) => !ISO_DATE_RE.test(d));
   if (malformedDates.length > 0) {
     throw new TimesheetValidationError('Vacation dates must be in YYYY-MM-DD format.', []);

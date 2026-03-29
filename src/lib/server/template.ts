@@ -8,7 +8,7 @@ function resolveTemplatePath(): string {
   const envDir = process.env.TEMPLATE_DIR;
   if (envDir) {
     const resolved = path.resolve(envDir, TEMPLATE_FILENAME);
-    if (!resolved.endsWith(path.sep + TEMPLATE_FILENAME) && !resolved.endsWith(TEMPLATE_FILENAME)) {
+    if (!resolved.endsWith(path.sep + TEMPLATE_FILENAME)) {
       throw new Error('TEMPLATE_DIR resolved to an unexpected path.');
     }
     return resolved;

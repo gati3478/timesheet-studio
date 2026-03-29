@@ -30,25 +30,18 @@ describe('Security headers hook', () => {
     expect(result.headers.get('X-Frame-Options')).toBe('DENY');
     expect(result.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
     expect(result.headers.get('X-XSS-Protection')).toBe('0');
-    expect(result.headers.get('Content-Security-Policy')).toContain("default-src 'self'");
     expect(result.headers.get('Permissions-Policy')).toContain('camera=()');
     expect(result.headers.get('Cross-Origin-Opener-Policy')).toBe('same-origin');
   });
 
-  it('CSP includes all required directives', async () => {
+  it('does not set CSP header (managed by SvelteKit csp config)', async () => {
     const { handle } = await import('../../src/hooks.server');
     const result = await handle({
       event: makeEvent(),
       resolve: async () => new Response('ok')
     });
-    const csp = result.headers.get('Content-Security-Policy')!;
 
-    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
-    expect(csp).toContain("style-src 'self' 'unsafe-inline'");
-    expect(csp).toContain("img-src 'self' data:");
-    expect(csp).toContain("font-src 'self'");
-    expect(csp).toContain("connect-src 'self' blob:");
-    expect(csp).toContain("frame-ancestors 'none'");
+    expect(result.headers.get('Content-Security-Policy')).toBeNull();
   });
 
   it('Permissions-Policy blocks all sensitive APIs', async () => {

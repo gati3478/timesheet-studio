@@ -1,17 +1,17 @@
+import {
+  isNumeric,
+  looksLikeName,
+  isValidCompanyCode,
+  isValidEmployeeName,
+  isValidEmployeeId
+} from './validation';
+
 const PROFILE_STORAGE_KEY = 'timesheet.profile.v1';
 
 export interface ProfileSnapshot {
   companyCode: string;
   employeeName: string;
   employeeId: string;
-}
-
-export function isNumeric(value: string): boolean {
-  return /^\d+$/.test(value.trim());
-}
-
-export function looksLikeName(value: string): boolean {
-  return /[^\d\s]/.test(value.trim());
 }
 
 function normalizeField(value: string, isValid: (v: string) => boolean): string {
@@ -42,18 +42,6 @@ export const NO_FIELD_ERRORS: Readonly<FieldErrors> = Object.freeze({
   employeeName: false,
   employeeId: false
 });
-
-function isValidCompanyCode(value: string): boolean {
-  return value.length >= 6 && value.length <= 12 && isNumeric(value);
-}
-
-function isValidEmployeeName(value: string): boolean {
-  return value.length > 0 && looksLikeName(value);
-}
-
-function isValidEmployeeId(value: string): boolean {
-  return /^\d{11}$/.test(value);
-}
 
 export interface ProfileValidationResult {
   messages: string[];
@@ -111,9 +99,9 @@ export function repairProfileSnapshot(snapshot: ProfileSnapshot): ProfileSnapsho
   }
 
   return {
-    companyCode: normalizeCompanyCode(nextCompanyCode),
-    employeeName: normalizeEmployeeName(nextEmployeeName),
-    employeeId: normalizeEmployeeId(nextEmployeeId)
+    companyCode: nextCompanyCode,
+    employeeName: nextEmployeeName,
+    employeeId: nextEmployeeId
   };
 }
 
@@ -128,14 +116,11 @@ export function loadSavedProfile(): ProfileSnapshot | null {
   try {
     const parsed = JSON.parse(saved) as Partial<ProfileSnapshot>;
 
-    const fixed = repairProfileSnapshot({
+    return repairProfileSnapshot({
       companyCode: typeof parsed.companyCode === 'string' ? parsed.companyCode : '',
       employeeName: typeof parsed.employeeName === 'string' ? parsed.employeeName : '',
       employeeId: typeof parsed.employeeId === 'string' ? parsed.employeeId : ''
     });
-
-    persistProfile(fixed);
-    return fixed;
   } catch {
     localStorage.removeItem(PROFILE_STORAGE_KEY);
     return null;

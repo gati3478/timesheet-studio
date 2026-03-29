@@ -12,7 +12,7 @@
   "app": {
     "windows": [],
     "security": {
-      "csp": "default-src http://127.0.0.1:*; script-src http://127.0.0.1:* 'unsafe-inline'; style-src http://127.0.0.1:* 'unsafe-inline'; connect-src http://127.0.0.1:* blob:; img-src http://127.0.0.1:* data:; font-src http://127.0.0.1:*; frame-ancestors 'none'"
+      "csp": "default-src 'self' http://127.0.0.1:*; script-src 'self' http://127.0.0.1:*; style-src 'self' http://127.0.0.1:* 'unsafe-inline'; connect-src 'self' http://127.0.0.1:* blob:; img-src 'self' http://127.0.0.1:* data:; font-src 'self' http://127.0.0.1:*; frame-ancestors 'none'"
     }
   },
   "bundle": {

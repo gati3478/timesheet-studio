@@ -157,7 +157,7 @@ function extractDatesFromText(text: string, fallbackYear: number): string[] {
     }
   }
 
-  const geRangeRegex = /(?<!\d)(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+([ა-ჰ]+)/giu;
+  const geRangeRegex = /(?<!\d)(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+([ა-ჰ]+)/gu;
   for (const match of text.matchAll(geRangeRegex)) {
     const start = Number(match[1]);
     const end = Number(match[2]);
@@ -174,7 +174,7 @@ function extractDatesFromText(text: string, fallbackYear: number): string[] {
     }
   }
 
-  const geSingleRegex = /(?<!\d)(\d{1,2})\s+([ა-ჰ]+)/giu;
+  const geSingleRegex = /(?<!\d)(\d{1,2})\s+([ა-ჰ]+)/gu;
   for (const match of text.matchAll(geSingleRegex)) {
     const day = Number(match[1]);
     const month = findMonthNumber(match[2]);
@@ -197,7 +197,7 @@ type MonthContext = {
 };
 
 function extractMonthContext(text: string, fallbackYear: number): MonthContext | null {
-  const monthWithYearRegex = /([ა-ჰ]+)\s*,?\s*(\d{4})/giu;
+  const monthWithYearRegex = /([ა-ჰ]+)\s*,?\s*(\d{4})/gu;
 
   for (const withYearMatch of text.matchAll(monthWithYearRegex)) {
     const month = findMonthNumber(withYearMatch[1]);
@@ -212,7 +212,7 @@ function extractMonthContext(text: string, fallbackYear: number): MonthContext |
     return null;
   }
 
-  const monthOnlyRegex = /^([ა-ჰ]+)$/iu;
+  const monthOnlyRegex = /^([ა-ჰ]+)$/u;
   const monthOnlyMatch = monthOnlyRegex.exec(normalized);
   if (!monthOnlyMatch) {
     return null;
@@ -331,10 +331,9 @@ function parseHolidayEntries(html: string, year: number): HolidayEntry[] {
     if (!/\d/.test(line)) continue;
 
     const stateOnly = isStateOnlyHoliday(line);
-    const lineYear = contextYear ?? year;
     const dates = [
-      ...extractDatesFromText(line, lineYear),
-      ...extractDayOnlyDatesFromText(line, lineYear, contextMonth)
+      ...extractDatesFromText(line, contextYear),
+      ...extractDayOnlyDatesFromText(line, contextYear, contextMonth)
     ];
 
     for (const date of dates) {

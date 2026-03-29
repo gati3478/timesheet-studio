@@ -6,11 +6,12 @@
   export let selectedMonth: number;
   export let calendarCells: CalendarCell[];
   export let loadingHolidays: boolean = false;
-  export let hasVacation: boolean = false;
   export let onBatchSetVacation: (dateIsos: string[], isVacation: boolean) => void;
   export let vacationCount: number = 0;
   export let onSelectAll: () => void = () => {};
   export let onClearAll: () => void = () => {};
+
+  $: hasVacation = vacationCount > 0;
 
   // ── Drag state ───────────────────────────────────────────
   let dragging = false;
@@ -342,31 +343,6 @@
     font-size: 0.85rem;
     font-weight: 600;
     box-shadow: var(--shadow-sm);
-  }
-
-  @keyframes pulse-dots {
-    0%,
-    20% {
-      opacity: 0;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-
-  .loading-overlay .loading-dots span {
-    animation: pulse-dots 1.4s infinite;
-  }
-
-  .loading-overlay .loading-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-
-  .loading-overlay .loading-dots span:nth-child(3) {
-    animation-delay: 0.4s;
   }
 
   .dot {

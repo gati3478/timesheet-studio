@@ -16,6 +16,7 @@
   import { buildOutputFilename } from '$lib/filename';
   import { persistProfile, loadSavedProfile, validateProfile, NO_FIELD_ERRORS } from '$lib/profile';
   import type { FieldErrors } from '$lib/profile';
+  import type { OutputFormat } from '$lib/constants';
   import type { PageData } from './$types';
 
   export let data: PageData;
@@ -41,7 +42,7 @@
   let profileMessage = '';
   let fieldErrors: FieldErrors = { ...NO_FIELD_ERRORS };
 
-  let outputFormat: 'docx' | 'doc' = data.docExportAvailable ? 'doc' : 'docx';
+  let outputFormat: OutputFormat = data.docExportAvailable ? 'doc' : 'docx';
 
   let holidayDates = new Set<string>();
   let holidayError = '';
@@ -117,7 +118,6 @@
       );
       loadedHolidayYear = year;
 
-      // Purge vacation dates that now conflict with newly-loaded holidays
       const conflicting = [...vacationDates].filter((d) => holidayDates.has(d));
       if (conflicting.length > 0) {
         for (const d of conflicting) vacationDates.delete(d);
@@ -207,7 +207,6 @@
             employeeId: draftEmployeeId
           });
           fieldErrors = result.fieldErrors;
-          // Clear generation error since it's now shown in profile section
           generationError = '';
           generationDetails = [];
           generationInfo = 'Profile errors found \u2014 check the fields highlighted above.';
@@ -496,7 +495,6 @@
         {selectedMonth}
         {calendarCells}
         {loadingHolidays}
-        hasVacation={summary.vacationDayCount > 0}
         vacationCount={summary.vacationDayCount}
         onBatchSetVacation={batchSetVacation}
         onSelectAll={selectAllWorkdays}
@@ -646,31 +644,6 @@
     display: grid;
     align-content: start;
     gap: var(--space-2);
-  }
-
-  @keyframes pulse-dots {
-    0%,
-    20% {
-      opacity: 0;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-
-  .status-info .loading-dots span {
-    animation: pulse-dots 1.4s infinite;
-  }
-
-  .status-info .loading-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-
-  .status-info .loading-dots span:nth-child(3) {
-    animation-delay: 0.4s;
   }
 
   @media (max-width: 1024px) {

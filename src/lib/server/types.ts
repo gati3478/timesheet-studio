@@ -1,3 +1,7 @@
+import type { OutputFormat } from '../constants';
+
+export type { OutputFormat };
+
 export type DayCode = '8' | 'X' | 'შ' | '';
 
 export interface HolidayEntry {
@@ -13,7 +17,7 @@ export interface TimesheetGenerateRequest {
   employeeName: string;
   employeeId: string;
   vacationDates: string[];
-  outputFormat: 'docx' | 'doc';
+  outputFormat: OutputFormat;
 }
 
 export interface ComputedTimesheet {

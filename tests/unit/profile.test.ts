@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { isNumeric, looksLikeName } from '../../src/lib/validation';
 import {
-  isNumeric,
-  looksLikeName,
   normalizeCompanyCode,
   normalizeEmployeeId,
   normalizeEmployeeName,
@@ -157,15 +156,15 @@ describe('repairProfileSnapshot', () => {
     expect(result.employeeId).toBe('12345678901');
   });
 
-  it('normalizes invalid values to empty strings', () => {
+  it('preserves invalid values without blanking them', () => {
     const result = repairProfileSnapshot({
       companyCode: 'abc',
       employeeName: '12345',
       employeeId: 'short'
     });
-    expect(result.companyCode).toBe('');
-    expect(result.employeeName).toBe('');
-    expect(result.employeeId).toBe('');
+    expect(result.companyCode).toBe('abc');
+    expect(result.employeeName).toBe('12345');
+    expect(result.employeeId).toBe('short');
   });
 });
 
@@ -259,18 +258,14 @@ describe('loadSavedProfile', () => {
     expect(result!.employeeId).toBe('');
   });
 
-  it('persists the repaired profile back to localStorage', () => {
-    localStorage.setItem(
-      'timesheet.profile.v1',
-      JSON.stringify({
-        companyCode: '  123456789  ',
-        employeeName: '  John  ',
-        employeeId: '12345678901'
-      })
-    );
+  it('does not overwrite localStorage on load', () => {
+    const original = JSON.stringify({
+      companyCode: '  123456789  ',
+      employeeName: '  John  ',
+      employeeId: '12345678901'
+    });
+    localStorage.setItem('timesheet.profile.v1', original);
     loadSavedProfile();
-    const repersisted = JSON.parse(localStorage.getItem('timesheet.profile.v1')!);
-    expect(repersisted.companyCode).toBe('123456789');
-    expect(repersisted.employeeName).toBe('John');
+    expect(localStorage.getItem('timesheet.profile.v1')).toBe(original);
   });
 });

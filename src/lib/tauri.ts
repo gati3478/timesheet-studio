@@ -1,3 +1,5 @@
+import type { OutputFormat } from './constants';
+
 /** Detect whether the app is running inside a Tauri webview. */
 export function isTauriApp(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -13,7 +15,7 @@ const LAST_SAVE_DIR_KEY = 'timesheet.lastSaveDir';
 export async function saveFileWithDialog(
   blob: Blob,
   suggestedFilename: string,
-  extension: 'docx' | 'doc'
+  extension: OutputFormat
 ): Promise<void> {
   const { save } = await import('@tauri-apps/plugin-dialog');
   const { writeFile } = await import('@tauri-apps/plugin-fs');
@@ -38,7 +40,6 @@ export async function saveFileWithDialog(
   const data = new Uint8Array(await blob.arrayBuffer());
   await writeFile(chosenPath, data);
 
-  // Remember directory for next time
   const lastSlash = Math.max(chosenPath.lastIndexOf('/'), chosenPath.lastIndexOf('\\'));
   if (lastSlash > 0) {
     localStorage.setItem(LAST_SAVE_DIR_KEY, chosenPath.substring(0, lastSlash));

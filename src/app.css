@@ -38,6 +38,10 @@
   --shadow-md: 0 14px 28px rgba(31, 68, 126, 0.12);
 }
 
+.body-wrapper {
+  display: contents;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -153,6 +157,33 @@ body.tauri-app {
 
 .status-list li + li {
   margin-top: 0.2rem;
+}
+
+/* ── Loading dots animation ───────────────────── */
+
+@keyframes pulse-dots {
+  0%,
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.loading-dots span {
+  animation: pulse-dots 1.4s infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 @media (prefers-reduced-motion: reduce) {

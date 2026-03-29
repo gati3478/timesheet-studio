@@ -1,11 +1,12 @@
 import { slugify } from './slugify';
 import { MONTHS } from './constants';
+import type { OutputFormat } from './constants';
 
 export function buildOutputFilename(
   employeeName: string,
   year: number,
   month: number,
-  extension: 'docx' | 'doc'
+  extension: OutputFormat
 ): string {
   const monthIndex = month - 1;
   if (monthIndex < 0 || monthIndex > 11) {

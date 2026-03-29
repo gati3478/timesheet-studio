@@ -2,6 +2,8 @@ export const HOURS_PER_WORKDAY = 8;
 export const MIN_YEAR = 2000;
 export const MAX_YEAR = 2100;
 
+export type OutputFormat = 'docx' | 'doc';
+
 export const MONTHS = [
   { value: 1, label: 'January', short: 'Jan' },
   { value: 2, label: 'February', short: 'Feb' },

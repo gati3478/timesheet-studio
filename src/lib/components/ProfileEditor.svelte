@@ -1,11 +1,12 @@
 <script lang="ts">
   import StatusMessage from './StatusMessage.svelte';
   import { NO_FIELD_ERRORS, type FieldErrors } from '$lib/profile';
+  import type { OutputFormat } from '$lib/constants';
 
   export let draftCompanyCode: string;
   export let draftEmployeeName: string;
   export let draftEmployeeId: string;
-  export let outputFormat: 'docx' | 'doc';
+  export let outputFormat: OutputFormat;
   export let isEditing: boolean;
   export let error: string;
   export let errorDetails: string[] = [];

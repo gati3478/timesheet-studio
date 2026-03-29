@@ -7,9 +7,13 @@ use tauri_plugin_shell::ShellExt;
 struct SidecarChild(Mutex<Option<CommandChild>>);
 
 /// Find an available port by binding to port 0 and reading the assigned port.
-// TODO: Consider passing port 0 to the sidecar and reading the actual port from stdout
-// to eliminate the TOCTOU race between dropping the listener and the sidecar binding.
-// Also narrow the Tauri CSP to the actual port once known (currently allows 127.0.0.1:*).
+// NOTE: The Tauri config CSP uses http://127.0.0.1:* because the port is dynamic
+// and capabilities are static at build time. This is acceptable because the actual
+// CSP enforcement for page content comes from the sidecar's HTTP response headers
+// (hooks.server.ts), which use 'self' — correctly pinning to the specific port.
+// The TOCTOU race between dropping the listener and the sidecar binding is a minor
+// concern; to eliminate it, the sidecar could bind to port 0 and report the actual
+// port via stdout.
 fn get_free_port() -> Result<u16, Box<dyn std::error::Error>> {
     let listener = TcpListener::bind("127.0.0.1:0")?;
     Ok(listener.local_addr()?.port())

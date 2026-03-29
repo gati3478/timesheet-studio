@@ -237,7 +237,12 @@
         URL.revokeObjectURL(href);
       }
     } catch (error) {
-      generationError = error instanceof Error ? error.message : 'Unexpected generation error.';
+      generationError =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'Unexpected generation error.';
     } finally {
       isGenerating = false;
     }

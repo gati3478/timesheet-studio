@@ -327,8 +327,8 @@ export async function fillTimesheetTemplate(input: FillTemplateInput): Promise<B
 
   const rowCells = getEmployeeRowCells(tables);
 
-  setStyledCellText(rowCells[1], input.employeeName);
-  setStyledCellText(rowCells[2], input.employeeId);
+  setStyledCellText(rowCells[1], input.employeeName, { sizeHalfPoints: '14' });
+  setStyledCellText(rowCells[2], input.employeeId, { sizeHalfPoints: '14' });
 
   for (let day = 1; day <= 31; day += 1) {
     const code = input.computed.dayCodesByDay.get(day) ?? '';

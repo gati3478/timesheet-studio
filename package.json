@@ -86,7 +86,8 @@
     "vitest": "^4.0.0"
   },
   "overrides": {
-    "@sveltejs/vite-plugin-svelte": "^7.0.0"
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "cookie": "^0.7.0"
   },
   "dependencies": {
     "@tauri-apps/plugin-store": "^2.4.3",

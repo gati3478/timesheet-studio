@@ -13,8 +13,8 @@ Thanks for your interest in contributing to Timesheet Studio! This is a small ut
 The fastest way to get a working development environment:
 
 ```bash
-git clone https://github.com/gati3478/timesheet-generator.git
-cd timesheet-generator
+git clone https://github.com/gati3478/timesheet-studio.git
+cd timesheet-studio
 npm start
 ```
 
@@ -59,7 +59,7 @@ CI runs all of the above on every push and pull request, so catching issues loca
 
 ## Reporting Bugs & Requesting Features
 
-Use the [issue templates](https://github.com/gati3478/timesheet-generator/issues/new/choose) for bug reports and feature requests.
+Use the [issue templates](https://github.com/gati3478/timesheet-studio/issues/new/choose) for bug reports and feature requests.
 
 ## Security
 

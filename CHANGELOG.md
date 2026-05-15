@@ -36,5 +36,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `npm audit` security audit job in CI pipeline
 - Dependabot for npm and GitHub Actions dependency updates
 
-[Unreleased]: https://github.com/gati3478/timesheet-generator/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/gati3478/timesheet-generator/releases/tag/v1.0.0
+[Unreleased]: https://github.com/gati3478/timesheet-studio/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/gati3478/timesheet-studio/releases/tag/v1.0.0

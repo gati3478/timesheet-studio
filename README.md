@@ -1,6 +1,6 @@
 # Timesheet Studio
 
-[![CI](https://github.com/gati3478/timesheet-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/gati3478/timesheet-generator/actions/workflows/ci.yml)
+[![CI](https://github.com/gati3478/timesheet-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/gati3478/timesheet-studio/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2-ff3e00.svg)](https://kit.svelte.dev/)
@@ -51,8 +51,8 @@ Built for organizations operating under Georgian labor regulations that require 
 ### One-Command Launch
 
 ```bash
-git clone https://github.com/gati3478/timesheet-generator.git
-cd timesheet-generator
+git clone https://github.com/gati3478/timesheet-studio.git
+cd timesheet-studio
 npm start
 ```
 
@@ -205,7 +205,7 @@ Timesheet Studio is also available as a standalone desktop application powered b
 
 ### Download
 
-> Pre-built binaries for macOS, Windows, and Linux are available on the [Releases](https://github.com/gati3478/timesheet-generator/releases) page.
+> Pre-built binaries for macOS, Windows, and Linux are available on the [Releases](https://github.com/gati3478/timesheet-studio/releases) page.
 
 | Platform              | Format              | Size   |
 | --------------------- | ------------------- | ------ |

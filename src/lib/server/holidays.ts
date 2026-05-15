@@ -412,7 +412,7 @@ function mergeHolidayEntries(...groups: HolidayEntry[][]): HolidayEntry[] {
 async function fetchYellHolidayPage(): Promise<string> {
   const response = await fetch(YELL_HOLIDAY_URL, {
     headers: {
-      'User-Agent': 'timesheet-generator/1.0'
+      'User-Agent': 'timesheet-studio/1.0'
     },
     signal: AbortSignal.timeout(10_000),
     redirect: 'error'
@@ -435,7 +435,7 @@ async function fetchYellHolidays(year: number): Promise<HolidayEntry[]> {
 async function fetchNagerHolidays(year: number): Promise<HolidayEntry[]> {
   const response = await fetch(`${NAGER_HOLIDAY_URL}/${year}/GE`, {
     headers: {
-      'User-Agent': 'timesheet-generator/1.0',
+      'User-Agent': 'timesheet-studio/1.0',
       Accept: 'application/json'
     },
     signal: AbortSignal.timeout(10_000),

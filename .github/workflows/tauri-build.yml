@@ -81,6 +81,6 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Timesheet Studio ${{ github.ref_name }}'
-          releaseBody: 'See [CHANGELOG.md](https://github.com/gati3478/timesheet-generator/blob/main/CHANGELOG.md) for details.'
+          releaseBody: 'See [CHANGELOG.md](https://github.com/gati3478/timesheet-studio/blob/main/CHANGELOG.md) for details.'
           releaseDraft: true
           prerelease: false

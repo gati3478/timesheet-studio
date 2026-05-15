@@ -209,9 +209,8 @@ Timesheet Studio is also available as a standalone desktop application powered b
 | Platform              | Format              | Size   |
 | --------------------- | ------------------- | ------ |
 | macOS (Apple Silicon) | `.dmg`              | ~40 MB |
-| macOS (Intel)         | `.dmg`              | ~40 MB |
 | Windows               | `.msi`              | ~40 MB |
-| Linux                 | `.AppImage`, `.deb` | ~45 MB |
+| Linux                 | `.rpm`, `.AppImage` | ~45 MB |
 
 ### Build from Source
 

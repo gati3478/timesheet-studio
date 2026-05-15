@@ -40,8 +40,7 @@ example-*.doc
 example-*.docx
 
 # Claude Code local settings
-.claude/*
-!.claude/skills/
+.claude/
 .mcp.json
 .serena/
 

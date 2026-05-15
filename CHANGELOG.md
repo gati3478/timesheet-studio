@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Corrected the Linux artifact size estimate in the README — split the row so the `.rpm` (~50 MB) and `.AppImage` (~125 MB) sizes are listed separately, with a note explaining why AppImage is larger (bundled runtime + libs vs. system-provided)
 - Removed a stale `.deb` reference in the build-from-source section left over from the 1.0.0 bundle-target switch to `.rpm` + `.AppImage`
+- Dropped redundant unprefixed `app-region` declarations in `TitleBar.svelte`; only the `-webkit-app-region` form is honored by Tauri's webviews, and the bare property tripped a `svelte-check` warning
 
 ## [1.0.0] - 2026-05-15
 

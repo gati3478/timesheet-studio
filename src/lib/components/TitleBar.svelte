@@ -89,7 +89,6 @@
     z-index: 9999;
     user-select: none;
     -webkit-user-select: none;
-    app-region: drag;
     -webkit-app-region: drag;
   }
 
@@ -115,7 +114,6 @@
     transition:
       background-color 120ms ease,
       color 120ms ease;
-    app-region: no-drag;
     -webkit-app-region: no-drag;
   }
 

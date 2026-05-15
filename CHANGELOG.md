@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-03-28
+## [1.0.0] - 2026-05-15
 
 ### Added
 
@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI job dependency graph — e2e and build gate on lint, type-check, and unit tests passing
 - `npm audit` security audit job in CI pipeline
 - Dependabot for npm and GitHub Actions dependency updates
+
+### Changed
+
+- Standardized the runtime on Node.js 24 LTS across `engines.node`, `.nvmrc`, the Dockerfile, and the Tauri sidecar binary (`SIDECAR_NODE_VERSION` 22.16.0 → 24.15.0)
+- Bumped dependency floors: `@tauri-apps/*` 2.11, `@playwright/test` 1.60, `@sveltejs/adapter-node` 5.5, `date-fns` 4.1, `@types/node` 24
+- Pinned `cookie` to `^0.7.0` via `overrides` to close GHSA-pxg6-pf52-xh8x (transitive via SvelteKit)
 
 [Unreleased]: https://github.com/gati3478/timesheet-studio/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/gati3478/timesheet-studio/releases/tag/v1.0.0

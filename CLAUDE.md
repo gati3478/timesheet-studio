@@ -4,23 +4,7 @@ Georgian-format monthly timesheet generator — SvelteKit 2, Svelte 5, TypeScrip
 
 ## Commands
 
-```bash
-npm run dev              # Dev server (port 5173)
-npm run build            # Production build (adapter-node)
-npm run start:prod       # Run production build (node build)
-npm run check            # Type-check with svelte-check
-npm run lint             # Prettier + ESLint check
-npm run format           # Auto-format all files
-npm run test:unit        # Vitest unit + integration tests
-npm run test:e2e         # Playwright e2e tests (needs dev server)
-npm run test:all         # Unit + e2e sequentially
-npm run test:coverage    # Unit tests with coverage report
-npm run doctor           # Environment health check (cross-platform)
-npm run clean            # Remove build artifacts (cross-platform)
-npm run bundle:sidecar   # Bundle SvelteKit server + Node binary for Tauri
-npm run tauri:dev        # Tauri desktop dev mode (needs `npm run dev` first)
-npm run tauri:build      # Full production desktop app build
-```
+The canonical command table lives in [README.md → All Commands](README.md#all-commands). Run `npm run` to list available scripts.
 
 ## Conventions
 

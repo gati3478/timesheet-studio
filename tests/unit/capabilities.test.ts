@@ -12,6 +12,7 @@ vi.mock('node:util', () => ({
 
 describe('isDocExportAvailable', () => {
   afterEach(async () => {
+    mockExecFile.mockReset();
     vi.restoreAllMocks();
     const { __resetDocExportCacheForTests } = await import('../../src/lib/server/capabilities');
     __resetDocExportCacheForTests();

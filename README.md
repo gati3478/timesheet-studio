@@ -206,11 +206,14 @@ Timesheet Studio is also available as a standalone desktop application powered b
 
 > Pre-built binaries for macOS, Windows, and Linux are available on the [Releases](https://github.com/gati3478/timesheet-studio/releases) page.
 
-| Platform              | Format              | Size   |
-| --------------------- | ------------------- | ------ |
-| macOS (Apple Silicon) | `.dmg`              | ~40 MB |
-| Windows               | `.msi`              | ~40 MB |
-| Linux                 | `.rpm`, `.AppImage` | ~45 MB |
+| Platform              | Format      | Size    |
+| --------------------- | ----------- | ------- |
+| macOS (Apple Silicon) | `.dmg`      | ~45 MB  |
+| Windows               | `.msi`      | ~40 MB  |
+| Linux (Fedora/RHEL)   | `.rpm`      | ~50 MB  |
+| Linux (universal)     | `.AppImage` | ~125 MB |
+
+> The `.AppImage` is larger because it bundles a portable runtime and all shared libraries so it runs on any distro. The `.rpm` defers those to system packages.
 
 ### Build from Source
 
@@ -221,7 +224,7 @@ Prerequisites: [Node.js](https://nodejs.org/) v24 LTS, [Rust](https://rustup.rs/
 npm run tauri:build
 ```
 
-The output is in `src-tauri/target/release/bundle/` — a `.dmg` on macOS, `.msi` on Windows, or `.AppImage`/`.deb` on Linux.
+The output is in `src-tauri/target/release/bundle/` — a `.dmg` on macOS, `.msi` on Windows, or `.rpm`/`.AppImage` on Linux.
 
 ### How It Works
 

@@ -1,6 +1,6 @@
 {
   "name": "timesheet-studio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Georgian-format monthly timesheet generator with interactive calendar and DOCX template filling",
   "license": "MIT",
   "author": "Giorgi Petriashvili",

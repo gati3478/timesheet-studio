@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-05-15
+
+### Fixed
+
+- Corrected the Linux artifact size estimate in the README — split the row so the `.rpm` (~50 MB) and `.AppImage` (~125 MB) sizes are listed separately, with a note explaining why AppImage is larger (bundled runtime + libs vs. system-provided)
+- Removed a stale `.deb` reference in the build-from-source section left over from the 1.0.0 bundle-target switch to `.rpm` + `.AppImage`
+
 ## [1.0.0] - 2026-05-15
 
 ### Added
@@ -42,5 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped dependency floors: `@tauri-apps/*` 2.11, `@playwright/test` 1.60, `@sveltejs/adapter-node` 5.5, `date-fns` 4.1, `@types/node` 24
 - Pinned `cookie` to `^0.7.0` via `overrides` to close GHSA-pxg6-pf52-xh8x (transitive via SvelteKit)
 
-[Unreleased]: https://github.com/gati3478/timesheet-studio/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/gati3478/timesheet-studio/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/gati3478/timesheet-studio/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gati3478/timesheet-studio/releases/tag/v1.0.0

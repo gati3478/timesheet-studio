@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/gati3478/timesheet-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/gati3478/timesheet-studio/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/node-%3E%3D24-brightgreen.svg)](https://nodejs.org/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2-ff3e00.svg)](https://kit.svelte.dev/)
 [![Tauri](https://img.shields.io/badge/Tauri-2-ffc131.svg)](https://v2.tauri.app/)
 
@@ -44,7 +44,7 @@ Built for organizations operating under Georgian labor regulations that require 
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v22+ (v24 LTS recommended, pinned in `.nvmrc`)
+- [Node.js](https://nodejs.org/) v24 LTS (pinned in `.nvmrc`)
 - [LibreOffice](https://www.libreoffice.org/) (required for template preparation and `.doc` export)
 
 ### One-Command Launch
@@ -215,7 +215,7 @@ Timesheet Studio is also available as a standalone desktop application powered b
 
 ### Build from Source
 
-Prerequisites: [Node.js](https://nodejs.org/) v22+, [Rust](https://rustup.rs/) toolchain, platform-specific dependencies ([Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)).
+Prerequisites: [Node.js](https://nodejs.org/) v24 LTS, [Rust](https://rustup.rs/) toolchain, platform-specific dependencies ([Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)).
 
 ```bash
 # One command builds everything: SvelteKit → sidecar bundle → Tauri app

@@ -9,7 +9,7 @@
  * 5. Rename to node-server-<target-triple> in src-tauri/binaries/
  *
  * Environment variables:
- *   SIDECAR_NODE_VERSION  — Override the Node.js version to bundle (default: 22.16.0 LTS)
+ *   SIDECAR_NODE_VERSION  — Override the Node.js version to bundle (default: 24.15.0 LTS)
  *   SKIP_NODE_DOWNLOAD    — Set to "1" to skip downloading Node.js (reuse existing binary)
  */
 
@@ -29,7 +29,7 @@ const RESOURCES = join(SRC_TAURI, 'resources');
 const BINARIES = join(SRC_TAURI, 'binaries');
 
 // Pin to Node.js LTS for reproducible, smaller builds (~45 MB vs ~127 MB for current)
-const NODE_VERSION = process.env.SIDECAR_NODE_VERSION || '22.16.0';
+const NODE_VERSION = process.env.SIDECAR_NODE_VERSION || '24.15.0';
 
 /** Get the Rust target triple from rustc */
 function getTargetTriple() {
@@ -132,7 +132,7 @@ async function main() {
     entryPoints: ['build/index.js'],
     bundle: true,
     platform: 'node',
-    target: 'node20',
+    target: 'node24',
     format: 'esm',
     banner: {
       js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);'

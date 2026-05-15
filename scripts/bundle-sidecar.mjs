@@ -21,6 +21,7 @@ import { pipeline } from 'node:stream/promises';
 import { arch, platform } from 'node:os';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { build as esbuild } from 'esbuild';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const SRC_TAURI = join(ROOT, 'src-tauri');
@@ -122,23 +123,24 @@ async function main() {
   mkdirSync(join(RESOURCES, 'templates'), { recursive: true });
   mkdirSync(BINARIES, { recursive: true });
 
-  // Step 1: Bundle server with esbuild
+  // Step 1: Bundle server with esbuild's JS API (cross-platform; the
+  // node_modules/.bin shim cannot be spawnSync'd on Windows).
   console.log('[1/4] Bundling SvelteKit server with esbuild...');
   const outfile = join(RESOURCES, 'server-bundle.mjs');
-  const esbuildBin = join(ROOT, 'node_modules', '.bin', 'esbuild');
-  execFileSync(
-    esbuildBin,
-    [
-      'build/index.js',
-      '--bundle',
-      '--platform=node',
-      '--target=node20',
-      '--format=esm',
-      '--banner:js=import { createRequire } from "module"; const require = createRequire(import.meta.url);',
-      `--outfile=${outfile}`
-    ],
-    { cwd: ROOT, stdio: 'inherit' }
-  );
+  const result = await esbuild({
+    absWorkingDir: ROOT,
+    entryPoints: ['build/index.js'],
+    bundle: true,
+    platform: 'node',
+    target: 'node20',
+    format: 'esm',
+    banner: {
+      js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);'
+    },
+    outfile,
+    logLevel: 'info'
+  });
+  if (result.errors.length > 0) throw new Error('esbuild reported errors');
   console.log('');
 
   // Step 2: Copy build/client/ (static assets the server needs to serve)

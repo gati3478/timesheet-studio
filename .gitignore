@@ -42,6 +42,8 @@ example-*.docx
 # Claude Code local settings
 .claude/*
 !.claude/skills/
+.mcp.json
+.serena/
 
 # Tauri
 src-tauri/target/
